@@ -278,7 +278,7 @@ function showResult() {
 
       // 使用 DiceBear 生成可愛治癒系角色圖標 (bottts-neutral / adventurer-neutral / thumbs 等風格)
       const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
-      const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${seed}&size=96&backgroundColor=transparent`;
+      const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${seed}&size=120&radius=50`;
 
       const svgSlot = document.getElementById("avatar-svg-slot");
       svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-20 h-20 object-contain drop-shadow-sm" crossOrigin="anonymous" />`;
