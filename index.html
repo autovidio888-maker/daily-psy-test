@@ -1,9 +1,17 @@
+```html
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>今日限定心理測驗 | DayDayQuiz</title>
+  <meta name="description" content="DayDayQuiz 提供每日更新的趣味心理測驗，1 分鐘測出你的今日人格角色，並生成專屬人格卡分享給朋友。" />
+  <meta property="og:title" content="今日限定心理測驗 | DayDayQuiz" />
+  <meta property="og:description" content="每天一題新主題，測出你的專屬人格角色。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/public/og-image.png" />
 
   <!-- Google AdSense 廣告代碼 -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370"
@@ -11,39 +19,118 @@
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- 截圖套件 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     @keyframes floatSlow {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(1deg); }
+      50% { transform: translateY(-7px) rotate(1.5deg); }
     }
+
+    @keyframes popIn {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes shine {
+      0% { transform: translateX(-120%) rotate(12deg); }
+      100% { transform: translateX(160%) rotate(12deg); }
+    }
+
+    @keyframes pulseSoft {
+      0%, 100% { opacity: 0.55; transform: scale(1); }
+      50% { opacity: 0.95; transform: scale(1.08); }
+    }
+
     .animate-float {
       animation: floatSlow 3.5s ease-in-out infinite;
     }
+
+    .animate-pop {
+      animation: popIn 0.28s ease-out both;
+    }
+
+    .shine-card::before {
+      content: "";
+      position: absolute;
+      top: -30%;
+      left: 0;
+      width: 42%;
+      height: 160%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      animation: shine 4.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .soft-pulse {
+      animation: pulseSoft 3.2s ease-in-out infinite;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(14px);
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-4">
 
-  <div id="app" class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden p-6 relative">
-    
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4f1_0,#eef2ff_28%,#f8fafc_58%,#fff7ed_100%)] text-slate-800 flex flex-col items-center justify-center p-4">
+
+  <main id="app" class="w-full max-w-md relative overflow-hidden rounded-[2rem] shadow-2xl shadow-indigo-100/70 border border-white/80 bg-white/90 p-6">
+
+    <!-- 背景裝飾 -->
+    <div class="absolute -top-24 -right-20 w-48 h-48 bg-pink-200/50 rounded-full blur-3xl pointer-events-none soft-pulse"></div>
+    <div class="absolute -bottom-24 -left-20 w-48 h-48 bg-indigo-200/60 rounded-full blur-3xl pointer-events-none soft-pulse"></div>
+
     <!-- 1. 載入中畫面 -->
-    <div id="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-9 w-9 border-4 border-indigo-500 border-t-transparent"></div>
-      <p class="mt-4 text-gray-500 font-medium tracking-wide">正在取得今日最新測驗...</p>
-    </div>
+    <section id="loading" class="relative z-10 text-center py-14">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+      <p class="mt-4 text-gray-500 font-bold tracking-wide">正在取得今日最新測驗...</p>
+      <p class="mt-1 text-xs text-gray-400">請稍等，正在抽出今天的人格卡</p>
+    </section>
 
     <!-- 2. 開始頁面 -->
-    <div id="start-screen" class="hidden text-center py-6">
-      <div class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-xs px-3.5 py-1 rounded-full font-bold border border-indigo-100/80">
+    <section id="start-screen" class="hidden relative z-10 text-center py-5">
+      <div class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-xs px-3.5 py-1 rounded-full font-black border border-indigo-100/80">
         <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
         今日限定
       </div>
+
       <h1 id="quiz-title" class="text-2xl font-black mt-4 mb-3 text-slate-900 leading-snug"></h1>
-      <p class="text-gray-500 text-sm mb-8">只需 1 分鐘，測出你的專屬命定角色與深層性格！</p>
-      
-      <!-- 頂部廣告展示位 -->
+
+      <!-- 主視覺：不用額外圖片也能生動 -->
+      <div class="relative mx-auto w-full max-w-xs mb-5">
+        <div class="absolute -inset-2 bg-gradient-to-r from-amber-200 via-pink-200 to-indigo-200 rounded-[2rem] blur-xl opacity-80"></div>
+
+        <div class="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-5 shine-card">
+          <div class="absolute top-3 left-4 text-[10px] font-black tracking-[0.2em] text-amber-200/90">DAYDAYQUIZ</div>
+          <div class="absolute top-3 right-4 text-[10px] font-black text-white/70" id="today-label"></div>
+
+          <div class="mt-7 mb-3 flex justify-center gap-3">
+            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:0s;">🍜</div>
+            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.3s;">🔥</div>
+            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.6s;">🍰</div>
+            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.9s;">🍱</div>
+          </div>
+
+          <div class="mt-3 rounded-2xl bg-white/12 border border-white/15 p-3">
+            <p class="text-white font-black text-lg leading-snug">今天的你，會抽到哪張人格卡？</p>
+            <p class="text-indigo-100 text-xs mt-1">深夜選擇會偷偷暴露你的靈魂狀態</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-gray-500 text-sm mb-2">每天一題新主題，1 分鐘測出你的今日人格。</p>
+      <p class="text-[11px] text-indigo-500 font-bold mb-6">完成後可生成專屬人格卡，分享到 Threads / IG ✨</p>
+
+      <div class="grid grid-cols-3 gap-2 mb-6 text-[11px]">
+        <div class="rounded-2xl bg-amber-50 border border-amber-100 py-2 font-bold text-amber-700">1 分鐘</div>
+        <div class="rounded-2xl bg-pink-50 border border-pink-100 py-2 font-bold text-pink-700">每日更新</div>
+        <div class="rounded-2xl bg-indigo-50 border border-indigo-100 py-2 font-bold text-indigo-700">可分享</div>
+      </div>
+
+      <!-- 首頁廣告展示位 -->
       <div class="w-full py-3 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mb-6">
         <ins class="adsbygoogle"
              style="display:block"
@@ -51,28 +138,36 @@
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
+          try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
         </script>
       </div>
 
-      <button onclick="startQuiz()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold rounded-2xl shadow-lg shadow-indigo-200 transition active:scale-95 text-base tracking-wide">
-        開始測驗 ✨
+      <button onclick="startQuiz()" class="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 transition active:scale-95 text-base tracking-wide">
+        開始今日測驗 ✨
       </button>
-    </div>
+    </section>
 
     <!-- 3. 測驗問答頁面 -->
-    <div id="quiz-screen" class="hidden">
-      <div class="flex justify-between items-center text-xs font-bold text-gray-400 mb-3 tracking-wider">
+    <section id="quiz-screen" class="hidden relative z-10">
+      <div class="flex justify-between items-center text-xs font-black text-gray-400 mb-3 tracking-wider">
         <span>QUESTION</span>
         <span id="progress-text">1 / 6</span>
       </div>
-      <div class="w-full bg-gray-100 h-2 rounded-full mb-6 overflow-hidden">
-        <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300" style="width: 16%"></div>
+
+      <div class="w-full bg-gray-100 h-2.5 rounded-full mb-6 overflow-hidden">
+        <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-500" style="width: 16%"></div>
       </div>
 
-      <h2 id="question-text" class="text-lg font-bold text-slate-800 mb-6 leading-relaxed"></h2>
+      <div class="mb-4">
+        <p id="question-mini-label" class="text-[11px] text-indigo-500 font-black tracking-widest mb-2">深夜人格偵測中</p>
+        <h2 id="question-text" class="text-xl font-black text-slate-900 leading-relaxed"></h2>
+      </div>
 
-      <div id="options-container" class="space-y-3 mb-6"></div>
+      <div id="options-container" class="space-y-3 mb-4"></div>
+
+      <p id="answer-feedback" class="hidden text-center text-xs font-black text-indigo-500 mb-4 animate-pop">
+        人格碎片 +1 ✨
+      </p>
 
       <!-- 答題頁底部廣告展示區 -->
       <div class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center text-[10px] text-gray-400">
@@ -82,72 +177,101 @@
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
+          try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
         </script>
       </div>
-    </div>
+    </section>
 
     <!-- 4. 計算過場動畫 -->
-    <div id="analyzing-screen" class="hidden text-center py-10">
+    <section id="analyzing-screen" class="hidden relative z-10 text-center py-10">
       <div class="flex flex-col items-center">
-        <div class="rounded-full bg-gradient-to-tr from-indigo-100 to-purple-100 p-5 mb-4 shadow-inner">
-          <svg class="w-9 h-9 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+        <div class="relative rounded-full bg-gradient-to-tr from-indigo-100 to-pink-100 p-6 mb-4 shadow-inner">
+          <div class="absolute inset-0 rounded-full bg-white/40 blur-lg"></div>
+          <div class="relative text-5xl animate-float">🔮</div>
         </div>
-        <h3 class="text-lg font-extrabold text-slate-800 mb-1">正在剖析你的靈魂屬性...</h3>
-        <p class="text-xs text-gray-400 mb-6">比對人格模型中，即將揭曉你的專屬角色</p>
+
+        <h3 class="text-lg font-black text-slate-800 mb-2">正在生成你的今日人格卡...</h3>
+        <div id="analyze-steps" class="text-xs text-gray-500 leading-6 min-h-[72px]"></div>
       </div>
+
       <!-- 過場廣告位 -->
-      <div class="w-full py-5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400">
+      <div class="w-full py-5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mt-4">
         <ins class="adsbygoogle"
              style="display:block"
              data-ad-client="ca-pub-3822526422033370"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
+          try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
         </script>
       </div>
-    </div>
+    </section>
 
-    <!-- 5. 結果頁面（包含巴納姆效應深度解析與超萌卡片） -->
-    <div id="result-screen" class="hidden">
+    <!-- 5. 結果頁面 -->
+    <section id="result-screen" class="hidden relative z-10">
+
       <!-- 截圖範圍 -->
-      <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-2xl border border-indigo-100/90 shadow-sm mb-6">
-        
-        <!-- 背景可愛漸層光斑 -->
-        <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-200/50 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-pink-200/50 rounded-full blur-2xl pointer-events-none"></div>
+      <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-3xl border border-indigo-100/90 shadow-sm mb-6 shine-card">
 
-        <!-- 頂部：今日專屬吉祥物圖鑑 -->
+        <!-- 背景光斑 -->
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-200/60 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-pink-200/60 rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- 頂部：今日人格卡 -->
         <div class="flex flex-col items-center text-center mb-4 relative z-10">
-          
+          <div class="inline-flex items-center gap-1.5 text-[10px] font-black tracking-[0.2em] text-white bg-slate-900 px-3 py-1 rounded-full mb-3">
+            TODAY PERSONALITY CARD
+          </div>
+
           <div class="relative mb-3 animate-float">
-            <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-60"></div>
-            <div id="avatar-container" class="relative w-24 h-24 rounded-full bg-white shadow-md border-2 border-white flex items-center justify-center overflow-hidden">
-              <div id="avatar-svg-slot" class="w-full h-full flex items-center justify-center"></div>
-              <span id="avatar-emoji" class="absolute bottom-1 right-1 text-base bg-white/95 rounded-full p-0.5 shadow-xs leading-none"></span>
+            <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-70"></div>
+            <div id="avatar-container" class="relative w-28 h-28 rounded-full bg-white shadow-md border-4 border-white flex items-center justify-center overflow-hidden">
+              <div id="avatar-svg-slot" class="w-full h-full flex items-center justify-center text-6xl"></div>
+              <span id="avatar-emoji" class="absolute bottom-1 right-1 text-lg bg-white/95 rounded-full p-1 shadow-sm leading-none"></span>
             </div>
           </div>
 
-          <span id="result-tagline" class="text-[11px] font-extrabold tracking-widest text-indigo-600 uppercase bg-white/90 px-3 py-0.5 rounded-full border border-indigo-100 shadow-xs mb-1.5"></span>
+          <span id="result-tagline" class="text-[11px] font-black tracking-widest text-indigo-600 uppercase bg-white/90 px-3 py-0.5 rounded-full border border-indigo-100 shadow-xs mb-1.5"></span>
+          <p class="text-xs text-gray-400 font-bold mb-1">你抽到的是</p>
           <h2 id="result-title" class="text-2xl font-black text-slate-900 tracking-tight"></h2>
-          <p id="result-quote" class="text-xs text-slate-500 italic mt-1 max-w-[290px] leading-relaxed"></p>
+          <p id="result-quote" class="text-xs text-slate-500 italic mt-1 max-w-[300px] leading-relaxed"></p>
+
+          <!-- 抽卡數值 -->
+          <div class="mt-4 grid grid-cols-3 gap-2 w-full text-[11px]">
+            <div class="bg-white/90 rounded-xl p-2 border border-amber-100">
+              <div class="text-gray-400 font-black">RARITY</div>
+              <div id="result-rarity" class="text-amber-500 font-black text-sm">SR</div>
+            </div>
+            <div class="bg-white/90 rounded-xl p-2 border border-pink-100">
+              <div class="text-gray-400 font-black">ENERGY</div>
+              <div id="result-energy" class="text-pink-500 font-black text-sm">82%</div>
+            </div>
+            <div class="bg-white/90 rounded-xl p-2 border border-indigo-100">
+              <div class="text-gray-400 font-black">SOCIAL</div>
+              <div id="result-social" class="text-indigo-500 font-black text-sm">36%</div>
+            </div>
+          </div>
         </div>
 
-        <!-- 巴納姆效應：深層性格剖析區塊 -->
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-4 mb-3.5 shadow-xs border border-purple-100/60 relative z-10">
-          <div class="text-[11px] font-bold text-indigo-600 mb-1.5 flex items-center gap-1">
+        <!-- 深層性格剖析 -->
+        <div class="glass rounded-2xl p-4 mb-3.5 shadow-xs border border-purple-100/60 relative z-10">
+          <div class="text-[11px] font-black text-indigo-600 mb-1.5 flex items-center gap-1">
             <span>🔮</span> 靈魂深層剖析
           </div>
           <p id="result-analysis" class="text-xs text-slate-600 leading-relaxed text-justify tracking-wide"></p>
         </div>
-        
+
+        <!-- 今日建議 -->
+        <div class="glass rounded-2xl p-4 mb-3.5 shadow-xs border border-amber-100/70 relative z-10">
+          <div class="text-[11px] font-black text-amber-600 mb-1.5 flex items-center gap-1">
+            <span>🌙</span> 今日建議
+          </div>
+          <p id="result-tip" class="text-xs text-slate-600 leading-relaxed"></p>
+        </div>
+
         <!-- 人格特質標籤 -->
-        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-3 shadow-xs border border-white/80 relative z-10">
-          <div class="text-[11px] font-bold text-gray-400 mb-2 flex items-center gap-1">
+        <div class="glass rounded-xl p-3 mb-3 shadow-xs border border-white/80 relative z-10">
+          <div class="text-[11px] font-black text-gray-400 mb-2 flex items-center gap-1">
             <span>✨</span> 核心特質標籤
           </div>
           <div id="result-traits" class="flex flex-wrap gap-1.5"></div>
@@ -156,41 +280,45 @@
         <!-- 契合搭檔卡片 -->
         <div class="grid grid-cols-2 gap-2 text-xs relative z-10">
           <div class="bg-white/90 p-3 rounded-xl border border-emerald-100/80 shadow-xs flex flex-col justify-between">
-            <span class="font-bold text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
+            <span class="font-black text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
             <span id="best-match" class="font-bold text-slate-700 text-xs truncate"></span>
           </div>
           <div class="bg-white/90 p-3 rounded-xl border border-rose-100/80 shadow-xs flex flex-col justify-between">
-            <span class="font-bold text-rose-500 block mb-1 text-[11px]">相剋雷區 ⚡</span>
+            <span class="font-black text-rose-500 block mb-1 text-[11px]">相剋雷區 ⚡</span>
             <span id="worst-match" class="font-bold text-slate-700 text-xs truncate"></span>
           </div>
         </div>
 
         <!-- 頁尾品牌與浮水印 -->
         <div class="mt-4 pt-3 border-t border-indigo-100/60 flex justify-between items-center text-[10px] text-gray-400 relative z-10">
-          <span class="font-bold text-indigo-500 tracking-wide">🐾 daydayquiz.com</span>
-          <span>今日限定 · 截圖分享</span>
+          <span class="font-black text-indigo-500 tracking-wide">🐾 daydayquiz.com</span>
+          <span id="result-date-label">今日限定 · 截圖分享</span>
         </div>
       </div>
 
       <!-- 分享按鈕與重新測驗 -->
       <div class="space-y-2.5">
-        <button onclick="saveResultImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-extrabold rounded-2xl shadow-lg shadow-purple-200 transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
-          <span>📸</span> 儲存精緻卡片發 Threads / IG
+        <button onclick="saveResultImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-purple-200 transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
+          <span>📸</span> 儲存人格卡發 Threads / IG
         </button>
-        <button onclick="resetQuiz()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition">
+
+        <button onclick="copyShareText()" class="w-full py-3 bg-white border border-indigo-100 hover:bg-indigo-50 text-indigo-600 text-xs font-black rounded-xl transition">
+          複製分享文案 📝
+        </button>
+
+        <button onclick="resetQuiz()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition">
           重新測驗
         </button>
       </div>
-    </div>
+    </section>
+  </main>
 
-  </div>
-
-  <!-- 頁尾合規宣告（Google AdSense 審核必備） -->
+  <!-- 頁尾合規宣告 -->
   <footer class="mt-8 text-center text-xs text-gray-400 space-y-2 pb-6">
     <div>
-      <a href="#privacy" onclick="alert('【隱私權政策】\n本站尊重並保護您的隱私，測驗過程完全在前端執行，不收集任何個人識別資訊。第三方廣告夥伴（如 Google AdSense）可能會使用 Cookie 來提供個人化廣告服務。'); return false;" class="underline hover:text-gray-600">隱私權政策</a>
+      <a href="#privacy" onclick="showPrivacy(); return false;" class="underline hover:text-gray-600">隱私權政策</a>
       <span class="mx-2">|</span>
-      <a href="#about" onclick="alert('【關於本站】\nDayDayQuiz（daydayquiz.com）提供每日自動更新之趣味心理測驗與社群互動內容，所有題目與分析結果僅供日常娛樂交流使用。'); return false;" class="underline hover:text-gray-600">關於我們</a>
+      <a href="#about" onclick="showAbout(); return false;" class="underline hover:text-gray-600">關於我們</a>
     </div>
     <p>© 2026 DayDayQuiz. All rights reserved.</p>
   </footer>
@@ -199,29 +327,45 @@
     let quizData = null;
     let currentStep = 0;
     let userAnswers = [];
+    let finalResult = null;
+
+    function todayText() {
+      const d = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${mm}.${dd}`;
+    }
 
     async function init() {
       try {
+        document.getElementById("today-label").innerText = todayText();
+        document.getElementById("result-date-label").innerText = `${todayText()} · 今日限定`;
+
         const res = await fetch(`public/data/daily_quiz.json?t=${new Date().getTime()}`);
         if (!res.ok) throw new Error("尚未生成題目");
+
         quizData = await res.json();
 
         document.getElementById("loading").classList.add("hidden");
-        document.getElementById("quiz-title").innerText = quizData.theme;
+        document.getElementById("quiz-title").innerText = quizData.theme || "今日限定心理測驗";
         document.getElementById("start-screen").classList.remove("hidden");
       } catch (err) {
         document.getElementById("loading").innerHTML = `
-          <p class="text-rose-500 font-bold">題目加載失敗</p>
-          <p class="text-xs text-gray-400 mt-1">請確認 Actions 已成功執行過一次</p>
+          <p class="text-rose-500 font-bold">題目載入失敗</p>
+          <p class="text-xs text-gray-400 mt-1">請確認 public/data/daily_quiz.json 是否存在</p>
         `;
       }
     }
 
     function startQuiz() {
       document.getElementById("start-screen").classList.add("hidden");
+      document.getElementById("result-screen").classList.add("hidden");
       document.getElementById("quiz-screen").classList.remove("hidden");
+
       currentStep = 0;
       userAnswers = [];
+      finalResult = null;
+
       renderQuestion();
     }
 
@@ -232,13 +376,20 @@
       document.getElementById("progress-text").innerText = `${currentStep + 1} / ${total}`;
       document.getElementById("progress-bar").style.width = `${((currentStep + 1) / total) * 100}%`;
       document.getElementById("question-text").innerText = q.title;
+      document.getElementById("question-mini-label").innerText = q.label || "深夜人格偵測中";
 
       const container = document.getElementById("options-container");
       container.innerHTML = "";
 
-      q.options.forEach(opt => {
+      q.options.forEach((opt, idx) => {
         const btn = document.createElement("button");
-        btn.className = "w-full text-left p-4 rounded-2xl border border-gray-200/90 bg-white hover:border-indigo-500 hover:bg-indigo-50/40 transition duration-150 text-sm font-medium text-slate-700 active:scale-[0.99] shadow-2xs";
+        btn.className = [
+          "w-full text-left p-4 rounded-2xl border bg-white/90",
+          "hover:border-indigo-400 hover:bg-indigo-50/70",
+          "transition duration-150 text-sm font-bold text-slate-700",
+          "active:scale-[0.99] shadow-sm animate-pop"
+        ].join(" ");
+        btn.style.animationDelay = `${idx * 0.05}s`;
         btn.innerText = opt.text;
         btn.onclick = () => selectOption(opt.type);
         container.appendChild(btn);
@@ -247,68 +398,117 @@
 
     function selectOption(type) {
       userAnswers.push(type);
-      if (currentStep < quizData.questions.length - 1) {
-        currentStep++;
-        renderQuestion();
-      } else {
-        showAnalyzing();
-      }
+
+      const feedback = document.getElementById("answer-feedback");
+      const messages = [
+        "人格碎片 +1 ✨",
+        "已捕捉到你的靈魂訊號 👀",
+        "這個選擇很有你 😎",
+        "系統正在偷看你的深夜人格 🌙",
+        "今日人格卡正在成形中 🔮"
+      ];
+
+      feedback.innerText = messages[Math.floor(Math.random() * messages.length)];
+      feedback.classList.remove("hidden");
+
+      document.querySelectorAll("#options-container button").forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add("opacity-70");
+      });
+
+      setTimeout(() => {
+        feedback.classList.add("hidden");
+
+        if (currentStep < quizData.questions.length - 1) {
+          currentStep++;
+          renderQuestion();
+        } else {
+          showAnalyzing();
+        }
+      }, 480);
     }
 
     function showAnalyzing() {
       document.getElementById("quiz-screen").classList.add("hidden");
       document.getElementById("analyzing-screen").classList.remove("hidden");
 
+      const steps = [
+        "正在讀取你的深夜選擇...",
+        "比對隱藏人格資料庫...",
+        "分析你的社交電量與能量值...",
+        "生成今日專屬人格卡..."
+      ];
+
+      const box = document.getElementById("analyze-steps");
+      let i = 0;
+      box.innerHTML = `<p class="animate-pop">・${steps[0]}</p>`;
+
+      const timer = setInterval(() => {
+        i++;
+        if (i < steps.length) {
+          box.innerHTML += `<p class="animate-pop">・${steps[i]}</p>`;
+        }
+      }, 520);
+
       setTimeout(() => {
+        clearInterval(timer);
         document.getElementById("analyzing-screen").classList.add("hidden");
         showResult();
-      }, 2200);
+      }, 2400);
+    }
+
+    function pickWinner() {
+      const counts = { A: 0, B: 0, C: 0, D: 0 };
+      userAnswers.forEach(t => counts[t] = (counts[t] || 0) + 1);
+
+      const maxCount = Math.max(...Object.values(counts));
+      const winners = Object.keys(counts).filter(k => counts[k] === maxCount);
+
+      if (winners.length === 1) return winners[0];
+
+      // 平手時，用最後一題當 tie-breaker；若最後一題不在平手名單，取第一個平手結果
+      const lastAnswer = userAnswers[userAnswers.length - 1];
+      if (winners.includes(lastAnswer)) return lastAnswer;
+
+      return winners[0];
     }
 
     function showResult() {
       document.getElementById("result-screen").classList.remove("hidden");
 
-      const counts = {};
-      userAnswers.forEach(t => counts[t] = (counts[t] || 0) + 1);
-      let winner = 'A';
-      let maxCount = -1;
-      for (const [k, v] of Object.entries(counts)) {
-        if (v > maxCount) {
-          maxCount = v;
-          winner = k;
-        }
-      }
-
+      const winner = pickWinner();
       const res = quizData.results[winner];
-
-      // 1. 生成超萌彩色大頭像 (thumbs 風格，粉嫩背景與大眼微笑)
-      const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
-      const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&size=128&shapeColor=ffd5dc,d1e8e2,dbeafe,fef3c7,f3e8ff&backgroundColor=transparent`;
+      finalResult = res;
 
       const svgSlot = document.getElementById("avatar-svg-slot");
-      svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-full h-full object-cover scale-110" crossOrigin="anonymous" />`;
 
-      document.getElementById("avatar-emoji").innerText = res.emoji || '🐾';
-      
+      // 有自訂圖片就用圖片；沒有就用 emoji + DiceBear
+      if (res.image) {
+        svgSlot.innerHTML = `<img src="${res.image}" alt="${res.title}" class="w-full h-full object-cover scale-110" crossorigin="anonymous" />`;
+      } else {
+        const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
+        const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&size=128&shapeColor=ffd5dc,d1e8e2,dbeafe,fef3c7,f3e8ff&backgroundColor=transparent`;
+        svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-full h-full object-cover scale-110" crossorigin="anonymous" />`;
+      }
+
+      document.getElementById("avatar-emoji").innerText = res.emoji || "🐾";
+
       const glowElem = document.getElementById("avatar-glow");
       if (glowElem) {
-        glowElem.className = `absolute -inset-1 rounded-full blur-md opacity-60 bg-gradient-to-r ${res.color || 'from-pink-400 to-indigo-400'}`;
+        glowElem.className = `absolute -inset-1 rounded-full blur-md opacity-70 bg-gradient-to-r ${res.color || "from-pink-400 to-indigo-400"}`;
       }
 
       document.getElementById("result-tagline").innerText = res.tagline || "今日專屬性格圖鑑";
-      document.getElementById("result-title").innerText = res.title;
-      document.getElementById("result-quote").innerText = `“${res.quote}”`;
+      document.getElementById("result-title").innerText = res.title || "神秘人格";
+      document.getElementById("result-quote").innerText = `“${res.quote || "今天的你，也有值得被好好收藏的一面。"}”`;
+      document.getElementById("result-rarity").innerText = res.rarity || "SR";
+      document.getElementById("result-energy").innerText = res.energy || "82%";
+      document.getElementById("result-social").innerText = res.social || "36%";
 
-      // 2. 巴納姆效應詳細描述（有後端 analysis 則載入，否則啟動經典巴納姆心理通用庫）
-      const defaultBarnum = {
-        'A': '你看似適應力極強、什麼都能泰然處之，但其實內心對安全感有很高的要求。你往往把堅強與靠譜留給外人，甚至習慣一個人扛下所有瑣碎，但偶爾你也很渴望能有一個人一眼看穿你的逞強，允許你毫無負擔地徹底放空。',
-        'B': '你常常給人隨和、脾氣好、不拘小節的印象，但只有真正走進你心裡的人才知道，你對特定的價值觀有著不可妥協的底線。你很擅長察覺旁人的情緒轉折，卻總把自己的疲憊與焦慮悄悄藏起來自己消化。',
-        'C': '外表看似理性冷靜、凡事井井有條的你，內心其實藏著極其豐富且敏感的情感世界。你很需要專屬的個人邊界來充電，當周遭喧囂過盛時，安靜的獨處對你而言不是孤獨，而是靈魂唯一的解藥。',
-        'D': '你是個充滿創造力與熱情的人，總能給身邊的人帶來意想不到的驚喜。但你偶爾會陷入深深的自我懷疑，在「渴望展現自己」與「想徹底隱形消失」之間反覆拉扯，其實你遠比自己想像中的還要耀眼迷人。'
-      };
-      document.getElementById("result-analysis").innerText = res.analysis || defaultBarnum[winner] || defaultBarnum['A'];
+      const defaultAnalysis = "你有自己的節奏，也有不想被打擾的時候。你不是不在乎世界，只是更需要用舒服的方式靠近它。今天的選擇透露出你正在尋找一種剛剛好的平衡。";
+      document.getElementById("result-analysis").innerText = res.analysis || defaultAnalysis;
+      document.getElementById("result-tip").innerText = res.tip || "今天適合慢一點，不用急著證明自己。";
 
-      // 3. 解析命定與相剋名稱為純中文稱號
       function getDisplayName(matchVal) {
         if (!matchVal) return "全員契合";
         let str = String(matchVal).trim();
@@ -321,12 +521,13 @@
       document.getElementById("best-match").innerText = getDisplayName(res.bestMatch);
       document.getElementById("worst-match").innerText = getDisplayName(res.worstMatch);
 
-      // 特質標籤渲染
       const traitsBox = document.getElementById("result-traits");
       traitsBox.innerHTML = "";
-      res.traits.forEach(t => {
+
+      const traits = Array.isArray(res.traits) ? res.traits : ["今日限定", "神秘感", "有個性"];
+      traits.forEach(t => {
         const badge = document.createElement("span");
-        badge.className = "px-3 py-1 bg-white border border-purple-100 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs";
+        badge.className = "px-3 py-1 bg-white border border-purple-100 rounded-lg text-xs font-bold text-slate-700 shadow-sm";
         badge.innerText = `#${t}`;
         traitsBox.appendChild(badge);
       });
@@ -334,24 +535,73 @@
 
     function saveResultImage() {
       const area = document.getElementById("capture-area");
-      html2canvas(area, { 
-        scale: 3, 
+
+      html2canvas(area, {
+        scale: 3,
         useCORS: true,
-        backgroundColor: null 
+        backgroundColor: null
       }).then(canvas => {
         const link = document.createElement("a");
-        link.download = `DayDayQuiz_${new Date().toISOString().slice(0,10)}.png`;
+        link.download = `DayDayQuiz_${new Date().toISOString().slice(0, 10)}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
       });
     }
 
+    async function copyShareText() {
+      const title = finalResult?.title || document.getElementById("result-title").innerText;
+      const tagline = finalResult?.tagline || document.getElementById("result-tagline").innerText;
+      const rarity = finalResult?.rarity || document.getElementById("result-rarity").innerText;
+      const energy = finalResult?.energy || document.getElementById("result-energy").innerText;
+      const social = finalResult?.social || document.getElementById("result-social").innerText;
+
+      const text =
+`我今天測到「${title}」！
+${tagline}
+
+稀有度：${rarity}
+今日能量值：${energy}
+社交電量：${social}
+
+你也來測看看今天是哪種人格：
+https://daydayquiz.com`;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("分享文案已複製！");
+      } catch (err) {
+        prompt("複製下面文字：", text);
+      }
+    }
+
     function resetQuiz() {
       document.getElementById("result-screen").classList.add("hidden");
       document.getElementById("start-screen").classList.remove("hidden");
+      currentStep = 0;
+      userAnswers = [];
+      finalResult = null;
+    }
+
+    function showPrivacy() {
+      alert(
+`隱私權政策
+
+本站尊重並保護您的隱私。心理測驗作答與結果計算主要在使用者瀏覽器端執行，本站不主動收集可識別個人身分的測驗答案。
+
+第三方廣告夥伴，例如 Google AdSense，可能會使用 Cookie 或類似技術提供廣告服務。`
+      );
+    }
+
+    function showAbout() {
+      alert(
+`關於本站
+
+DayDayQuiz 提供每日更新的趣味心理測驗與社群互動內容。所有題目與分析結果僅供日常娛樂交流使用，不代表專業心理診斷或醫療建議。`
+      );
     }
 
     init();
   </script>
 </body>
 </html>
+```
