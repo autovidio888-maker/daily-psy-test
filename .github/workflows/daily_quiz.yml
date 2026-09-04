@@ -35,9 +35,9 @@ jobs:
         run: |
           python scripts/generate_quiz.py
 
-      - name: Post to Threads
-        run: |
-          python scripts/post_to_threads.py
+      - #name: Post to Threads
+        #run: |
+         # python scripts/post_to_threads.py
 
       - name: Commit and push changes
         run: |
