@@ -112,7 +112,7 @@
       </div>
     </div>
 
-    <!-- 5. 結果頁面（包含全新動態生成可愛角色卡片） -->
+    <!-- 5. 結果頁面（包含超萌角色與中文配對解析） -->
     <div id="result-screen" class="hidden">
       <!-- 截圖範圍 -->
       <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-2xl border border-indigo-100/90 shadow-sm mb-6">
@@ -126,7 +126,7 @@
           
           <div class="relative mb-3 animate-float">
             <!-- 發光底座環 -->
-            <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-50"></div>
+            <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-60"></div>
             <!-- 可愛角色外框容器 -->
             <div id="avatar-container" class="relative w-24 h-24 rounded-full bg-white shadow-md border-2 border-white flex items-center justify-center overflow-hidden">
               <div id="avatar-svg-slot" class="w-full h-full flex items-center justify-center"></div>
@@ -148,7 +148,7 @@
           <div id="result-traits" class="flex flex-wrap gap-1.5"></div>
         </div>
 
-        <!-- 契合搭檔卡片 -->
+        <!-- 契合搭檔卡片（已修正為中文名稱） -->
         <div class="grid grid-cols-2 gap-2 text-xs relative z-10">
           <div class="bg-white/90 p-3 rounded-xl border border-emerald-100/80 shadow-xs flex flex-col justify-between">
             <span class="font-bold text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
@@ -260,7 +260,7 @@
       }, 2200);
     }
 
-function showResult() {
+    function showResult() {
       document.getElementById("result-screen").classList.remove("hidden");
 
       const counts = {};
@@ -276,26 +276,38 @@ function showResult() {
 
       const res = quizData.results[winner];
 
-      // 使用 DiceBear 生成可愛治癒系角色圖標 (bottts-neutral / adventurer-neutral / thumbs 等風格)
+      // 1. 生成超萌彩色立體大眼角色頭像 (thumbs 風格，粉彩背景與萌系表情)
       const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
-      const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${seed}&size=120&radius=50`;
+      const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&size=128&shapeColor=ffd5dc,d1e8e2,dbeafe,fef3c7,f3e8ff&backgroundColor=transparent`;
 
       const svgSlot = document.getElementById("avatar-svg-slot");
-      svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-20 h-20 object-contain drop-shadow-sm" crossOrigin="anonymous" />`;
+      svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-full h-full object-cover scale-110" crossOrigin="anonymous" />`;
 
       document.getElementById("avatar-emoji").innerText = res.emoji || '🐾';
       
       const glowElem = document.getElementById("avatar-glow");
       if (glowElem) {
-        glowElem.className = `absolute -inset-1 rounded-full blur-md opacity-50 bg-gradient-to-r ${res.color || 'from-indigo-400 to-purple-500'}`;
+        glowElem.className = `absolute -inset-1 rounded-full blur-md opacity-60 bg-gradient-to-r ${res.color || 'from-pink-400 to-indigo-400'}`;
       }
 
       document.getElementById("result-tagline").innerText = res.tagline || "今日專屬性格圖鑑";
       document.getElementById("result-title").innerText = res.title;
       document.getElementById("result-quote").innerText = `“${res.quote}”`;
-      document.getElementById("best-match").innerText = res.bestMatch || "全員契合";
-      document.getElementById("worst-match").innerText = res.worstMatch || "無";
 
+      // 2. 解析命定與相剋名稱（若後端回傳 A/B/C/D 代號，自動轉換為中文稱號並去除冒號後長字串）
+      function getDisplayName(matchVal) {
+        if (!matchVal) return "全員契合";
+        let str = String(matchVal).trim();
+        if (quizData.results && quizData.results[str] && quizData.results[str].title) {
+          str = quizData.results[str].title;
+        }
+        return str.split("：")[0].split(":")[0].trim();
+      }
+
+      document.getElementById("best-match").innerText = getDisplayName(res.bestMatch);
+      document.getElementById("worst-match").innerText = getDisplayName(res.worstMatch);
+
+      // 特質標籤渲染
       const traitsBox = document.getElementById("result-traits");
       traitsBox.innerHTML = "";
       res.traits.forEach(t => {
