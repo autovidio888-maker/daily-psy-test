@@ -2,45 +2,45 @@ name: Daily Quiz Auto Update
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # 每天 UTC 00:00 (台灣時間早上 08:00) 自動出題
+  workflow_dispatch:      # 保留手動「Run workflow」按鈕
 
 permissions:
   contents: write
 
 jobs:
-  generate-and-push:
+  build-and-post:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 檢出程式碼
+      - name: 檢出儲存庫代碼
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 安裝 Python
-        uses: actions/setup-python@v5
+      - name: 設定 Python 環境
+        uses: setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 安裝套件
+      - name: 安裝相依套件
         run: |
-          pip install google-generativeai
+          python -m pip install --upgrade pip
+          pip install google-generativeai requests
 
-      - name: 執行 AI 出題腳本
+      - name: 執行 AI 出題與文案生成腳本
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          python scripts/generate_quiz.py
+        run: python scripts/generate_quiz.py
 
-      - name: 自動提交並推送
+      - name: 自動發布貼文至 Threads
+        env:
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        run: python scripts/post_to_threads.py
+
+      - name: 提交並推送今日測驗資料更新
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add public/data/daily_quiz.json
-          if git diff --staged --quiet; then
-            echo "無變更"
-          else
-            git commit -m "Auto: 更新今日測驗 [$(date +'%Y-%m-%d')]"
-            git push
-          fi
+          git commit -m "Auto: 更新今日測驗 [$(date +'%Y-%m-%d')]" || echo "無資料變更"
+          git push
