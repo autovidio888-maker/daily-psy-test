@@ -260,7 +260,7 @@
       }, 2200);
     }
 
-    function showResult() {
+function showResult() {
       document.getElementById("result-screen").classList.remove("hidden");
 
       const counts = {};
@@ -276,13 +276,12 @@
 
       const res = quizData.results[winner];
 
-      // 渲染動態角色頭像、光暈與 Emoji
+      // 使用 DiceBear 生成可愛治癒系角色圖標 (bottts-neutral / adventurer-neutral / thumbs 等風格)
+      const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
+      const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${seed}&size=96&backgroundColor=transparent`;
+
       const svgSlot = document.getElementById("avatar-svg-slot");
-      if (res.svg_icon && res.svg_icon.trim().startsWith("<svg")) {
-        svgSlot.innerHTML = res.svg_icon;
-      } else {
-        svgSlot.innerHTML = `<span class="text-5xl">${res.emoji || '✨'}</span>`;
-      }
+      svgSlot.innerHTML = `<img src="${avatarUrl}" alt="avatar" class="w-20 h-20 object-contain drop-shadow-sm" crossOrigin="anonymous" />`;
 
       document.getElementById("avatar-emoji").innerText = res.emoji || '🐾';
       
