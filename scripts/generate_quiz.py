@@ -1,6 +1,8 @@
 import os
 import json
 import re
+from datetime import datetime, timezone, timedelta
+
 import google.generativeai as genai
 
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -184,14 +186,50 @@ analysis 要讓人覺得「這就是我」。
 response = model.generate_content(prompt)
 raw_text = response.text.strip()
 
-raw_text = re.sub(r"^```json\s*", "", raw_text, flags=re.MULTILINE)
-raw_text = re.sub(r"^```\s*", "", raw_text, flags=re.MULTILINE)
+raw_text = re.sub(r"^```json\\s*", "", raw_text, flags=re.MULTILINE)
+raw_text = re.sub(r"^```\\s*", "", raw_text, flags=re.MULTILINE)
 raw_text = re.sub(r"```$", "", raw_text, flags=re.MULTILINE)
 
 quiz_data = json.loads(raw_text.strip())
 
+tz = timezone(timedelta(hours=8))
+today = datetime.now(tz).strftime("%Y-%m-%d")
+
+quiz_data["date"] = today
+quiz_data.setdefault("quiz_type", "personality_quiz")
+quiz_data.setdefault("subtitle", "1 分鐘測出你的今日人格卡")
+quiz_data.setdefault("visual_style", "柔和漸層、可愛卡片、社群分享風格")
+quiz_data.setdefault("threads_post", "笑死，今天又被測驗看穿。連結放下面，測完跟我說你是哪種人。https://daydayquiz.com #心理測驗 #今日限定")
+
+if "questions" not in quiz_data or len(quiz_data["questions"]) != 6:
+    raise ValueError("questions 必須剛好有 6 題")
+
+if "results" not in quiz_data:
+    raise ValueError("缺少 results")
+
+for key in ["A", "B", "C", "D"]:
+    if key not in quiz_data["results"]:
+        raise ValueError(f"缺少結果 {key}")
+
+    result = quiz_data["results"][key]
+    result.setdefault("title", f"神秘角色{key}")
+    result.setdefault("tagline", "今日限定人格")
+    result.setdefault("emoji", "✨")
+    result.setdefault("avatar_seed", key)
+    result.setdefault("color", "from-indigo-400 to-purple-500")
+    result.setdefault("quote", "你不是奇怪，你只是剛好有自己的節奏。")
+    result.setdefault("rarity", "SR")
+    result.setdefault("energy", "70%")
+    result.setdefault("social", "50%")
+    result.setdefault("analysis", "你看起來很隨和，但其實心裡有自己的標準。你不一定會把所有想法說出口，卻常常默默觀察細節。你需要自由，也希望有人真正理解你。")
+    result.setdefault("tip", "今天先照顧自己的節奏，不用急著配合所有人。")
+    result.setdefault("traits", ["直覺派", "有想法", "今日限定"])
+    result.setdefault("bestMatch", "神秘角色")
+    result.setdefault("worstMatch", "神秘角色")
+
 os.makedirs("public/data", exist_ok=True)
+
 with open("public/data/daily_quiz.json", "w", encoding="utf-8") as f:
     json.dump(quiz_data, f, ensure_ascii=False, indent=2)
 
-print("今日心理測驗及 Threads 文案生成成功！")
+print(f"今日心理測驗生成成功！類型：{quiz_data['quiz_type']}，日期：{today}")
