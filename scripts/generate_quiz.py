@@ -11,15 +11,23 @@ genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
 prompt = """
-你是一個爆款社群心理測驗與視覺設計師。請設計一個適合在 Threads / IG 引發轉發的趣味心理測驗。
-主題可以多樣化（例如：職場摸魚生物、咖啡性格圖鑑、奇幻冒險職業、貓狗社交屬性、消夜靈魂人格等）。
+你是一個專門打造爆款社群心理測驗的心理學專家與視覺設計師。
+請設計一個適合在 Threads / IG 引發病毒式轉發的趣味心理測驗。
+主題可以多樣化（例如：職場摸魚生物、咖啡靈魂圖鑑、奇幻冒險職業、貓狗社交人格、深夜消夜屬性等）。
 
-除了題目外，請為 A, B, C, D 四種測驗結果分別設計一個專屬的「超可愛治癒系代表角色」。
-為了生成專屬的可愛插圖，請為每個結果提供：
+【核心要求：深度巴納姆效應（Barnum Effect）】
+在每個結果的 "analysis" 中，必須深度運用巴納姆效應（結合看似矛盾但普遍共鳴的心理特質，例如：外表獨立但渴望被理解、平時隨和但對某些細節極度固執、看起來很能社交其實電量消耗極快等），寫出一段約 80-120 字、直擊靈魂讓人直呼「這完全就是我！」的精準解析。
+
+請為每個結果提供：
 1. "emoji": 一個代表性的可愛 Emoji。
 2. "tagline": 一句超有梗的副標題（例如「躺平系摸魚王」）。
-3. "avatar_seed": 一個能代表該角色的簡短英文單字（用於生成專屬可愛頭像，例如 "cat", "wizard", "fox", "bear", "coffee", "sparkle"）。
+3. "avatar_seed": 一個能代表該角色的簡短英文單字（用於生成專屬可愛頭像，例如 "cat", "fox", "panda", "rabbit", "owl" 等）。
 4. "color": 專屬漸層顏色（例如 "from-amber-400 to-orange-500", "from-pink-400 to-rose-500", "from-teal-400 to-emerald-500", "from-indigo-400 to-purple-500"）。
+5. "quote": 扎心又好笑的一句話金句。
+6. "analysis": 運用巴納姆效應的深度特質剖析（80~120 字）。
+7. "traits": 3~4 個特質關鍵字標籤。
+8. "bestMatch": 契合拍檔（直接填寫對應結果的稱號，如「摸魚貓頭鷹」）。
+9. "worstMatch": 相剋雷區（直接填寫對應結果的稱號，如「八卦鸚鵡」）。
 
 請嚴格只輸出合法的 JSON 格式（不要有 markdown 標記、不要用 ```json 包裹），格式規範如下：
 {
@@ -44,6 +52,7 @@ prompt = """
       "avatar_seed": "fox",
       "color": "from-amber-400 to-orange-500",
       "quote": "金句",
+      "analysis": "巴納姆效應深度解析內容...",
       "traits": ["特徵1", "特徵2", "特徵3"],
       "bestMatch": "稱號B",
       "worstMatch": "稱號D"
@@ -55,6 +64,7 @@ prompt = """
       "avatar_seed": "panda",
       "color": "from-teal-400 to-emerald-500",
       "quote": "金句",
+      "analysis": "巴納姆效應深度解析內容...",
       "traits": ["特徵1", "特徵2", "特徵3"],
       "bestMatch": "稱號A",
       "worstMatch": "稱號C"
@@ -66,6 +76,7 @@ prompt = """
       "avatar_seed": "cat",
       "color": "from-indigo-400 to-purple-500",
       "quote": "金句",
+      "analysis": "巴納姆效應深度解析內容...",
       "traits": ["特徵1", "特徵2", "特徵3"],
       "bestMatch": "稱號D",
       "worstMatch": "稱號B"
@@ -74,9 +85,10 @@ prompt = """
       "title": "稱號D",
       "tagline": "短梗副稱號",
       "emoji": "🐰",
-      "avatar_seed": "bunny",
+      "avatar_seed": "rabbit",
       "color": "from-rose-400 to-pink-500",
       "quote": "金句",
+      "analysis": "巴納姆效應深度解析內容...",
       "traits": ["特徵1", "特徵2", "特徵3"],
       "bestMatch": "稱號C",
       "worstMatch": "稱號A"
