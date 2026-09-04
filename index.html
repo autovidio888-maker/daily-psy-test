@@ -17,7 +17,7 @@
   <style>
     @keyframes floatSlow {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(1deg); }
+      50% { transform: translateY(-5px) rotate(1deg); }
     }
     .animate-float {
       animation: floatSlow 3.5s ease-in-out infinite;
@@ -41,7 +41,7 @@
         今日限定
       </div>
       <h1 id="quiz-title" class="text-2xl font-black mt-4 mb-3 text-slate-900 leading-snug"></h1>
-      <p class="text-gray-500 text-sm mb-8">只需 1 分鐘，測出你的專屬命定角色與隱藏性格！</p>
+      <p class="text-gray-500 text-sm mb-8">只需 1 分鐘，測出你的專屬命定角色與深層性格！</p>
       
       <!-- 頂部廣告展示位 -->
       <div class="w-full py-3 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mb-6">
@@ -96,8 +96,8 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <h3 class="text-lg font-extrabold text-slate-800 mb-1">正在生成專屬分析卡片...</h3>
-        <p class="text-xs text-gray-400 mb-6">比對演算法中，即將揭曉你的命定角色</p>
+        <h3 class="text-lg font-extrabold text-slate-800 mb-1">正在剖析你的靈魂屬性...</h3>
+        <p class="text-xs text-gray-400 mb-6">比對人格模型中，即將揭曉你的專屬角色</p>
       </div>
       <!-- 過場廣告位 -->
       <div class="w-full py-5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400">
@@ -112,7 +112,7 @@
       </div>
     </div>
 
-    <!-- 5. 結果頁面（包含超萌角色與中文配對解析） -->
+    <!-- 5. 結果頁面（包含巴納姆效應深度解析與超萌卡片） -->
     <div id="result-screen" class="hidden">
       <!-- 截圖範圍 -->
       <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-2xl border border-indigo-100/90 shadow-sm mb-6">
@@ -121,34 +121,39 @@
         <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-200/50 rounded-full blur-2xl pointer-events-none"></div>
         <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-pink-200/50 rounded-full blur-2xl pointer-events-none"></div>
 
-        <!-- 頂部：今日專屬可愛吉祥物圖鑑 -->
+        <!-- 頂部：今日專屬吉祥物圖鑑 -->
         <div class="flex flex-col items-center text-center mb-4 relative z-10">
           
           <div class="relative mb-3 animate-float">
-            <!-- 發光底座環 -->
             <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-60"></div>
-            <!-- 可愛角色外框容器 -->
             <div id="avatar-container" class="relative w-24 h-24 rounded-full bg-white shadow-md border-2 border-white flex items-center justify-center overflow-hidden">
               <div id="avatar-svg-slot" class="w-full h-full flex items-center justify-center"></div>
-              <!-- 角色右下角可愛 Emoji 浮印 -->
               <span id="avatar-emoji" class="absolute bottom-1 right-1 text-base bg-white/95 rounded-full p-0.5 shadow-xs leading-none"></span>
             </div>
           </div>
 
           <span id="result-tagline" class="text-[11px] font-extrabold tracking-widest text-indigo-600 uppercase bg-white/90 px-3 py-0.5 rounded-full border border-indigo-100 shadow-xs mb-1.5"></span>
           <h2 id="result-title" class="text-2xl font-black text-slate-900 tracking-tight"></h2>
-          <p id="result-quote" class="text-xs text-slate-500 italic mt-1.5 max-w-[280px] leading-relaxed"></p>
+          <p id="result-quote" class="text-xs text-slate-500 italic mt-1 max-w-[290px] leading-relaxed"></p>
+        </div>
+
+        <!-- 巴納姆效應：深層性格剖析區塊 -->
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-4 mb-3.5 shadow-xs border border-purple-100/60 relative z-10">
+          <div class="text-[11px] font-bold text-indigo-600 mb-1.5 flex items-center gap-1">
+            <span>🔮</span> 靈魂深層剖析
+          </div>
+          <p id="result-analysis" class="text-xs text-slate-600 leading-relaxed text-justify tracking-wide"></p>
         </div>
         
         <!-- 人格特質標籤 -->
-        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3.5 mb-3.5 shadow-xs border border-white/80 relative z-10">
+        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-3 shadow-xs border border-white/80 relative z-10">
           <div class="text-[11px] font-bold text-gray-400 mb-2 flex items-center gap-1">
-            <span>✨</span> 核心特質圖鑑
+            <span>✨</span> 核心特質標籤
           </div>
           <div id="result-traits" class="flex flex-wrap gap-1.5"></div>
         </div>
 
-        <!-- 契合搭檔卡片（已修正為中文名稱） -->
+        <!-- 契合搭檔卡片 -->
         <div class="grid grid-cols-2 gap-2 text-xs relative z-10">
           <div class="bg-white/90 p-3 rounded-xl border border-emerald-100/80 shadow-xs flex flex-col justify-between">
             <span class="font-bold text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
@@ -170,7 +175,7 @@
       <!-- 分享按鈕與重新測驗 -->
       <div class="space-y-2.5">
         <button onclick="saveResultImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-extrabold rounded-2xl shadow-lg shadow-purple-200 transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
-          <span>📸</span> 儲存可愛卡片發 Threads / IG
+          <span>📸</span> 儲存精緻卡片發 Threads / IG
         </button>
         <button onclick="resetQuiz()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition">
           重新測驗
@@ -276,7 +281,7 @@
 
       const res = quizData.results[winner];
 
-      // 1. 生成超萌彩色立體大眼角色頭像 (thumbs 風格，粉彩背景與萌系表情)
+      // 1. 生成超萌彩色大頭像 (thumbs 風格，粉嫩背景與大眼微笑)
       const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
       const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&size=128&shapeColor=ffd5dc,d1e8e2,dbeafe,fef3c7,f3e8ff&backgroundColor=transparent`;
 
@@ -294,7 +299,16 @@
       document.getElementById("result-title").innerText = res.title;
       document.getElementById("result-quote").innerText = `“${res.quote}”`;
 
-      // 2. 解析命定與相剋名稱（若後端回傳 A/B/C/D 代號，自動轉換為中文稱號並去除冒號後長字串）
+      // 2. 巴納姆效應詳細描述（有後端 analysis 則載入，否則啟動經典巴納姆心理通用庫）
+      const defaultBarnum = {
+        'A': '你看似適應力極強、什麼都能泰然處之，但其實內心對安全感有很高的要求。你往往把堅強與靠譜留給外人，甚至習慣一個人扛下所有瑣碎，但偶爾你也很渴望能有一個人一眼看穿你的逞強，允許你毫無負擔地徹底放空。',
+        'B': '你常常給人隨和、脾氣好、不拘小節的印象，但只有真正走進你心裡的人才知道，你對特定的價值觀有著不可妥協的底線。你很擅長察覺旁人的情緒轉折，卻總把自己的疲憊與焦慮悄悄藏起來自己消化。',
+        'C': '外表看似理性冷靜、凡事井井有條的你，內心其實藏著極其豐富且敏感的情感世界。你很需要專屬的個人邊界來充電，當周遭喧囂過盛時，安靜的獨處對你而言不是孤獨，而是靈魂唯一的解藥。',
+        'D': '你是個充滿創造力與熱情的人，總能給身邊的人帶來意想不到的驚喜。但你偶爾會陷入深深的自我懷疑，在「渴望展現自己」與「想徹底隱形消失」之間反覆拉扯，其實你遠比自己想像中的還要耀眼迷人。'
+      };
+      document.getElementById("result-analysis").innerText = res.analysis || defaultBarnum[winner] || defaultBarnum['A'];
+
+      // 3. 解析命定與相剋名稱為純中文稱號
       function getDisplayName(matchVal) {
         if (!matchVal) return "全員契合";
         let str = String(matchVal).trim();
