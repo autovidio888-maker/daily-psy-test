@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>今日限定心理測驗</title>
+  <title>今日限定心理測驗 | DayDayQuiz</title>
+
+  <!-- Google AdSense 廣告代碼 -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370"
+       crossorigin="anonymous"></script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 截圖套件 用於將結果卡片轉為圖片下載 -->
@@ -25,9 +30,16 @@
       <h1 id="quiz-title" class="text-2xl font-black mt-4 mb-3 text-slate-900 leading-snug"></h1>
       <p class="text-gray-500 text-sm mb-8">只需 1 分鐘，測出你的今日隱藏屬性！</p>
       
-      <!-- 頂部預留廣告位 -->
+      <!-- 頂部廣告展示位 -->
       <div class="w-full py-3 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-xs text-gray-400 mb-6">
-        [ 廣告版位預留 ]
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3822526422033370"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
       </div>
 
       <button onclick="startQuiz()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95">
@@ -49,9 +61,16 @@
 
       <div id="options-container" class="space-y-3 mb-6"></div>
 
-      <!-- 答題頁底部預留廣告位 -->
+      <!-- 答題頁底部廣告展示區 -->
       <div class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 rounded text-center text-[10px] text-gray-400">
-        [ 廣告展示區 ]
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3822526422033370"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
       </div>
     </div>
 
@@ -68,8 +87,15 @@
         <p class="text-xs text-gray-400 mb-6">比對演算法數據中</p>
       </div>
       <!-- 過場廣告位 -->
-      <div class="w-full py-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-xs text-gray-400">
-        [ 廣告版位：此處曝光率最高 ]
+      <div class="w-full py-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-xs text-gray-400">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3822526422033370"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
       </div>
     </div>
 
@@ -98,7 +124,7 @@
         </div>
 
         <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center text-[10px] text-gray-400">
-          <span>今日心理測驗 Daily Quiz</span>
+          <span>今日心理測驗 daydayquiz.com</span>
           <span>分享你的測驗結果</span>
         </div>
       </div>
@@ -115,6 +141,16 @@
     </div>
 
   </div>
+
+  <!-- 頁尾合規宣告（Google AdSense 審核必備） -->
+  <footer class="mt-8 text-center text-xs text-gray-400 space-y-2 pb-6">
+    <div>
+      <a href="#privacy" onclick="alert('【隱私權政策】\n本站尊重並保護您的隱私，測驗過程完全在前端執行，不收集任何個人識別資訊。第三方廣告夥伴（如 Google AdSense）可能會使用 Cookie 來提供個人化廣告服務。'); return false;" class="underline hover:text-gray-600">隱私權政策</a>
+      <span class="mx-2">|</span>
+      <a href="#about" onclick="alert('【關於本站】\nDayDayQuiz（daydayquiz.com）提供每日自動更新之心理測驗與社群互動內容，所有題目與分析結果僅供日常娛樂交流使用。'); return false;" class="underline hover:text-gray-600">關於我們</a>
+    </div>
+    <p>© 2026 DayDayQuiz. All rights reserved.</p>
+  </footer>
 
   <script>
     let quizData = null;
