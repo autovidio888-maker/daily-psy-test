@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-D0XC0V7CP1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-D0XC0V7CP1');
-</script>
-  <title>今日限定心理測驗 | DayDayQuiz</title>
-  <meta name="description" content="DayDayQuiz 提供每日更新的趣味心理測驗，1 分鐘測出你的今日人格角色，並生成專屬人格卡分享給朋友。" />
-  <meta property="og:title" content="今日限定心理測驗 | DayDayQuiz" />
-  <meta property="og:description" content="每天不同主題，測出你的今日人格卡。" />
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D0XC0V7CP1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D0XC0V7CP1');
+  </script>
+
+  <title>今日限定心理測驗與社畜避難所 | DayDayQuiz</title>
+  <meta name="description" content="DayDayQuiz 提供每日更新的趣味心理測驗、今日上班運抽籤與匿名爛事樹洞。" />
+  <meta property="og:title" content="今日限定心理測驗與社畜避難所 | DayDayQuiz" />
+  <meta property="og:description" content="每日測驗、今日上班運抽籤、匿名爛事吐槽牆。" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="/public/og-image.png" />
 
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370"
@@ -31,72 +31,19 @@
 
   <style>
     @keyframes floatSlow {
-      0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-      }
-      50% {
-        transform: translateY(-7px) rotate(1.5deg);
-      }
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(1.5deg); }
     }
-
     @keyframes popIn {
-      0% {
-        transform: scale(0.94);
-        opacity: 0;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+      0% { transform: scale(0.94); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
-
     @keyframes shine {
-      0% {
-        transform: translateX(-130%) rotate(12deg);
-      }
-      100% {
-        transform: translateX(170%) rotate(12deg);
-      }
+      0% { transform: translateX(-130%) rotate(12deg); }
+      100% { transform: translateX(170%) rotate(12deg); }
     }
-
-    @keyframes pulseSoft {
-      0%, 100% {
-        opacity: 0.55;
-        transform: scale(1);
-      }
-      50% {
-        opacity: 0.95;
-        transform: scale(1.08);
-      }
-    }
-
-    @keyframes fadeUp {
-      0% {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-float {
-      animation: floatSlow 3.5s ease-in-out infinite;
-    }
-
-    .animate-pop {
-      animation: popIn 0.25s ease-out both;
-    }
-
-    .animate-fade-up {
-      animation: fadeUp 0.3s ease-out both;
-    }
-
-    .soft-pulse {
-      animation: pulseSoft 3.2s ease-in-out infinite;
-    }
-
+    .animate-float { animation: floatSlow 3.5s ease-in-out infinite; }
+    .animate-pop { animation: popIn 0.25s ease-out both; }
     .shine-card::before {
       content: "";
       position: absolute;
@@ -104,703 +51,423 @@
       left: 0;
       width: 42%;
       height: 170%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.5),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
       animation: shine 4.8s ease-in-out infinite;
       pointer-events: none;
     }
-
     .glass {
       background: rgba(255, 255, 255, 0.84);
       backdrop-filter: blur(14px);
-    }
-
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
     }
   </style>
 </head>
 
 <body id="page-body" class="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4f1_0,#eef2ff_30%,#f8fafc_60%,#fff7ed_100%)] text-slate-800 flex flex-col items-center justify-center p-4">
 
+  <!-- 頂部功能切換 Tab -->
+  <header class="w-full max-w-md flex justify-center gap-2 mb-4">
+    <button id="tab-btn-quiz" onclick="switchNavTab('quiz')" class="flex-1 py-2 rounded-2xl font-black text-xs bg-indigo-600 text-white shadow-md shadow-indigo-100 transition">
+      🧠 心理測驗
+    </button>
+    <button id="tab-btn-fortune" onclick="switchNavTab('fortune')" class="flex-1 py-2 rounded-2xl font-black text-xs bg-white text-slate-600 border border-slate-200 transition">
+      ☕ 上班運勢
+    </button>
+    <button id="tab-btn-vent" onclick="switchNavTab('vent')" class="flex-1 py-2 rounded-2xl font-black text-xs bg-white text-slate-600 border border-slate-200 transition">
+      🫠 爛事樹洞
+    </button>
+  </header>
+
   <main id="app" class="w-full max-w-md relative overflow-hidden rounded-[2rem] shadow-2xl shadow-indigo-100/70 border border-white/80 bg-white/90 p-6">
 
-    <!-- 背景裝飾 -->
-    <div id="bg-glow-1" class="absolute -top-24 -right-20 w-48 h-48 bg-pink-200/50 rounded-full blur-3xl pointer-events-none soft-pulse"></div>
-    <div id="bg-glow-2" class="absolute -bottom-24 -left-20 w-48 h-48 bg-indigo-200/60 rounded-full blur-3xl pointer-events-none soft-pulse"></div>
+    <!-- 背景光暈 -->
+    <div class="absolute -top-24 -right-20 w-48 h-48 bg-pink-200/50 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -left-20 w-48 h-48 bg-indigo-200/60 rounded-full blur-3xl pointer-events-none"></div>
 
-    <!-- Loading -->
-    <section id="loading" class="relative z-10 text-center py-14">
-      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
-      <p class="mt-4 text-gray-500 font-black tracking-wide">正在取得今日最新測驗...</p>
-      <p class="mt-1 text-xs text-gray-400">正在抽出今天的人格卡</p>
-    </section>
+    <!-- ==================== 模組 1: 每日測驗專區 ==================== -->
+    <div id="section-quiz">
+      <!-- Loading -->
+      <section id="loading" class="relative z-10 text-center py-14">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+        <p class="mt-4 text-gray-500 font-black tracking-wide">正在取得今日最新測驗...</p>
+      </section>
 
-    <!-- Start Screen -->
-    <section id="start-screen" class="hidden relative z-10 text-center py-5">
-
-      <div id="quiz-type-label" class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-xs px-3.5 py-1 rounded-full font-black border border-indigo-100/80">
-        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
-        今日限定
-      </div>
-
-      <h1 id="quiz-title" class="text-2xl font-black mt-4 mb-3 text-slate-900 leading-snug"></h1>
-
-      <!-- 主視覺卡片 -->
-      <div class="relative mx-auto w-full max-w-xs mb-5">
-        <div id="hero-glow" class="absolute -inset-2 bg-gradient-to-r from-amber-200 via-pink-200 to-indigo-200 rounded-[2rem] blur-xl opacity-80"></div>
-
-        <div id="hero-card" class="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-5 shine-card">
-          <div class="absolute top-3 left-4 text-[10px] font-black tracking-[0.2em] text-amber-200/90">DAYDAYQUIZ</div>
-          <div class="absolute top-3 right-4 text-[10px] font-black text-white/70" id="today-label"></div>
-
-          <div id="hero-icons" class="mt-8 mb-4 flex justify-center gap-3">
-            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:0s;">🔮</div>
-            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.3s;">✨</div>
-            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.6s;">🌙</div>
-            <div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:.9s;">🃏</div>
-          </div>
-
-          <div class="mt-3 rounded-2xl bg-white/12 border border-white/15 p-3">
-            <p id="hero-main-text" class="text-white font-black text-lg leading-snug">今天的你，會抽到哪張人格卡？</p>
-            <p id="hero-sub-text" class="text-indigo-100 text-xs mt-1">每天不同主題，測出你的今日狀態</p>
-          </div>
-        </div>
-      </div>
-
-      <p id="quiz-subtitle" class="text-gray-500 text-sm mb-2">每天一題新主題，1 分鐘測出你的今日人格。</p>
-      <p class="text-[11px] text-indigo-500 font-bold mb-6">完成後可生成專屬人格卡，分享到 Threads / IG ✨</p>
-
-      <div class="grid grid-cols-3 gap-2 mb-6 text-[11px]">
-        <div class="rounded-2xl bg-amber-50 border border-amber-100 py-2 font-bold text-amber-700">1 分鐘</div>
-        <div class="rounded-2xl bg-pink-50 border border-pink-100 py-2 font-bold text-pink-700">每日更新</div>
-        <div class="rounded-2xl bg-indigo-50 border border-indigo-100 py-2 font-bold text-indigo-700">可分享</div>
-      </div>
-
-      <!-- 首頁廣告展示位 -->
-      <div class="w-full py-3 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mb-6">
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-3822526422033370"
-          data-ad-format="auto"
-          data-full-width-responsive="true"></ins>
-        <script>
-          try {
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          } catch (e) {}
-        </script>
-      </div>
-
-      <button onclick="startQuiz()" class="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 transition active:scale-95 text-base tracking-wide">
-        開始今日測驗 ✨
-      </button>
-    </section>
-
-    <!-- Quiz Screen -->
-    <section id="quiz-screen" class="hidden relative z-10">
-      <div class="flex justify-between items-center text-xs font-black text-gray-400 mb-3 tracking-wider">
-        <span>QUESTION</span>
-        <span id="progress-text">1 / 6</span>
-      </div>
-
-      <div class="w-full bg-gray-100 h-2.5 rounded-full mb-6 overflow-hidden">
-        <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-500" style="width: 16%"></div>
-      </div>
-
-      <div class="mb-4">
-        <p id="question-mini-label" class="text-[11px] text-indigo-500 font-black tracking-widest mb-2">人格偵測中</p>
-        <h2 id="question-text" class="text-xl font-black text-slate-900 leading-relaxed"></h2>
-      </div>
-
-      <div id="options-container" class="space-y-3 mb-4"></div>
-
-      <p id="answer-feedback" class="hidden text-center text-xs font-black text-indigo-500 mb-4 animate-pop">
-        人格碎片 +1 ✨
-      </p>
-
-      <!-- 答題頁廣告展示位 -->
-      <div class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center text-[10px] text-gray-400">
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-3822526422033370"
-          data-ad-format="auto"
-          data-full-width-responsive="true"></ins>
-        <script>
-          try {
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          } catch (e) {}
-        </script>
-      </div>
-    </section>
-
-    <!-- Analyzing Screen -->
-    <section id="analyzing-screen" class="hidden relative z-10 text-center py-10">
-      <div class="flex flex-col items-center">
-        <div class="relative rounded-full bg-gradient-to-tr from-indigo-100 to-pink-100 p-6 mb-4 shadow-inner">
-          <div class="absolute inset-0 rounded-full bg-white/40 blur-lg"></div>
-          <div id="analyze-emoji" class="relative text-5xl animate-float">🔮</div>
+      <!-- 測驗首頁 -->
+      <section id="start-screen" class="hidden relative z-10 text-center py-5">
+        <div id="quiz-type-label" class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-xs px-3.5 py-1 rounded-full font-black border border-indigo-100/80">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
+          今日限定
         </div>
 
-        <h3 class="text-lg font-black text-slate-800 mb-2">正在生成你的今日人格卡...</h3>
-        <div id="analyze-steps" class="text-xs text-gray-500 leading-6 min-h-[72px]"></div>
-      </div>
+        <h1 id="quiz-title" class="text-2xl font-black mt-4 mb-3 text-slate-900 leading-snug"></h1>
 
-      <!-- 過場廣告展示位 -->
-      <div class="w-full py-5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mt-4">
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-3822526422033370"
-          data-ad-format="auto"
-          data-full-width-responsive="true"></ins>
-        <script>
-          try {
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          } catch (e) {}
-        </script>
-      </div>
-    </section>
-
-    <!-- Result Screen -->
-    <section id="result-screen" class="hidden relative z-10">
-
-      <!-- 截圖區 -->
-      <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-3xl border border-indigo-100/90 shadow-sm mb-6 shine-card">
-
-        <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-200/60 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-pink-200/60 rounded-full blur-2xl pointer-events-none"></div>
-
-        <!-- 結果卡片頂部 -->
-        <div class="flex flex-col items-center text-center mb-4 relative z-10">
-          <div id="result-type-badge" class="inline-flex items-center gap-1.5 text-[10px] font-black tracking-[0.18em] text-white bg-slate-900 px-3 py-1 rounded-full mb-3">
-            TODAY PERSONALITY CARD
-          </div>
-
-          <div class="relative mb-3 animate-float">
-            <div id="avatar-glow" class="absolute -inset-1 rounded-full blur-md opacity-70 bg-gradient-to-r from-pink-400 to-indigo-400"></div>
-
-            <div id="avatar-container" class="relative w-28 h-28 rounded-full bg-white shadow-md border-4 border-white flex items-center justify-center overflow-hidden">
-              <div id="avatar-svg-slot" class="w-full h-full flex items-center justify-center text-6xl"></div>
-              <span id="avatar-emoji" class="absolute bottom-1 right-1 text-lg bg-white/95 rounded-full p-1 shadow-sm leading-none"></span>
+        <div class="relative mx-auto w-full max-w-xs mb-5">
+          <div id="hero-card" class="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-5 shine-card">
+            <div class="absolute top-3 left-4 text-[10px] font-black tracking-[0.2em] text-amber-200/90">DAYDAYQUIZ</div>
+            <div class="absolute top-3 right-4 text-[10px] font-black text-white/70" id="today-label"></div>
+            <div id="hero-icons" class="mt-8 mb-4 flex justify-center gap-3">
+              <div class="animate-float text-5xl">🔮</div>
+              <div class="animate-float text-5xl">✨</div>
             </div>
-          </div>
-
-          <span id="result-tagline" class="text-[11px] font-black tracking-widest text-indigo-600 uppercase bg-white/90 px-3 py-0.5 rounded-full border border-indigo-100 shadow-xs mb-1.5"></span>
-          <p class="text-xs text-gray-400 font-bold mb-1">你抽到的是</p>
-          <h2 id="result-title" class="text-2xl font-black text-slate-900 tracking-tight"></h2>
-          <p id="result-quote" class="text-xs text-slate-500 italic mt-1 max-w-[300px] leading-relaxed"></p>
-
-          <!-- 抽卡數值 -->
-          <div class="mt-4 grid grid-cols-3 gap-2 w-full text-[11px]">
-            <div class="bg-white/90 rounded-xl p-2 border border-amber-100">
-              <div class="text-gray-400 font-black">RARITY</div>
-              <div id="result-rarity" class="text-amber-500 font-black text-sm">SR</div>
-            </div>
-
-            <div class="bg-white/90 rounded-xl p-2 border border-pink-100">
-              <div class="text-gray-400 font-black">ENERGY</div>
-              <div id="result-energy" class="text-pink-500 font-black text-sm">82%</div>
-            </div>
-
-            <div class="bg-white/90 rounded-xl p-2 border border-indigo-100">
-              <div class="text-gray-400 font-black">SOCIAL</div>
-              <div id="result-social" class="text-indigo-500 font-black text-sm">36%</div>
+            <div class="mt-3 rounded-2xl bg-white/12 border border-white/15 p-3 text-center">
+              <p id="hero-main-text" class="text-white font-black text-lg leading-snug"></p>
+              <p id="hero-sub-text" class="text-indigo-100 text-xs mt-1"></p>
             </div>
           </div>
         </div>
 
-        <!-- 深層解析 -->
-        <div class="glass rounded-2xl p-4 mb-3.5 shadow-xs border border-purple-100/60 relative z-10">
-          <div class="text-[11px] font-black text-indigo-600 mb-1.5 flex items-center gap-1">
-            <span>🔮</span> 靈魂深層剖析
-          </div>
-          <p id="result-analysis" class="text-xs text-slate-600 leading-relaxed text-justify tracking-wide"></p>
+        <p id="quiz-subtitle" class="text-gray-500 text-sm mb-4"></p>
+
+        <!-- 廣告展示位 -->
+        <div class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 mb-5">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-3822526422033370" data-ad-format="auto" data-full-width-responsive="true"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
 
-        <!-- 今日建議 -->
-        <div class="glass rounded-2xl p-4 mb-3.5 shadow-xs border border-amber-100/70 relative z-10">
-          <div class="text-[11px] font-black text-amber-600 mb-1.5 flex items-center gap-1">
-            <span>🌙</span> 今日建議
-          </div>
-          <p id="result-tip" class="text-xs text-slate-600 leading-relaxed"></p>
-        </div>
-
-        <!-- 特質標籤 -->
-        <div class="glass rounded-xl p-3 mb-3 shadow-xs border border-white/80 relative z-10">
-          <div class="text-[11px] font-black text-gray-400 mb-2 flex items-center gap-1">
-            <span>✨</span> 核心特質標籤
-          </div>
-          <div id="result-traits" class="flex flex-wrap gap-1.5"></div>
-        </div>
-
-        <!-- 配對 -->
-        <div class="grid grid-cols-2 gap-2 text-xs relative z-10">
-          <div class="bg-white/90 p-3 rounded-xl border border-emerald-100/80 shadow-xs flex flex-col justify-between">
-            <span class="font-black text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
-            <span id="best-match" class="font-bold text-slate-700 text-xs truncate"></span>
-          </div>
-
-          <div class="bg-white/90 p-3 rounded-xl border border-rose-100/80 shadow-xs flex flex-col justify-between">
-            <span class="font-black text-rose-500 block mb-1 text-[11px]">相剋雷區 ⚡</span>
-            <span id="worst-match" class="font-bold text-slate-700 text-xs truncate"></span>
-          </div>
-        </div>
-
-        <!-- 浮水印 -->
-        <div class="mt-4 pt-3 border-t border-indigo-100/60 flex justify-between items-center text-[10px] text-gray-400 relative z-10">
-          <span class="font-black text-indigo-500 tracking-wide">🐾 daydayquiz.com</span>
-          <span id="result-date-label">今日限定 · 截圖分享</span>
-        </div>
-      </div>
-
-      <!-- 分享按鈕 -->
-      <div class="space-y-2.5">
-        <button onclick="saveResultImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-purple-200 transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
-          <span>📸</span> 儲存人格卡發 Threads / IG
+        <button onclick="startQuiz()" class="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 transition active:scale-95 text-base">
+          開始今日測驗 ✨
         </button>
+      </section>
 
-        <button onclick="copyShareText()" class="w-full py-3 bg-white border border-indigo-100 hover:bg-indigo-50 text-indigo-600 text-xs font-black rounded-xl transition">
-          複製分享文案 📝
+      <!-- 答題頁 -->
+      <section id="quiz-screen" class="hidden relative z-10">
+        <div class="flex justify-between items-center text-xs font-black text-gray-400 mb-3 tracking-wider">
+          <span>QUESTION</span>
+          <span id="progress-text">1 / 6</span>
+        </div>
+        <div class="w-full bg-gray-100 h-2.5 rounded-full mb-6 overflow-hidden">
+          <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-500" style="width: 16%"></div>
+        </div>
+        <div class="mb-4">
+          <p id="question-mini-label" class="text-[11px] text-indigo-500 font-black tracking-widest mb-2"></p>
+          <h2 id="question-text" class="text-xl font-black text-slate-900 leading-relaxed"></h2>
+        </div>
+        <div id="options-container" class="space-y-3 mb-4"></div>
+      </section>
+
+      <!-- 計算中 -->
+      <section id="analyzing-screen" class="hidden relative z-10 text-center py-10">
+        <div class="text-5xl animate-float mb-4">🔮</div>
+        <h3 class="text-lg font-black text-slate-800 mb-2">正在解讀你的靈魂碎片...</h3>
+        <p class="text-xs text-gray-400">正在生成今日專屬人格卡片</p>
+      </section>
+
+      <!-- 結果頁面 -->
+      <section id="result-screen" class="hidden relative z-10">
+        <div id="capture-area" class="relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-pink-50/90 p-6 rounded-3xl border border-indigo-100 shadow-sm mb-6">
+          <div class="flex flex-col items-center text-center mb-4">
+            <span id="result-tagline" class="text-[11px] font-black tracking-widest text-indigo-600 bg-white px-3 py-0.5 rounded-full mb-2"></span>
+            <div id="avatar-svg-slot" class="w-24 h-24 rounded-full bg-white shadow-md border-4 border-white flex items-center justify-center overflow-hidden mb-2 text-5xl"></div>
+            <h2 id="result-title" class="text-2xl font-black text-slate-900"></h2>
+            <p id="result-quote" class="text-xs text-slate-500 italic mt-1"></p>
+
+            <div class="mt-4 grid grid-cols-3 gap-2 w-full text-[11px]">
+              <div class="bg-white/90 rounded-xl p-2 border border-amber-100 font-black">
+                <div class="text-gray-400">RARITY</div>
+                <div id="result-rarity" class="text-amber-500 text-sm">SR</div>
+              </div>
+              <div class="bg-white/90 rounded-xl p-2 border border-pink-100 font-black">
+                <div class="text-gray-400">ENERGY</div>
+                <div id="result-energy" class="text-pink-500 text-sm">80%</div>
+              </div>
+              <div class="bg-white/90 rounded-xl p-2 border border-indigo-100 font-black">
+                <div class="text-gray-400">SOCIAL</div>
+                <div id="result-social" class="text-indigo-500 text-sm">40%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-4 mb-3">
+            <p class="text-[11px] font-black text-indigo-600 mb-1">🔮 靈魂深層剖析</p>
+            <p id="result-analysis" class="text-xs text-slate-600 leading-relaxed"></p>
+          </div>
+
+          <div class="glass rounded-2xl p-4 mb-3">
+            <p class="text-[11px] font-black text-amber-600 mb-1">🌙 今日建議</p>
+            <p id="result-tip" class="text-xs text-slate-600 leading-relaxed"></p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-white p-3 rounded-xl border border-emerald-100">
+              <span class="font-black text-emerald-600 block mb-1 text-[11px]">命定拍檔 💖</span>
+              <span id="best-match" class="font-bold text-slate-700"></span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-rose-100">
+              <span class="font-black text-rose-500 block mb-1 text-[11px]">相剋雷區 ⚡</span>
+              <span id="worst-match" class="font-bold text-slate-700"></span>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-indigo-100 flex justify-between items-center text-[10px] text-gray-400">
+            <span class="font-black text-indigo-500">🐾 daydayquiz.com</span>
+            <span>今日限定 · 截圖分享</span>
+          </div>
+        </div>
+
+        <button onclick="saveResultImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-black rounded-2xl shadow-lg transition active:scale-[0.98] text-sm mb-2">
+          📸 儲存卡片分享至 Threads
         </button>
-
-        <button onclick="resetQuiz()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition">
+        <button onclick="resetQuiz()" class="w-full py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl">
           重新測驗
         </button>
+      </section>
+    </div>
+
+    <!-- ==================== 模組 2: 今日上班運勢抽籤 ==================== -->
+    <div id="section-fortune" class="hidden relative z-10 text-center py-4">
+      <h2 class="text-xl font-black text-slate-900 mb-1">今日社畜避凶指南</h2>
+      <p class="text-xs text-gray-400 mb-6">上班前抽一張，看今天該演情緒穩定還是直接靈魂出竅</p>
+
+      <div id="fortune-card" class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-3xl p-6 shadow-sm mb-6">
+        <div id="fortune-level" class="text-3xl font-black text-amber-600 mb-2">點擊抽取</div>
+        <div id="fortune-desc" class="text-xs text-slate-600 leading-relaxed mb-4">今天宇宙給你的上班暗號是什麼？</div>
+
+        <div class="grid grid-cols-2 gap-2 text-left text-xs mb-4">
+          <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
+            <span class="font-black text-emerald-600 block">宜：</span>
+            <span id="fortune-yi" class="text-slate-600">---</span>
+          </div>
+          <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
+            <span class="font-black text-rose-500 block">忌：</span>
+            <span id="fortune-ji" class="text-slate-600">---</span>
+          </div>
+        </div>
+
+        <div class="bg-white/80 p-3 rounded-xl border border-amber-100 text-left text-xs">
+          <span class="font-black text-indigo-600 block">今日防雷生物：</span>
+          <span id="fortune-enemy" class="text-slate-600">---</span>
+        </div>
       </div>
-    </section>
+
+      <button onclick="drawFortune()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-black rounded-2xl shadow-lg shadow-amber-200 transition active:scale-95 text-base">
+        🎲 抽取今日上班籤
+      </button>
+    </div>
+
+    <!-- ==================== 模組 3: 匿名爛事樹洞 ==================== -->
+    <div id="section-vent" class="hidden relative z-10 py-4">
+      <div class="text-center mb-4">
+        <h2 class="text-xl font-black text-slate-900 mb-1">職場爛事樹洞</h2>
+        <p class="text-xs text-gray-400">寫下來就不生氣了（大概吧）</p>
+      </div>
+
+      <!-- 匿名輸入框 -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4">
+        <input id="vent-author" type="text" placeholder="匿名暱稱（如：心死的打卡仔）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500" />
+        <textarea id="vent-content" rows="3" placeholder="今天又遇到什麼神仙同事或奇蹟主管？（請勿包含真實個資）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500 resize-none"></textarea>
+        <button onclick="submitVent()" class="w-full py-2.5 bg-slate-800 text-white font-black rounded-xl text-xs transition hover:bg-slate-900">
+          📨 匿名投進樹洞
+        </button>
+      </div>
+
+      <!-- 爛事列表牆 -->
+      <div id="vent-list" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+    </div>
+
   </main>
 
-  <!-- Footer -->
-  <footer class="mt-8 text-center text-xs text-gray-400 space-y-2 pb-6">
-    <div>
-      <a href="#privacy" onclick="showPrivacy(); return false;" class="underline hover:text-gray-600">隱私權政策</a>
-      <span class="mx-2">|</span>
-      <a href="#about" onclick="showAbout(); return false;" class="underline hover:text-gray-600">關於我們</a>
-    </div>
-    <p>© 2026 DayDayQuiz. All rights reserved.</p>
+  <footer class="mt-6 text-center text-xs text-gray-400 space-y-1 pb-4">
+    <p>© 2026 DayDayQuiz. 每日心理測驗與社畜避難所</p>
   </footer>
 
   <script>
+    // Tab 切換
+    function switchNavTab(tab) {
+      document.getElementById('section-quiz').classList.add('hidden');
+      document.getElementById('section-fortune').classList.add('hidden');
+      document.getElementById('section-vent').classList.add('hidden');
+
+      const tabs = ['quiz', 'fortune', 'vent'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tab) {
+          btn.className = "flex-1 py-2 rounded-2xl font-black text-xs bg-indigo-600 text-white shadow-md shadow-indigo-100 transition";
+        } else {
+          btn.className = "flex-1 py-2 rounded-2xl font-black text-xs bg-white text-slate-600 border border-slate-200 transition";
+        }
+      });
+
+      if (tab === 'quiz') document.getElementById('section-quiz').classList.remove('hidden');
+      if (tab === 'fortune') document.getElementById('section-fortune').classList.remove('hidden');
+      if (tab === 'vent') {
+        document.getElementById('section-vent').classList.remove('hidden');
+        renderVents();
+      }
+    }
+
+    // 上班運籤庫
+    const fortunes = [
+      {
+        level: "大吉 · 準時下班",
+        desc: "今天主管可能比你早離開辦公室，空氣充滿自由的甜味。",
+        yi: "已讀不回、默默喝燕麥奶、假裝去廁所裝水",
+        ji: "主動問『有什麼要幫忙的嗎』、跟主管對到眼",
+        enemy: "突然熱情邀你開會的人"
+      },
+      {
+        level: "小凶 · 甩鍋警報",
+        desc: "今天會有某個人拿著只有標題的檔案，說剩一點小地方請你補。",
+        yi: "戴降噪耳機、回『我手頭有點卡』、筆電蓋上一半",
+        ji: "好心接過滑鼠、答應『我幫你順一下』",
+        enemy: "口頭確認大師（回完收到就蒸發的人）"
+      },
+      {
+        level: "中吉 · 摸魚隱形人",
+        desc: "今天你在辦公室的透明度高達 87%，完全沒有人發現你正在發呆。",
+        yi: "開 Excel 假裝很專注、看社群不用滑鼠用鍵盤",
+        ji: "打翻水杯引人注目、嘆氣嘆得太大聲",
+        enemy: "走路沒有聲音的老闆"
+      },
+      {
+        level: "末凶 · 靈魂出竅",
+        desc: "下午五點半會有臨時交辦的『小需求』，請保護好自己的血壓。",
+        yi: "面帶微笑但放空、多吃甜食補充多巴胺",
+        ji: "試圖跟講不通的人講邏輯",
+        enemy: "下班前 10 分鐘突然很有幹勁的人"
+      }
+    ];
+
+    function drawFortune() {
+      const idx = Math.floor(Math.random() * fortunes.length);
+      const f = fortunes[idx];
+      document.getElementById("fortune-level").innerText = f.level;
+      document.getElementById("fortune-desc").innerText = f.desc;
+      document.getElementById("fortune-yi").innerText = f.yi;
+      document.getElementById("fortune-ji").innerText = f.ji;
+      document.getElementById("fortune-enemy").innerText = f.enemy;
+    }
+
+    // 匿名爛事本地儲存牆（預載熱門爛事）
+    let initialVents = [
+      { author: "第37頁受害者", time: "剛才", text: "主管問進度，同事說剩小地方麻煩大家補，打開看整份只有標題是完整的。" },
+      { author: "打卡退堂鼓手", time: "1 小時前", text: "說好大家一起點飲料，結果收錢時那個人就去大號了，到現在還沒出來。" },
+      { author: "安靜離職中", time: "3 小時前", text: "每次在群組 tag 他裝沒看見，主管一 tag 他一秒打字說收到我來追。" }
+    ];
+
+    function renderVents() {
+      const box = document.getElementById("vent-list");
+      box.innerHTML = "";
+      const saved = JSON.parse(localStorage.getItem("dayday_vents") || "[]");
+      const list = [...saved, ...initialVents];
+
+      list.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "bg-white p-3 rounded-2xl border border-slate-100 shadow-xs text-xs";
+        div.innerHTML = `
+          <div class="flex justify-between items-center mb-1 text-gray-400 font-bold text-[10px]">
+            <span>👤 ${item.author}</span>
+            <span>${item.time}</span>
+          </div>
+          <p class="text-slate-700 leading-relaxed">${item.text}</p>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function submitVent() {
+      const author = document.getElementById("vent-author").value.trim() || "匿名苦主";
+      const text = document.getElementById("vent-content").value.trim();
+      if (!text) {
+        alert("請寫下你的爛事才能發送喔！");
+        return;
+      }
+      const saved = JSON.parse(localStorage.getItem("dayday_vents") || "[]");
+      saved.unshift({ author, time: "剛剛", text });
+      localStorage.setItem("dayday_vents", JSON.stringify(saved));
+      document.getElementById("vent-content").value = "";
+      renderVents();
+      alert("已投進樹洞！");
+    }
+
+    // 測驗核心腳本（接取 daily_quiz.json）
     let quizData = null;
     let currentStep = 0;
     let userAnswers = [];
-    let finalResult = null;
-    let finalResultKey = null;
-
-    const typeMap = {
-      personality_quiz: {
-        label: "今日心理測驗",
-        badge: "PERSONALITY CARD",
-        icons: ["🧠", "✨", "🌙", "🎭"],
-        heroText: "今天的你，會抽到哪張人格卡？",
-        heroSub: "用 6 題看出你的今日狀態",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4f1_0,#eef2ff_30%,#f8fafc_60%,#fff7ed_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-5 shine-card"
-      },
-      tarot_quiz: {
-        label: "今日塔羅",
-        badge: "TODAY TAROT CARD",
-        icons: ["🃏", "🔮", "🌙", "⭐"],
-        heroText: "直覺選擇，抽出今天的命運角色",
-        heroSub: "神秘但不迷信，今天只是想被宇宙安慰一下",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#2e1065_0,#4c1d95_25%,#111827_62%,#030712_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-950 p-5 shine-card"
-      },
-      numerology_quiz: {
-        label: "生命靈數",
-        badge: "NUMEROLOGY CARD",
-        icons: ["0️⃣", "7️⃣", "9️⃣", "✨"],
-        heroText: "選一組數字，看今天的內在頻率",
-        heroSub: "不用輸入生日，也能玩出今日靈感",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#cffafe_0,#e0e7ff_35%,#f8fafc_64%,#fef3c7_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-cyan-800 via-indigo-900 to-slate-900 p-5 shine-card"
-      },
-      zodiac_quiz: {
-        label: "生肖星座",
-        badge: "ZODIAC CARD",
-        icons: ["🐲", "♈", "🌟", "🐰"],
-        heroText: "今天你的生肖星座氣場開到幾格？",
-        heroSub: "用日常選擇測出你的今日屬性",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#fee2e2_0,#fef3c7_32%,#f8fafc_62%,#dcfce7_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-red-900 via-amber-800 to-slate-900 p-5 shine-card"
-      },
-      visual_choice_quiz: {
-        label: "潛意識選圖",
-        badge: "VISUAL CHOICE CARD",
-        icons: ["🚪", "🌈", "🪞", "🦋"],
-        heroText: "第一眼選到什麼，通常藏不住",
-        heroSub: "用直覺選擇測出你的潛意識狀態",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#fbcfe8_0,#ddd6fe_30%,#bfdbfe_62%,#f8fafc_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-pink-700 via-violet-800 to-blue-900 p-5 shine-card"
-      },
-      workplace_quiz: {
-        label: "職場人格",
-        badge: "WORKPLACE SURVIVAL CARD",
-        icons: ["☕", "💻", "🫠", "📎"],
-        heroText: "上班已經很累，還要被測驗看穿",
-        heroSub: "測出你的職場生存模式",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#e5e7eb_0,#dbeafe_32%,#f8fafc_64%,#fef9c3_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-slate-700 via-gray-800 to-slate-950 p-5 shine-card"
-      },
-      love_quiz: {
-        label: "戀愛人格",
-        badge: "LOVE PERSONALITY CARD",
-        icons: ["💌", "💘", "🥲", "🌹"],
-        heroText: "你的戀愛腦今天有沒有偷偷上線？",
-        heroSub: "從聊天反應看出你的感情模式",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4e6_0,#fbcfe8_32%,#eef2ff_64%,#fff7ed_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-rose-700 via-pink-800 to-purple-900 p-5 shine-card"
-      },
-      fantasy_quiz: {
-        label: "奇幻人格",
-        badge: "FANTASY ROLE CARD",
-        icons: ["🧙", "🐉", "⚔️", "🏰"],
-        heroText: "如果今天要冒險，你會是哪種角色？",
-        heroSub: "用奇幻選擇測出你的隱藏屬性",
-        bodyClass: "min-h-screen bg-[radial-gradient(circle_at_top_left,#dcfce7_0,#dbeafe_30%,#e9d5ff_62%,#f8fafc_100%)] text-slate-800 flex flex-col items-center justify-center p-4",
-        heroClass: "relative overflow-hidden rounded-[2rem] border-4 border-white shadow-xl bg-gradient-to-br from-emerald-800 via-indigo-900 to-purple-950 p-5 shine-card"
-      }
-    };
-
-    function todayText() {
-      const d = new Date();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${mm}.${dd}`;
-    }
-
-    function safeText(value, fallback) {
-      if (value === null || value === undefined || value === "") return fallback;
-      return String(value);
-    }
-
-    function getTypeConfig(type) {
-      return typeMap[type] || typeMap.personality_quiz;
-    }
-
-    function applyQuizTypeStyle() {
-      const type = quizData?.quiz_type || "personality_quiz";
-      const cfg = getTypeConfig(type);
-
-      document.getElementById("page-body").className = cfg.bodyClass;
-      document.getElementById("hero-card").className = cfg.heroClass;
-
-      document.getElementById("quiz-type-label").innerHTML = `
-        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
-        ${cfg.label}
-      `;
-
-      document.getElementById("result-type-badge").innerText = cfg.badge;
-
-      const icons = cfg.icons || ["🔮", "✨", "🌙", "🃏"];
-      document.getElementById("hero-icons").innerHTML = icons.map((icon, idx) => {
-        return `<div class="animate-float text-5xl drop-shadow-lg" style="animation-delay:${idx * 0.3}s;">${icon}</div>`;
-      }).join("");
-
-      document.getElementById("hero-main-text").innerText = cfg.heroText;
-      document.getElementById("hero-sub-text").innerText = quizData?.visual_style || cfg.heroSub;
-
-      document.getElementById("analyze-emoji").innerText = icons[1] || "🔮";
-    }
 
     async function init() {
       try {
-        document.getElementById("today-label").innerText = todayText();
-        document.getElementById("result-date-label").innerText = `${todayText()} · 今日限定`;
-
+        const d = new Date();
+        document.getElementById("today-label").innerText = `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+        
         const res = await fetch(`public/data/daily_quiz.json?t=${new Date().getTime()}`);
-        if (!res.ok) throw new Error("找不到 daily_quiz.json");
-
+        if (!res.ok) throw new Error("找不到題目");
         quizData = await res.json();
 
-        if (!quizData.questions || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
-          throw new Error("daily_quiz.json 缺少 questions");
-        }
-
-        if (!quizData.results || !quizData.results.A || !quizData.results.B || !quizData.results.C || !quizData.results.D) {
-          throw new Error("daily_quiz.json 缺少 results A/B/C/D");
-        }
-
-        applyQuizTypeStyle();
+        document.getElementById("quiz-title").innerText = quizData.theme || "今日限定心理測驗";
+        document.getElementById("quiz-subtitle").innerText = quizData.subtitle || "1 分鐘測出今日人格";
+        document.getElementById("hero-main-text").innerText = quizData.theme || "今日限定人格測驗";
+        document.getElementById("hero-sub-text").innerText = quizData.subtitle || "用 6 題看出你的今日狀態";
 
         document.getElementById("loading").classList.add("hidden");
-        document.getElementById("quiz-title").innerText = safeText(quizData.theme, "今日限定心理測驗");
-        document.getElementById("quiz-subtitle").innerText = safeText(quizData.subtitle, "每天不同主題，1 分鐘測出你的今日人格卡。");
         document.getElementById("start-screen").classList.remove("hidden");
-      } catch (err) {
-        document.getElementById("loading").innerHTML = `
-          <p class="text-rose-500 font-black">題目載入失敗</p>
-          <p class="text-xs text-gray-400 mt-2 leading-relaxed">${err.message}</p>
-          <p class="text-xs text-gray-400 mt-1">請確認 public/data/daily_quiz.json 格式是否正確。</p>
-        `;
+      } catch (e) {
+        document.getElementById("loading").innerHTML = `<p class="text-rose-500 font-bold">載入測驗失敗，請稍後再試</p>`;
       }
     }
 
     function startQuiz() {
       document.getElementById("start-screen").classList.add("hidden");
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("analyzing-screen").classList.add("hidden");
       document.getElementById("quiz-screen").classList.remove("hidden");
-
       currentStep = 0;
       userAnswers = [];
-      finalResult = null;
-      finalResultKey = null;
-
       renderQuestion();
     }
 
     function renderQuestion() {
       const q = quizData.questions[currentStep];
       const total = quizData.questions.length;
-
       document.getElementById("progress-text").innerText = `${currentStep + 1} / ${total}`;
       document.getElementById("progress-bar").style.width = `${((currentStep + 1) / total) * 100}%`;
-      document.getElementById("question-text").innerText = safeText(q.title, "請選擇最像你的答案");
-      document.getElementById("question-mini-label").innerText = safeText(q.label, "人格偵測中");
+      document.getElementById("question-text").innerText = q.title;
+      document.getElementById("question-mini-label").innerText = q.label || "人格偵測中";
 
-      const container = document.getElementById("options-container");
-      container.innerHTML = "";
-
-      const options = Array.isArray(q.options) ? q.options : [];
-      options.forEach((opt, idx) => {
+      const box = document.getElementById("options-container");
+      box.innerHTML = "";
+      q.options.forEach((opt, idx) => {
         const btn = document.createElement("button");
-        btn.className = [
-          "w-full text-left p-4 rounded-2xl border bg-white/90",
-          "hover:border-indigo-400 hover:bg-indigo-50/70",
-          "transition duration-150 text-sm font-bold text-slate-700",
-          "active:scale-[0.99] shadow-sm animate-pop"
-        ].join(" ");
-
-        btn.style.animationDelay = `${idx * 0.05}s`;
-        btn.innerText = safeText(opt.text, `選項 ${idx + 1}`);
-        btn.onclick = () => selectOption(opt.type || "A");
-        container.appendChild(btn);
+        btn.className = "w-full text-left p-4 rounded-2xl border bg-white/90 hover:border-indigo-400 hover:bg-indigo-50/70 transition text-sm font-bold text-slate-700 shadow-sm";
+        btn.innerText = opt.text;
+        btn.onclick = () => {
+          userAnswers.push(opt.type || "A");
+          if (currentStep < total - 1) {
+            currentStep++;
+            renderQuestion();
+          } else {
+            showResult();
+          }
+        };
+        box.appendChild(btn);
       });
-    }
-
-    function selectOption(type) {
-      userAnswers.push(type);
-
-      const feedback = document.getElementById("answer-feedback");
-      const messages = [
-        "人格碎片 +1 ✨",
-        "已捕捉到你的靈魂訊號 👀",
-        "這個選擇很有你 😎",
-        "系統正在偷看你的今日狀態 🌙",
-        "今日人格卡正在成形中 🔮",
-        "你剛剛那個選擇很可疑 🫣"
-      ];
-
-      feedback.innerText = messages[Math.floor(Math.random() * messages.length)];
-      feedback.classList.remove("hidden");
-
-      document.querySelectorAll("#options-container button").forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add("opacity-70");
-      });
-
-      setTimeout(() => {
-        feedback.classList.add("hidden");
-
-        if (currentStep < quizData.questions.length - 1) {
-          currentStep++;
-          renderQuestion();
-        } else {
-          showAnalyzing();
-        }
-      }, 480);
-    }
-
-    function showAnalyzing() {
-      document.getElementById("quiz-screen").classList.add("hidden");
-      document.getElementById("analyzing-screen").classList.remove("hidden");
-
-      const type = quizData?.quiz_type || "personality_quiz";
-      const cfg = getTypeConfig(type);
-
-      const stepsByType = {
-        personality_quiz: [
-          "正在讀取你的日常選擇...",
-          "比對隱藏人格資料庫...",
-          "分析你的社交電量與能量值...",
-          "生成今日專屬人格卡..."
-        ],
-        tarot_quiz: [
-          "正在洗牌你的直覺訊號...",
-          "抽出今天的隱藏牌面...",
-          "解析你的能量與關係狀態...",
-          "生成今日塔羅人格卡..."
-        ],
-        numerology_quiz: [
-          "正在比對你的數字直覺...",
-          "分析今日能量頻率...",
-          "校準社交電量與行動力...",
-          "生成生命靈數人格卡..."
-        ],
-        zodiac_quiz: [
-          "正在讀取你的星座生肖氣場...",
-          "比對今日屬性反應...",
-          "分析你的隱藏情緒模式...",
-          "生成生肖星座人格卡..."
-        ],
-        visual_choice_quiz: [
-          "正在解讀你的第一眼直覺...",
-          "比對潛意識選圖反應...",
-          "分析你的情緒色塊...",
-          "生成潛意識人格卡..."
-        ],
-        workplace_quiz: [
-          "正在讀取你的上班求生訊號...",
-          "分析你的摸魚與責任感比例...",
-          "比對職場精神狀態...",
-          "生成職場人格卡..."
-        ],
-        love_quiz: [
-          "正在分析你的聊天反應...",
-          "比對曖昧模式與安全感...",
-          "檢查戀愛腦是否上線...",
-          "生成戀愛人格卡..."
-        ],
-        fantasy_quiz: [
-          "正在打開冒險地圖...",
-          "比對你的魔法屬性...",
-          "分析你的隊伍定位...",
-          "生成奇幻角色卡..."
-        ]
-      };
-
-      const steps = stepsByType[type] || stepsByType.personality_quiz;
-      const box = document.getElementById("analyze-steps");
-      let i = 0;
-
-      box.innerHTML = `<p class="animate-fade-up">・${steps[0]}</p>`;
-
-      const timer = setInterval(() => {
-        i++;
-        if (i < steps.length) {
-          box.innerHTML += `<p class="animate-fade-up">・${steps[i]}</p>`;
-        }
-      }, 520);
-
-      setTimeout(() => {
-        clearInterval(timer);
-        document.getElementById("analyzing-screen").classList.add("hidden");
-        showResult();
-      }, 2400);
-    }
-
-    function pickWinner() {
-      const counts = { A: 0, B: 0, C: 0, D: 0 };
-
-      userAnswers.forEach(t => {
-        if (!counts[t]) counts[t] = 0;
-        counts[t]++;
-      });
-
-      const maxCount = Math.max(...Object.values(counts));
-      const winners = Object.keys(counts).filter(k => counts[k] === maxCount);
-
-      if (winners.length === 1) return winners[0];
-
-      const lastAnswer = userAnswers[userAnswers.length - 1];
-      if (winners.includes(lastAnswer)) return lastAnswer;
-
-      return winners[0];
     }
 
     function showResult() {
-      document.getElementById("result-screen").classList.remove("hidden");
+      document.getElementById("quiz-screen").classList.add("hidden");
+      document.getElementById("analyzing-screen").classList.remove("hidden");
 
-      const winner = pickWinner();
-      finalResultKey = winner;
+      setTimeout(() => {
+        document.getElementById("analyzing-screen").classList.add("hidden");
+        document.getElementById("result-screen").classList.remove("hidden");
 
-      const res = quizData.results[winner] || quizData.results.A;
-      finalResult = res;
+        const counts = { A: 0, B: 0, C: 0, D: 0 };
+        userAnswers.forEach(t => counts[t] = (counts[t] || 0) + 1);
+        const winner = Object.keys(counts).reduce((a, b) => counts[a] >= counts[b] ? a : b);
+        const res = quizData.results[winner] || quizData.results.A;
 
-      const svgSlot = document.getElementById("avatar-svg-slot");
-
-      if (res.image) {
-        svgSlot.innerHTML = `
-          <img src="${res.image}" alt="${safeText(res.title, "result")}" class="w-full h-full object-cover scale-110" crossorigin="anonymous" />
-        `;
-      } else {
-        const seed = encodeURIComponent(res.avatar_seed || res.title || winner);
-        const avatarUrl = `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&size=128&shapeColor=ffd5dc,d1e8e2,dbeafe,fef3c7,f3e8ff&backgroundColor=transparent`;
-
-        svgSlot.innerHTML = `
-          <img src="${avatarUrl}" alt="avatar" class="w-full h-full object-cover scale-110" crossorigin="anonymous" />
-        `;
-      }
-
-      document.getElementById("avatar-emoji").innerText = safeText(res.emoji, "✨");
-
-      const glowElem = document.getElementById("avatar-glow");
-      glowElem.className = `absolute -inset-1 rounded-full blur-md opacity-70 bg-gradient-to-r ${safeText(res.color, "from-pink-400 to-indigo-400")}`;
-
-      document.getElementById("result-tagline").innerText = safeText(res.tagline, "今日限定人格");
-      document.getElementById("result-title").innerText = safeText(res.title, "神秘人格");
-      document.getElementById("result-quote").innerText = `“${safeText(res.quote, "你不是奇怪，你只是剛好有自己的節奏。")}”`;
-      document.getElementById("result-rarity").innerText = safeText(res.rarity, "SR");
-      document.getElementById("result-energy").innerText = safeText(res.energy, "70%");
-      document.getElementById("result-social").innerText = safeText(res.social, "50%");
-
-      document.getElementById("result-analysis").innerText = safeText(
-        res.analysis,
-        "你看起來很隨和，但其實心裡有自己的標準。你不一定會把所有想法說出口，卻常常默默觀察細節。你需要自由，也希望有人真正理解你。"
-      );
-
-      document.getElementById("result-tip").innerText = safeText(
-        res.tip,
-        "今天先照顧自己的節奏，不用急著配合所有人。"
-      );
-
-      document.getElementById("best-match").innerText = getDisplayName(res.bestMatch);
-      document.getElementById("worst-match").innerText = getDisplayName(res.worstMatch);
-
-      const traitsBox = document.getElementById("result-traits");
-      traitsBox.innerHTML = "";
-
-      const traits = Array.isArray(res.traits) && res.traits.length > 0
-        ? res.traits
-        : ["直覺派", "有想法", "今日限定"];
-
-      traits.forEach(t => {
-        const badge = document.createElement("span");
-        badge.className = "px-3 py-1 bg-white border border-purple-100 rounded-lg text-xs font-bold text-slate-700 shadow-sm";
-        badge.innerText = `#${t}`;
-        traitsBox.appendChild(badge);
-      });
-    }
-
-    function getDisplayName(matchVal) {
-      if (!matchVal) return "全員契合";
-
-      let str = String(matchVal).trim();
-
-      if (quizData.results && quizData.results[str] && quizData.results[str].title) {
-        str = quizData.results[str].title;
-      }
-
-      return str.split("：")[0].split(":")[0].trim();
+        document.getElementById("result-tagline").innerText = res.tagline || "今日限定人格";
+        document.getElementById("result-title").innerText = res.title || "神秘角色";
+        document.getElementById("result-quote").innerText = `“${res.quote || ''}”`;
+        document.getElementById("result-rarity").innerText = res.rarity || "SR";
+        document.getElementById("result-energy").innerText = res.energy || "75%";
+        document.getElementById("result-social").innerText = res.social || "45%";
+        document.getElementById("result-analysis").innerText = res.analysis || "";
+        document.getElementById("result-tip").innerText = res.tip || "";
+        document.getElementById("best-match").innerText = res.bestMatch || "全員契合";
+        document.getElementById("worst-match").innerText = res.worstMatch || "無";
+        document.getElementById("avatar-svg-slot").innerText = res.emoji || "✨";
+      }, 1200);
     }
 
     function saveResultImage() {
-      const area = document.getElementById("capture-area");
-
-      html2canvas(area, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: null
-      }).then(canvas => {
+      html2canvas(document.getElementById("capture-area"), { scale: 3, backgroundColor: null }).then(canvas => {
         const link = document.createElement("a");
         link.download = `DayDayQuiz_${new Date().toISOString().slice(0, 10)}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -808,72 +475,9 @@
       });
     }
 
-    async function copyShareText() {
-      const defaultTitle = document.getElementById("result-title").innerText;
-      const defaultTagline = document.getElementById("result-tagline").innerText;
-      const defaultRarity = document.getElementById("result-rarity").innerText;
-      const defaultEnergy = document.getElementById("result-energy").innerText;
-      const defaultSocial = document.getElementById("result-social").innerText;
-
-      let text = "";
-
-      if (quizData?.threads_post) {
-        text =
-`${quizData.threads_post}
-
-我測到：${defaultTitle}
-稀有度：${defaultRarity}
-能量值：${defaultEnergy}
-社交電量：${defaultSocial}`;
-      } else {
-        text =
-`我今天測到「${defaultTitle}」！
-${defaultTagline}
-
-稀有度：${defaultRarity}
-今日能量值：${defaultEnergy}
-社交電量：${defaultSocial}
-
-你也來測看看今天是哪種人格：
-https://daydayquiz.com
-
-#心理測驗 #今日限定`;
-      }
-
-      try {
-        await navigator.clipboard.writeText(text);
-        alert("分享文案已複製！");
-      } catch (err) {
-        prompt("複製下面文字：", text);
-      }
-    }
-
     function resetQuiz() {
       document.getElementById("result-screen").classList.add("hidden");
       document.getElementById("start-screen").classList.remove("hidden");
-
-      currentStep = 0;
-      userAnswers = [];
-      finalResult = null;
-      finalResultKey = null;
-    }
-
-    function showPrivacy() {
-      alert(
-`隱私權政策
-
-本站尊重並保護您的隱私。心理測驗作答與結果計算主要在使用者瀏覽器端執行，本站不主動收集可識別個人身分的測驗答案。
-
-第三方廣告夥伴，例如 Google AdSense，可能會使用 Cookie 或類似技術提供廣告服務。`
-      );
-    }
-
-    function showAbout() {
-      alert(
-`關於本站
-
-DayDayQuiz 提供每日更新的趣味心理測驗與社群互動內容。所有題目與分析結果僅供日常娛樂交流使用，不代表專業心理診斷、醫療建議或真實預言。`
-      );
     }
 
     init();
