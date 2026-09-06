@@ -29,6 +29,9 @@
   <!-- html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     @keyframes floatSlow {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -243,24 +246,26 @@
       </button>
     </div>
 
-    <!-- ==================== 模組 3: 匿名爛事樹洞 ==================== -->
+    <!-- ==================== 模組 3: 匿名爛事樹洞 (Supabase 雲端版) ==================== -->
     <div id="section-vent" class="hidden relative z-10 py-4">
       <div class="text-center mb-4">
         <h2 class="text-xl font-black text-slate-900 mb-1">職場爛事樹洞</h2>
-        <p class="text-xs text-gray-400">寫下來就不生氣了（大概吧）</p>
+        <p class="text-xs text-gray-400">寫下來就不生氣了 · 依共鳴讚數排行</p>
       </div>
 
       <!-- 匿名輸入框 -->
       <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4">
-        <input id="vent-author" type="text" placeholder="匿名暱稱（如：心死的打卡仔）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500" />
-        <textarea id="vent-content" rows="3" placeholder="今天又遇到什麼神仙同事或奇蹟主管？（請勿包含真實個資）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500 resize-none"></textarea>
-        <button onclick="submitVent()" class="w-full py-2.5 bg-slate-800 text-white font-black rounded-xl text-xs transition hover:bg-slate-900">
+        <input id="vent-author" type="text" maxlength="20" placeholder="匿名暱稱（如：第37頁受害者）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500" />
+        <textarea id="vent-content" rows="3" maxlength="300" placeholder="今天又遇到什麼神仙同事或奇蹟主管？（請勿透露真實個資）" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 mb-2 focus:outline-indigo-500 resize-none"></textarea>
+        <button id="vent-submit-btn" onclick="submitVent()" class="w-full py-2.5 bg-slate-800 text-white font-black rounded-xl text-xs transition hover:bg-slate-900">
           📨 匿名投進樹洞
         </button>
       </div>
 
       <!-- 爛事列表牆 -->
-      <div id="vent-list" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+      <div id="vent-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+        <p class="text-xs text-gray-400 text-center py-4">正在載入樹洞留言...</p>
+      </div>
     </div>
 
   </main>
@@ -270,14 +275,18 @@
   </footer>
 
   <script>
+    // Supabase 初始化 (已帶入你的專案金鑰)
+    const SUPABASE_URL = "https://yyniwynnwngutugyjywk.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5bml3eW5ud25ndXR1Z3lqeXdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTQ1NDksImV4cCI6MjEwNDE3MDU0OX0.IIJU4rZsUybViZDX7p2P3gXAaZBbA7CMqrhga88RmDc";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     // Tab 切換
     function switchNavTab(tab) {
       document.getElementById('section-quiz').classList.add('hidden');
       document.getElementById('section-fortune').classList.add('hidden');
       document.getElementById('section-vent').classList.add('hidden');
 
-      const tabs = ['quiz', 'fortune', 'vent'];
-      tabs.forEach(t => {
+      ['quiz', 'fortune', 'vent'].forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
         if (t === tab) {
           btn.className = "flex-1 py-2 rounded-2xl font-black text-xs bg-indigo-600 text-white shadow-md shadow-indigo-100 transition";
@@ -336,49 +345,110 @@
       document.getElementById("fortune-enemy").innerText = f.enemy;
     }
 
-    // 匿名爛事本地儲存牆（預載熱門爛事）
-    let initialVents = [
-      { author: "第37頁受害者", time: "剛才", text: "主管問進度，同事說剩小地方麻煩大家補，打開看整份只有標題是完整的。" },
-      { author: "打卡退堂鼓手", time: "1 小時前", text: "說好大家一起點飲料，結果收錢時那個人就去大號了，到現在還沒出來。" },
-      { author: "安靜離職中", time: "3 小時前", text: "每次在群組 tag 他裝沒看見，主管一 tag 他一秒打字說收到我來追。" }
-    ];
-
-    function renderVents() {
+    // ==================== 樹洞資料庫邏輯 ====================
+    async function renderVents() {
       const box = document.getElementById("vent-list");
-      box.innerHTML = "";
-      const saved = JSON.parse(localStorage.getItem("dayday_vents") || "[]");
-      const list = [...saved, ...initialVents];
+      box.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">正在載入熱門爛事...</p>`;
 
-      list.forEach(item => {
+      // 依讚數降序排列，讚數相同依時間由新到舊
+      const { data: vents, error } = await supabaseClient
+        .from("vents")
+        .select("*")
+        .order("likes", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error || !vents) {
+        box.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">載入失敗，請確認網路連線</p>`;
+        return;
+      }
+
+      if (vents.length === 0) {
+        box.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">樹洞目前還是空的，搶當第一個苦主！</p>`;
+        return;
+      }
+
+      box.innerHTML = "";
+      const likedHistory = JSON.parse(localStorage.getItem("dayday_liked_vents") || "[]");
+
+      vents.forEach(item => {
+        const isLiked = likedHistory.includes(item.id);
         const div = document.createElement("div");
-        div.className = "bg-white p-3 rounded-2xl border border-slate-100 shadow-xs text-xs";
+        div.className = "bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs text-xs mb-3 flex flex-col justify-between";
         div.innerHTML = `
-          <div class="flex justify-between items-center mb-1 text-gray-400 font-bold text-[10px]">
-            <span>👤 ${item.author}</span>
-            <span>${item.time}</span>
+          <div class="flex justify-between items-center mb-1.5 text-gray-400 font-bold text-[10px]">
+            <span>👤 ${item.author || "匿名苦主"}</span>
+            <span>${new Date(item.created_at).toLocaleDateString()}</span>
           </div>
-          <p class="text-slate-700 leading-relaxed">${item.text}</p>
+          <p class="text-slate-700 leading-relaxed my-1">${escapeHtml(item.content)}</p>
+          <div class="flex justify-end items-center mt-2 pt-2 border-t border-slate-50">
+            <button onclick="likeVent(${item.id})" id="like-btn-${item.id}" 
+              class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black transition ${isLiked ? 'bg-pink-100 text-pink-600' : 'bg-slate-100 text-slate-500 hover:bg-pink-50 hover:text-pink-500'}">
+              <span>❤️</span>
+              <span id="like-count-${item.id}">${item.likes || 0}</span>
+            </button>
+          </div>
         `;
         box.appendChild(div);
       });
     }
 
-    function submitVent() {
+    async function submitVent() {
       const author = document.getElementById("vent-author").value.trim() || "匿名苦主";
-      const text = document.getElementById("vent-content").value.trim();
-      if (!text) {
-        alert("請寫下你的爛事才能發送喔！");
+      const content = document.getElementById("vent-content").value.trim();
+      const btn = document.getElementById("vent-submit-btn");
+
+      if (!content) {
+        alert("請寫下你的爛事才能投進樹洞喔！");
         return;
       }
-      const saved = JSON.parse(localStorage.getItem("dayday_vents") || "[]");
-      saved.unshift({ author, time: "剛剛", text });
-      localStorage.setItem("dayday_vents", JSON.stringify(saved));
-      document.getElementById("vent-content").value = "";
-      renderVents();
-      alert("已投進樹洞！");
+
+      btn.disabled = true;
+      btn.innerText = "發送中...";
+
+      const { error } = await supabaseClient
+        .from("vents")
+        .insert([{ author, content }]);
+
+      btn.disabled = false;
+      btn.innerText = "📨 匿名投進樹洞";
+
+      if (error) {
+        alert("發布失敗，請確認剛才 SQL 是否正常執行！");
+        console.error(error);
+      } else {
+        document.getElementById("vent-content").value = "";
+        alert("投進樹洞成功！");
+        renderVents();
+      }
     }
 
-    // 測驗核心腳本（接取 daily_quiz.json）
+    async function likeVent(id) {
+      const likedHistory = JSON.parse(localStorage.getItem("dayday_liked_vents") || "[]");
+      if (likedHistory.includes(id)) {
+        alert("你已經給這則爛事加過油了！");
+        return;
+      }
+
+      const { error } = await supabaseClient.rpc("increment_like", { vent_id: id });
+      if (!error) {
+        likedHistory.push(id);
+        localStorage.setItem("dayday_liked_vents", JSON.stringify(likedHistory));
+        renderVents();
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    // ==================== 測驗載入邏輯 ====================
     let quizData = null;
     let currentStep = 0;
     let userAnswers = [];
