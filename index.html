@@ -152,6 +152,23 @@
           <button class="answer-btn btn btn-red py-4" data-answer="down">看跌</button>
         </section>
 
+        <section id="profit-battle-area" class="hidden mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
+            <div>
+              <h2 class="text-lg font-black text-white">獲利對戰</h2>
+              <p id="profit-status" class="text-sm text-slate-300 mt-1">等待開始。</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 min-w-[420px]">
+              <button id="profit-long" class="btn btn-green py-3">做多 / 買入</button>
+              <button id="profit-short" class="btn btn-red py-3">做空 / 放空</button>
+              <button id="profit-close" class="btn btn-gray py-3">平倉</button>
+              <button id="profit-next" class="btn btn-main py-3">下一根 K</button>
+              <button id="profit-finish" class="btn btn-dark py-3">完成</button>
+            </div>
+          </div>
+          <div id="profit-detail" class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm font-bold"></div>
+        </section>
+
         <section id="backtest-area" class="hidden grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">
           <button id="bt-buy" class="btn btn-green py-3">買進</button>
           <button id="bt-sell" class="btn btn-red py-3">賣出</button>
@@ -178,6 +195,8 @@
           <h2 class="text-lg font-black text-white mb-3">修正版重點</h2>
           <ul class="text-sm text-slate-300 space-y-2 leading-relaxed">
             <li>日 / 週 / 月 K 會強制重建 5 題並載入對應 JSON。</li>
+            <li>對戰分為「猜方向」與「獲利」兩種。</li>
+            <li>獲利對戰可做多 / 做空，限制在指定 K 線數內完成。</li>
             <li>對戰不再限制房主切下一題，任一玩家都可下一題。</li>
             <li>排行榜每 1.5 秒輪詢一次，Realtime 失效也不用 F5。</li>
             <li>指標由前端補算，EMA / MA / BB / RSI / MACD / ATR 都會顯示。</li>
@@ -198,14 +217,25 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const BATTLE_POLL_MS = 1500;
 
-const Battle = { roomCode:"", playerName:"", isHost:false, subscribed:false, channel:null, pollTimer:null, lastRoomQuestion:null, lastRoomStatus:null };
+const Battle = {
+  roomCode:"",
+  playerName:"",
+  isHost:false,
+  subscribed:false,
+  channel:null,
+  pollTimer:null,
+  lastRoomQuestion:null,
+  lastRoomStatus:null,
+  battleMode:"direction",
+  profitLimitBars:20
+};
 
 const App = {
   interval:"1d", mode:"quiz", challenge:null, questions:[], questionIndex:0,
-  currentData:[], currentDataPath:"", currentQuestion:null,
+  currentData:[], currentDataPath:"", currentQuestion:null, loadingQuestion:false,
   chart:null, candleSeries:null, volumeSeries:null, indicatorSeries:{},
   indicators:{ volume:true, ma:true, ema:false, bb:false, rsi:false, macd:false, atr:false },
-  revealed:false, score:0, hits:0, answers:[], backtest:null, autoplayTimer:null,
+  revealed:false, score:0, hits:0, answers:[], backtest:null, autoplayTimer:null, profit:null,
   drawings:[], drawHistory:[], drawTool:"cursor", drawStart:null, drawPreview:null, selectedDrawingId:null,
   drawStyle:{ color:"#f59e0b", width:2, style:"solid" }
 };
@@ -276,6 +306,11 @@ function bindUI(){
   $("bt-next").onclick = backtestNext;
   $("bt-auto").onclick = toggleAutoplay;
   $("bt-reset").onclick = () => setupBacktest(true);
+  $("profit-long").onclick = () => safeAsync(() => profitOpen("long"));
+  $("profit-short").onclick = () => safeAsync(() => profitOpen("short"));
+  $("profit-close").onclick = () => safeAsync(profitClose);
+  $("profit-next").onclick = () => safeAsync(profitNextBar);
+  $("profit-finish").onclick = () => safeAsync(profitFinish);
 }
 
 async function safeAsync(fn){ try { await fn(); } catch(err){ console.error(err); showLoadError(err); } }
@@ -286,10 +321,29 @@ function setMode(mode){
   App.mode = mode;
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active-pill"));
   $("answer-area").classList.add("hidden");
+  $("profit-battle-area").classList.add("hidden");
   $("backtest-area").classList.add("hidden");
-  if(mode === "quiz"){ $("mode-quiz").classList.add("active-pill"); $("answer-area").classList.remove("hidden"); }
-  if(mode === "battle"){ $("mode-battle").classList.add("active-pill"); $("answer-area").classList.remove("hidden"); }
-  if(mode === "backtest"){ $("mode-backtest").classList.add("active-pill"); $("backtest-area").classList.remove("hidden"); setupBacktest(true); }
+
+  if(mode === "quiz"){
+    $("mode-quiz").classList.add("active-pill");
+    $("answer-area").classList.remove("hidden");
+  }
+
+  if(mode === "battle"){
+    $("mode-battle").classList.add("active-pill");
+    if(Battle.battleMode === "profit"){
+      $("profit-battle-area").classList.remove("hidden");
+      if(App.currentQuestion && !App.profit){ setupProfitBattle(false); }
+    } else {
+      $("answer-area").classList.remove("hidden");
+    }
+  }
+
+  if(mode === "backtest"){
+    $("mode-backtest").classList.add("active-pill");
+    $("backtest-area").classList.remove("hidden");
+    setupBacktest(true);
+  }
 }
 
 function createChart(){
@@ -427,23 +481,88 @@ async function loadManualQuestion(randomStart=false, renderNow=true){
 }
 
 async function renderQuestion(){
-  clearInterval(App.autoplayTimer); App.autoplayTimer=null; App.revealed=false;
-  $("result-box").classList.add("hidden"); $("next-btn").classList.add("hidden"); setAnswerDisabled(false);
-  let q = App.questions[App.questionIndex];
-  if(!q){ await loadManualQuestion(false, false); q=App.questions[0]; }
-  App.currentQuestion=q;
-  if(!App.currentData.length || App.currentDataPath !== q.data_path){ App.currentData = await loadKlines(q.data_path); App.currentDataPath = q.data_path; }
-  const visibleBars=Number(q.visible_bars || 240), revealBars=Number(q.reveal_bars || revealBarsByInterval(q.interval));
-  const maxStart=Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
-  if(q.start_idx===null || q.start_idx===undefined) q.start_idx=maxStart;
-  q.start_idx=Math.max(0, Math.min(q.start_idx, maxStart));
-  q._visibleEnd=Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
-  q._revealEnd=Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
-  updateChartVisibleData();
-  $("symbol-badge").innerText="代號隱藏"; $("blind-badge").innerText="BLIND MODE"; $("interval-badge").innerText=intervalText(q.interval || App.interval);
-  loadDrawings(); redrawCanvas();
-  if(App.mode === "backtest") setupBacktest(true);
-  updateStats();
+  clearInterval(App.autoplayTimer);
+  App.autoplayTimer = null;
+  App.loadingQuestion = true;
+  App.revealed = false;
+
+  $("result-box").classList.add("hidden");
+  $("next-btn").classList.add("hidden");
+  setAnswerDisabled(true);
+
+  try {
+    let q = App.questions[App.questionIndex];
+
+    if(!q){
+      await loadManualQuestion(false, false);
+      q = App.questions[0];
+    }
+
+    if(!q){
+      throw new Error("找不到題目設定，請按『最新題段』重新建立題目。");
+    }
+
+    App.currentQuestion = q;
+
+    if(!App.currentData.length || App.currentDataPath !== q.data_path){
+      App.currentData = await loadKlines(q.data_path);
+      App.currentDataPath = q.data_path;
+    }
+
+    normalizeQuestionBounds(q);
+    updateChartVisibleData();
+
+    $("symbol-badge").innerText = "代號隱藏";
+    $("blind-badge").innerText = "BLIND MODE";
+    $("interval-badge").innerText = intervalText(q.interval || App.interval);
+
+    loadDrawings();
+    redrawCanvas();
+
+    if(App.mode === "backtest"){
+      setupBacktest(true);
+    }
+
+    if(App.mode === "battle" && Battle.battleMode === "profit"){
+      setupProfitBattle(true);
+    }
+
+    updateStats();
+  } finally {
+    App.loadingQuestion = false;
+    if(!App.revealed && App.mode !== "backtest" && !(App.mode === "battle" && Battle.battleMode === "profit")){
+      setAnswerDisabled(false);
+    }
+  }
+}
+
+function normalizeQuestionBounds(q){
+  if(!q || !App.currentData.length){
+    throw new Error("題目或 K 線資料尚未載入完成。");
+  }
+
+  const visibleBars = Math.max(20, Number(q.visible_bars || $("bars-select")?.value || 240));
+  const revealBars = Math.max(1, Number(q.reveal_bars || revealBarsByInterval(q.interval || App.interval)));
+
+  if(App.currentData.length < visibleBars + revealBars + 2){
+    throw new Error(`K 線資料不足：目前 ${App.currentData.length} 根，需要至少 ${visibleBars + revealBars + 2} 根。`);
+  }
+
+  const maxStart = Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
+
+  if(q.start_idx === null || q.start_idx === undefined || !Number.isFinite(Number(q.start_idx))){
+    q.start_idx = maxStart;
+  }
+
+  q.start_idx = Math.max(0, Math.min(Number(q.start_idx), maxStart));
+  q.visible_bars = visibleBars;
+  q.reveal_bars = revealBars;
+  q._visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
+  q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
+
+  if(q._visibleEnd < 0 || q._revealEnd <= q._visibleEnd){
+    throw new Error("題目索引異常，請按『最新題段』重新整理題目。");
+  }
 }
 
 function visibleBarSpacing(len){
@@ -523,24 +642,104 @@ function updateChartVisibleData(){
 }
 
 function computeOutcome(){
-  const q=App.currentQuestion, base=App.currentData[q._visibleEnd], last=App.currentData[q._revealEnd], future=App.currentData.slice(q._visibleEnd+1, q._revealEnd+1);
-  const ret=((last.close-base.close)/base.close)*100, high=Math.max(...future.map(x=>x.high)), low=Math.min(...future.map(x=>x.low));
-  const maxUp=((high-base.close)/base.close)*100, maxDown=((low-base.close)/base.close)*100, threshold=Number(q.threshold_pct || thresholdByInterval(q.interval));
-  let direction="range"; if(ret>threshold) direction="up"; if(ret < -threshold) direction="down";
+  const q = App.currentQuestion;
+
+  normalizeQuestionBounds(q);
+
+  const base = App.currentData[q._visibleEnd];
+  const last = App.currentData[q._revealEnd];
+  const future = App.currentData.slice(q._visibleEnd + 1, q._revealEnd + 1);
+
+  if(!base || !last || !Number.isFinite(base.close) || !Number.isFinite(last.close)){
+    console.error("Invalid outcome state", {
+      questionIndex: App.questionIndex,
+      question: q,
+      dataLength: App.currentData.length,
+      base,
+      last
+    });
+    throw new Error("目前題目的 K 線索引異常，已避免程式中斷。請按『下一題』或『最新題段』重新定位。");
+  }
+
+  const ret = ((last.close - base.close) / base.close) * 100;
+  const futureSafe = future.length ? future : [last];
+  const high = Math.max(...futureSafe.map(x => Number(x.high)).filter(Number.isFinite));
+  const low = Math.min(...futureSafe.map(x => Number(x.low)).filter(Number.isFinite));
+
+  const maxUp = Number.isFinite(high) ? ((high - base.close) / base.close) * 100 : ret;
+  const maxDown = Number.isFinite(low) ? ((low - base.close) / base.close) * 100 : ret;
+  const threshold = Number(q.threshold_pct || thresholdByInterval(q.interval));
+
+  let direction = "range";
+  if(ret > threshold) direction = "up";
+  if(ret < -threshold) direction = "down";
+
   return { direction, ret, maxUp, maxDown, threshold };
 }
 
 async function submitAnswer(answer){
+  if(App.loadingQuestion) return;
   if(App.revealed) return;
-  App.revealed=true; setAnswerDisabled(true); updateChartVisibleData();
-  const out=computeOutcome(); const correct=answer===out.direction; const gained=correct ? (out.direction==="range"?25:20) : 0;
-  if(correct) App.hits += 1; App.score += gained;
-  App.answers.push({ no:App.questionIndex+1, ticker:App.currentQuestion.ticker, interval:App.currentQuestion.interval, answer, correct:out.direction, gained, ret:out.ret, answered_at:new Date().toISOString() });
-  if(Battle.roomCode) await submitBattleScore();
-  $("symbol-badge").innerText=`${App.currentQuestion.ticker} · ${intervalText(App.currentQuestion.interval)}`;
-  $("blind-badge").innerText=correct?"命中":"失誤";
-  showResult(answer, out, correct, gained); updateStats();
-  if(App.questionIndex < App.questions.length-1) $("next-btn").classList.remove("hidden"); else finishChallenge();
+
+  App.loadingQuestion = true;
+  App.revealed = true;
+  setAnswerDisabled(true);
+
+  try {
+    const q = App.currentQuestion;
+
+    if(!q){
+      throw new Error("題目尚未載入完成，請重新整理或按『最新題段』。");
+    }
+
+    if(!App.currentData.length || App.currentDataPath !== q.data_path){
+      App.currentData = await loadKlines(q.data_path);
+      App.currentDataPath = q.data_path;
+    }
+
+    normalizeQuestionBounds(q);
+    updateChartVisibleData();
+
+    const out = computeOutcome();
+    const correct = answer === out.direction;
+    const gained = correct ? (out.direction === "range" ? 25 : 20) : 0;
+
+    if(correct) App.hits += 1;
+    App.score += gained;
+
+    App.answers.push({
+      no: App.questionIndex + 1,
+      ticker: App.currentQuestion.ticker,
+      interval: App.currentQuestion.interval,
+      answer,
+      correct: out.direction,
+      gained,
+      ret: out.ret,
+      answered_at: new Date().toISOString()
+    });
+
+    if(Battle.roomCode){
+      await submitBattleScore();
+    }
+
+    $("symbol-badge").innerText = `${App.currentQuestion.ticker} · ${intervalText(App.currentQuestion.interval)}`;
+    $("blind-badge").innerText = correct ? "命中" : "失誤";
+
+    showResult(answer, out, correct, gained);
+    updateStats();
+
+    if(App.questionIndex < App.questions.length - 1){
+      $("next-btn").classList.remove("hidden");
+    } else {
+      finishChallenge();
+    }
+  } catch(err){
+    App.revealed = false;
+    setAnswerDisabled(false);
+    throw err;
+  } finally {
+    App.loadingQuestion = false;
+  }
 }
 
 function directionText(d){ if(d==="up") return "看漲"; if(d==="down") return "看跌"; return "盤整"; }
@@ -624,16 +823,239 @@ function hitTest(p){ let best=null, bestDist=999; for(const d of App.drawings){ 
 function distanceToDrawing(d,p){ if(d.type==="hline"){ const y=yOf(d.price); return y==null?999:Math.abs(y-p.y); } if(d.type==="vline"){ const x=xOf(d.time); return x==null?999:Math.abs(x-p.x); } if(d.type==="text"){ const x=xOf(d.time), y=yOf(d.price); return x==null||y==null?999:Math.hypot(x-p.x,y-p.y); } if(["trend","ray","rect","fib"].includes(d.type)){ const x1=xOf(d.t1), y1=yOf(d.p1), x2=xOf(d.t2), y2=yOf(d.p2); if(x1==null||x2==null||y1==null||y2==null) return 999; if(d.type==="rect") return Math.min(Math.abs(p.x-x1),Math.abs(p.x-x2),Math.abs(p.y-y1),Math.abs(p.y-y2)); return pointLineDistance(p.x,p.y,x1,y1,x2,y2); } return 999; }
 function pointLineDistance(px,py,x1,y1,x2,y2){ const A=px-x1,B=py-y1,C=x2-x1,D=y2-y1,dot=A*C+B*D,len=C*C+D*D,t=Math.max(0,Math.min(1,len?dot/len:0)); return Math.hypot(px-(x1+t*C), py-(y1+t*D)); }
 
+
+/* =========================
+   獲利對戰：做多 / 做空 / 平倉
+========================= */
+function battleModeText(mode){ return mode === "profit" ? "獲利" : "猜方向"; }
+function selectedBattleMode(){ return $("battle-kind-select") ? $("battle-kind-select").value : (Battle.battleMode || "direction"); }
+function selectedProfitLimitBars(){
+  const raw = $("profit-limit-bars") ? Number($("profit-limit-bars").value || 20) : Number(Battle.profitLimitBars || 20);
+  return Math.max(1, Math.min(120, Math.floor(raw || 20)));
+}
+function applyBattleModeToQuestions(){
+  if(Battle.battleMode !== "profit") return;
+  const limit = Math.max(1, Number(Battle.profitLimitBars || 20));
+  App.questions = (App.questions || []).map(q => ({ ...q, reveal_bars:limit, threshold_pct:thresholdByInterval(q.interval || App.interval) }));
+}
+function profitKey(){
+  const q = App.currentQuestion;
+  return q ? `${q.ticker}_${q.interval}_${q.start_idx}_${App.questionIndex}` : "profit_default";
+}
+function setupProfitBattle(reset=true){
+  const q = App.currentQuestion;
+  if(!q || !App.currentData.length) return;
+
+  normalizeQuestionBounds(q);
+
+  const same = App.profit && App.profit.key === profitKey();
+  if(reset || !same){
+    App.profit = {
+      key:profitKey(),
+      idx:q._visibleEnd,
+      start:q._visibleEnd,
+      end:q._revealEnd,
+      position:null,
+      entryPrice:null,
+      entryIdx:null,
+      realizedPct:0,
+      trades:[],
+      finished:false
+    };
+  }
+
+  renderProfitChart();
+  updateProfitStatus("在限制 K 線內選擇做多、做空、平倉。可不交易，完成後以獲利率排名。");
+  syncProfitScore(false);
+}
+function currentProfitPrice(){
+  if(!App.profit) return null;
+  const bar = App.currentData[App.profit.idx];
+  return bar && Number.isFinite(bar.close) ? bar.close : null;
+}
+function profitCurrentPct(){
+  const p = App.profit;
+  if(!p) return 0;
+  let total = Number(p.realizedPct || 0);
+  const price = currentProfitPrice();
+  if(p.position && p.entryPrice && price){
+    const openPct = p.position === "long"
+      ? ((price - p.entryPrice) / p.entryPrice) * 100
+      : ((p.entryPrice - price) / p.entryPrice) * 100;
+    total += openPct;
+  }
+  return total;
+}
+function renderProfitChart(){
+  const p = App.profit;
+  const q = App.currentQuestion;
+  if(!p || !q) return;
+  const candles = App.currentData.slice(q.start_idx, p.idx + 1);
+  App.candleSeries.setData(candles.map(x => ({ time:x.time, open:x.open, high:x.high, low:x.low, close:x.close })));
+  App.volumeSeries.setData(App.indicators.volume ? candles.map(x => ({
+    time:x.time,
+    value:x.volume || 0,
+    color:x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
+  })) : []);
+  setIndicatorData(candles);
+  focusCurrentPrice(candles);
+}
+function updateProfitStatus(message=""){
+  const p = App.profit;
+  if(!p){
+    $("profit-status").innerText = "獲利對戰尚未開始。";
+    return;
+  }
+  const price = currentProfitPrice();
+  const used = Math.max(0, p.idx - p.start);
+  const limit = Math.max(1, p.end - p.start);
+  const currentPct = profitCurrentPct();
+  const posText = p.position === "long" ? "做多中" : p.position === "short" ? "做空中" : "空手";
+  $("profit-status").innerText = message || `${posText}，目前損益 ${pct(currentPct)}，剩餘 ${Math.max(0, limit - used)} 根 K。`;
+  $("profit-detail").innerHTML = `
+    <div class="rounded-xl bg-slate-950 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前價格</div><div>${price ? price.toFixed(2) : "-"}</div></div>
+    <div class="rounded-xl bg-slate-950 border border-slate-700 p-3"><div class="text-slate-500 text-xs">倉位</div><div>${posText}</div></div>
+    <div class="rounded-xl bg-slate-950 border border-slate-700 p-3"><div class="text-slate-500 text-xs">已用 K 線</div><div>${used}/${limit}</div></div>
+    <div class="rounded-xl bg-slate-950 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前獲利率</div><div class="${currentPct >= 0 ? "text-emerald-300" : "text-rose-300"}">${pct(currentPct)}</div></div>
+    <div class="rounded-xl bg-slate-950 border border-slate-700 p-3"><div class="text-slate-500 text-xs">交易次數</div><div>${p.trades.length}</div></div>
+  `;
+}
+function upsertProfitAnswer(finished=false){
+  const p = App.profit;
+  const q = App.currentQuestion;
+  if(!p || !q) return;
+  const profitPct = profitCurrentPct();
+  const item = {
+    no:App.questionIndex + 1,
+    ticker:q.ticker,
+    interval:q.interval,
+    type:"profit",
+    profit_pct:profitPct,
+    score:Math.round(profitPct * 100),
+    trades:p.trades,
+    position:p.position,
+    idx:p.idx,
+    finished:!!finished,
+    updated_at:new Date().toISOString()
+  };
+  const idx = App.answers.findIndex(x => x.no === item.no && x.type === "profit");
+  if(idx >= 0) App.answers[idx] = item;
+  else App.answers.push(item);
+}
+function syncProfitScore(writeAnswer=true){
+  if(writeAnswer) upsertProfitAnswer(App.profit?.finished || false);
+  const totalProfit = App.answers
+    .filter(x => x.type === "profit")
+    .reduce((sum, x) => sum + Number(x.profit_pct || 0), 0);
+  App.score = Math.round(totalProfit * 100);
+  App.hits = App.answers.filter(x => x.type === "profit" && Number(x.profit_pct || 0) > 0).length;
+  updateStats();
+}
+async function profitOpen(side){
+  if(App.mode !== "battle" || Battle.battleMode !== "profit") return;
+  if(!App.profit) setupProfitBattle(false);
+  const p = App.profit;
+  if(!p || p.finished) return;
+  if(p.position){ alert("目前已有倉位，請先平倉。 "); return; }
+  const price = currentProfitPrice();
+  if(!price) return;
+  p.position = side;
+  p.entryPrice = price;
+  p.entryIdx = p.idx;
+  p.trades.push({ action: side === "long" ? "open_long" : "open_short", price, idx:p.idx, time:App.currentData[p.idx]?.time });
+  syncProfitScore(true);
+  updateProfitStatus(side === "long" ? `已做多，進場價 ${price.toFixed(2)}。` : `已做空，進場價 ${price.toFixed(2)}。`);
+  await submitBattleScore();
+}
+async function profitClose(){
+  const p = App.profit;
+  if(!p || p.finished) return;
+  if(!p.position){ alert("目前沒有倉位可平倉。 "); return; }
+  const price = currentProfitPrice();
+  if(!price || !p.entryPrice) return;
+  const tradePct = p.position === "long"
+    ? ((price - p.entryPrice) / p.entryPrice) * 100
+    : ((p.entryPrice - price) / p.entryPrice) * 100;
+  p.realizedPct += tradePct;
+  p.trades.push({
+    action:p.position === "long" ? "close_long" : "close_short",
+    entry_price:p.entryPrice,
+    exit_price:price,
+    profit_pct:tradePct,
+    entry_idx:p.entryIdx,
+    exit_idx:p.idx,
+    time:App.currentData[p.idx]?.time
+  });
+  p.position = null;
+  p.entryPrice = null;
+  p.entryIdx = null;
+  syncProfitScore(true);
+  updateProfitStatus(`已平倉，本筆 ${pct(tradePct)}，本題累計 ${pct(p.realizedPct)}。`);
+  await submitBattleScore();
+}
+async function profitNextBar(){
+  const p = App.profit;
+  if(!p || p.finished) return;
+  if(p.idx >= p.end){ await profitFinish(); return; }
+  p.idx += 1;
+  renderProfitChart();
+  syncProfitScore(true);
+  updateProfitStatus();
+  await submitBattleScore();
+  if(p.idx >= p.end){
+    updateProfitStatus("已到限制 K 線最後一根，請平倉或按完成自動結算。");
+  }
+}
+async function profitFinish(){
+  const p = App.profit;
+  if(!p || p.finished) return;
+  if(p.position){
+    await profitClose();
+  }
+  p.finished = true;
+  App.revealed = true;
+  upsertProfitAnswer(true);
+  syncProfitScore(false);
+  updateProfitStatus(`本題完成，獲利率 ${pct(App.answers.find(x => x.no === App.questionIndex + 1 && x.type === "profit")?.profit_pct || 0)}。可由任一玩家按右側「下一題」。`);
+  await submitBattleScore();
+}
+
 /* Supabase 即時對戰 */
 function randomRoomCode(){ return "ROOM" + Math.floor(100000 + Math.random()*900000); }
 function normalizeRoomCode(room){ return String(room || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, ""); }
 function normalizePlayerName(name){ return String(name || "").trim().slice(0,24); }
-function currentBattleConfig(){ return { ticker:$("symbol-select").value, interval:App.interval, bars:Number($("bars-select").value || 240), questions:App.questions, created_at:new Date().toISOString() }; }
-async function applyBattleConfig(config, renderNow=true){ if(!config) return; syncSymbolAndBarsUI(config.ticker, config.interval, config.bars); App.questions=Array.isArray(config.questions) && config.questions.length ? config.questions : App.questions; App.currentData=[]; App.currentDataPath=""; if(renderNow) await renderQuestion(); }
+function currentBattleConfig(){
+  applyBattleModeToQuestions();
+  return {
+    ticker:$("symbol-select").value,
+    interval:App.interval,
+    bars:Number($("bars-select").value || 240),
+    battle_mode:Battle.battleMode || "direction",
+    profit_limit_bars:Number(Battle.profitLimitBars || 20),
+    questions:App.questions,
+    created_at:new Date().toISOString()
+  };
+}
+async function applyBattleConfig(config, renderNow=true){
+  if(!config) return;
+  Battle.battleMode = config.battle_mode || "direction";
+  Battle.profitLimitBars = Number(config.profit_limit_bars || config.limit_bars || revealBarsByInterval(config.interval || App.interval) || 20);
+  syncSymbolAndBarsUI(config.ticker, config.interval, config.bars);
+  App.questions = Array.isArray(config.questions) && config.questions.length ? config.questions : App.questions;
+  applyBattleModeToQuestions();
+  App.currentData=[];
+  App.currentDataPath="";
+  App.profit=null;
+  setMode("battle");
+  if(renderNow) await renderQuestion();
+}
 
 async function createBattleRoom(){
   const player=normalizePlayerName(prompt("輸入你的玩家名稱")); if(!player){ alert("玩家名稱不能空白"); return; }
+  Battle.battleMode = selectedBattleMode();
+  Battle.profitLimitBars = selectedProfitLimitBars();
   await loadManualQuestion(false, true);
+  applyBattleModeToQuestions();
   const room=randomRoomCode(); const config=currentBattleConfig();
   const { error:roomError } = await SB.from("battle_rooms").insert({ room_code:room, host_name:player, status:"waiting", current_question:0, config });
   if(roomError){ alert("建立房間失敗：" + roomError.message + "\n請確認已執行新版 supabase_schema.sql。"); return; }
@@ -641,7 +1063,7 @@ async function createBattleRoom(){
   if(playerError){ alert("加入房間失敗：" + playerError.message); return; }
   Battle.roomCode=room; Battle.playerName=player; Battle.isHost=true;
   localStorage.setItem("kline_battle_room", room); localStorage.setItem("kline_battle_player", player); localStorage.setItem("kline_battle_host", "1");
-  setMode("battle"); alert(`房間已建立：${room}\n請把房號傳給朋友。`);
+  setMode("battle"); alert(`房間已建立：${room}\n模式：${battleModeText(Battle.battleMode)}\n請把房號傳給朋友。`);
   await subscribeBattleRoom(room); startBattlePolling(); await refreshBattlePanel();
 }
 
@@ -662,7 +1084,8 @@ async function joinBattleRoom(){
 
 async function startBattleRoom(){
   if(!Battle.roomCode){ alert("請先建立或加入房間"); return; }
-  App.questionIndex=0; App.score=0; App.hits=0; App.answers=[];
+  App.questionIndex=0; App.score=0; App.hits=0; App.answers=[]; App.profit=null;
+  applyBattleModeToQuestions();
   const { error } = await SB.from("battle_rooms").update({ status:"started", current_question:0, started_at:new Date().toISOString(), config:currentBattleConfig() }).eq("room_code", Battle.roomCode);
   if(error){ alert("開始失敗：" + error.message); return; }
   setMode("battle"); await renderQuestion(); await submitBattleScore(); await refreshBattlePanel();
@@ -682,21 +1105,56 @@ async function submitBattleScore(){
 }
 
 async function nextBattleQuestion(){
-  if(!Battle.roomCode){ alert("請先建立或加入房間"); return; }
-  const { data:room, error:readError } = await SB.from("battle_rooms").select("current_question,status,config").eq("room_code", Battle.roomCode).single();
-  if(readError || !room){ alert("讀取房間失敗"); return; }
-  const current=Number(room.current_question || 0); const total=(room.config?.questions?.length || App.questions.length || 1); const nextIndex=Math.min(current+1, total-1);
-  if(nextIndex === current){ alert("已經是最後一題"); return; }
-  const { error } = await SB.from("battle_rooms").update({ current_question:nextIndex, status:"started" }).eq("room_code", Battle.roomCode);
-  if(error){ alert("切題失敗：" + error.message); return; }
-  App.questionIndex=nextIndex; await renderQuestion(); await refreshBattlePanel();
+  if(!Battle.roomCode){
+    alert("請先建立或加入房間");
+    return;
+  }
+
+  const { data:room, error:readError } = await SB
+    .from("battle_rooms")
+    .select("current_question,status,config")
+    .eq("room_code", Battle.roomCode)
+    .single();
+
+  if(readError || !room){
+    alert("讀取房間失敗");
+    return;
+  }
+
+  if(room.config){
+    await applyBattleConfig(room.config, false);
+  }
+
+  const current = Number(room.current_question || 0);
+  const total = room.config?.questions?.length || App.questions.length || 1;
+  const nextIndex = Math.min(current + 1, total - 1);
+
+  if(nextIndex === current){
+    alert("已經是最後一題");
+    return;
+  }
+
+  const { data:updatedRoom, error } = await SB
+    .from("battle_rooms")
+    .update({ current_question: nextIndex, status:"started" })
+    .eq("room_code", Battle.roomCode)
+    .select("*")
+    .single();
+
+  if(error){
+    alert("切題失敗：" + error.message);
+    return;
+  }
+
+  await syncBattleRoom(updatedRoom);
+  await refreshBattlePanel();
 }
 
 async function resetBattleRoom(){
   if(!Battle.roomCode){ alert("請先建立或加入房間"); return; }
   await SB.from("battle_rooms").update({ status:"waiting", current_question:0, started_at:null, config:currentBattleConfig() }).eq("room_code", Battle.roomCode);
   await SB.from("battle_players").update({ score:0, hits:0, answers:[], updated_at:new Date().toISOString() }).eq("room_code", Battle.roomCode);
-  App.questionIndex=0; App.score=0; App.hits=0; App.answers=[]; await renderQuestion(); await refreshBattlePanel();
+  App.questionIndex=0; App.score=0; App.hits=0; App.answers=[]; App.profit=null; await renderQuestion(); await refreshBattlePanel();
 }
 
 async function subscribeBattleRoom(roomCode){
@@ -710,12 +1168,32 @@ async function subscribeBattleRoom(roomCode){
 
 async function syncBattleRoom(room){
   if(!room) return;
-  if(room.config && JSON.stringify(room.config.questions || []) !== JSON.stringify(App.questions || [])){ await applyBattleConfig(room.config, false); }
-  const newIndex=Number(room.current_question || 0);
-  const status=room.status || "waiting";
-  const shouldRender = status === "started" && (App.questionIndex !== newIndex || Battle.lastRoomQuestion !== newIndex || Battle.lastRoomStatus !== status);
-  Battle.lastRoomQuestion=newIndex; Battle.lastRoomStatus=status;
-  if(shouldRender){ App.questionIndex=newIndex; setMode("battle"); await renderQuestion(); }
+
+  if(room.config){
+    const incoming = JSON.stringify(room.config.questions || []);
+    const current = JSON.stringify(App.questions || []);
+    if(incoming !== current){
+      await applyBattleConfig(room.config, false);
+    }
+  }
+
+  const newIndex = Number(room.current_question || 0);
+  const status = room.status || "waiting";
+  const q = App.questions[newIndex];
+
+  const boundsMissing = !q || q._visibleEnd === undefined || q._revealEnd === undefined;
+  const indexChanged = App.questionIndex !== newIndex;
+  const statusChanged = Battle.lastRoomStatus !== status;
+  const questionChanged = Battle.lastRoomQuestion !== newIndex;
+
+  Battle.lastRoomQuestion = newIndex;
+  Battle.lastRoomStatus = status;
+
+  if(status === "started" && (indexChanged || questionChanged || statusChanged || boundsMissing)){
+    App.questionIndex = newIndex;
+    setMode("battle");
+    await renderQuestion();
+  }
 }
 
 function startBattlePolling(){ stopBattlePolling(); Battle.pollTimer=setInterval(() => safeAsync(pollBattleRoom), BATTLE_POLL_MS); }
@@ -732,15 +1210,72 @@ async function restoreBattleSession(){
 
 async function refreshBattlePanel(){
   const panel=$("battle-status-panel");
+  if(!panel) return;
+
   if(!Battle.roomCode){
-    panel.innerHTML=`<h2 class="text-lg font-black text-white mb-3">即時對戰</h2><p class="text-sm text-slate-400 mb-3 leading-relaxed">建立房間後，把房號傳給朋友。雙方會看到同一題裸 K，作答後分數會同步到排行榜。</p><div class="grid grid-cols-2 gap-2"><button onclick="createBattleRoom()" class="btn btn-main px-3 py-3">建立房間</button><button onclick="joinBattleRoom()" class="btn btn-dark px-3 py-3">加入房間</button></div>`;
+    panel.innerHTML=`
+      <h2 class="text-lg font-black text-white mb-3">即時對戰</h2>
+      <p class="text-sm text-slate-400 mb-3 leading-relaxed">建立房間後，把房號傳給朋友。可選「猜方向」或「獲利」對戰。</p>
+      <div class="space-y-2 mb-3">
+        <label class="block text-xs text-slate-500 font-black">對戰類型</label>
+        <select id="battle-kind-select" class="w-full px-3 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
+          <option value="direction">猜方向：看漲 / 盤整 / 看跌</option>
+          <option value="profit">獲利：做多 / 做空 / 平倉</option>
+        </select>
+        <label class="block text-xs text-slate-500 font-black pt-2">獲利模式限制 K 線數</label>
+        <input id="profit-limit-bars" type="number" min="1" max="120" value="${Number(Battle.profitLimitBars || 20)}" class="w-full px-3 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="createBattleRoom()" class="btn btn-main px-3 py-3">建立房間</button>
+        <button onclick="joinBattleRoom()" class="btn btn-dark px-3 py-3">加入房間</button>
+      </div>`;
     return;
   }
+
   const { data:roomData } = await SB.from("battle_rooms").select("*").eq("room_code", Battle.roomCode).single();
+  if(roomData?.config){
+    Battle.battleMode = roomData.config.battle_mode || Battle.battleMode || "direction";
+    Battle.profitLimitBars = Number(roomData.config.profit_limit_bars || Battle.profitLimitBars || 20);
+  }
+
   const { data:players } = await SB.from("battle_players").select("*").eq("room_code", Battle.roomCode).order("score", { ascending:false }).order("hits", { ascending:false }).order("updated_at", { ascending:false });
-  const rows=(players || []).map((p,i)=>{ const isMe=p.player_name===Battle.playerName; const updated=p.updated_at ? new Date(p.updated_at).toLocaleTimeString("zh-TW", {hour12:false}) : ""; return `<div class="flex items-center justify-between rounded-xl ${isMe?"bg-blue-500/10 border-blue-400/40":"bg-slate-900 border-slate-700"} border px-3 py-2"><div><div class="font-black text-sm ${isMe?"text-blue-200":"text-white"}">${i+1}. ${escapeHtml(p.player_name)} ${isMe?"（你）":""}</div><div class="text-xs text-slate-500">命中 ${Number(p.hits || 0)} 題 · ${updated}</div></div><div class="text-right"><div class="text-blue-300 font-black">${Number(p.score || 0)}</div><div class="text-xs text-slate-500">分</div></div></div>`; }).join("");
-  const status=roomData?.status || "waiting"; const qText=status==="started" ? `第 ${Number(roomData?.current_question || 0)+1} 題` : "等待開始";
-  panel.innerHTML=`<h2 class="text-lg font-black text-white mb-3">即時對戰</h2><div class="rounded-2xl bg-slate-950 border border-slate-700 p-3 mb-3"><div class="text-xs text-slate-500 font-bold">房號</div><div class="text-2xl font-black text-amber-300 tracking-wide">${Battle.roomCode}</div><div class="grid grid-cols-2 gap-2 mt-3 text-sm"><div><div class="text-slate-500 text-xs font-bold">玩家</div><div class="text-emerald-300 font-black">${escapeHtml(Battle.playerName)}</div></div><div><div class="text-slate-500 text-xs font-bold">狀態</div><div class="text-blue-300 font-black">${qText}</div></div></div></div><div class="grid grid-cols-2 gap-2 mb-3"><button onclick="startBattleRoom()" class="btn btn-main px-3 py-3">開始 / 重開</button><button onclick="nextBattleQuestion()" class="btn btn-dark px-3 py-3">下一題</button><button onclick="resetBattleRoom()" class="btn btn-dark px-3 py-3">重置</button><button onclick="leaveBattleRoom()" class="btn btn-dark px-3 py-3">離開</button></div><h3 class="text-sm font-black text-slate-300 mb-2">排行榜</h3><div class="space-y-2">${rows || `<div class="text-slate-500 text-sm">等待玩家加入...</div>`}</div><p class="text-xs text-slate-500 mt-3">排行榜每 ${BATTLE_POLL_MS/1000} 秒同步一次；Supabase Realtime 生效時會更快更新。</p>`;
+
+  const rows=(players || []).map((p,i)=>{
+    const isMe=p.player_name===Battle.playerName;
+    const updated=p.updated_at ? new Date(p.updated_at).toLocaleTimeString("zh-TW", {hour12:false}) : "";
+    const answers = Array.isArray(p.answers) ? p.answers : [];
+    const lastProfit = [...answers].reverse().find(x => x.type === "profit");
+    const sub = Battle.battleMode === "profit"
+      ? `獲利 ${pct(lastProfit?.profit_pct || 0)} · ${updated}`
+      : `命中 ${Number(p.hits || 0)} 題 · ${updated}`;
+    return `<div class="flex items-center justify-between rounded-xl ${isMe?"bg-blue-500/10 border-blue-400/40":"bg-slate-900 border-slate-700"} border px-3 py-2"><div><div class="font-black text-sm ${isMe?"text-blue-200":"text-white"}">${i+1}. ${escapeHtml(p.player_name)} ${isMe?"（你）":""}</div><div class="text-xs text-slate-500">${sub}</div></div><div class="text-right"><div class="text-blue-300 font-black">${Number(p.score || 0)}</div><div class="text-xs text-slate-500">分</div></div></div>`;
+  }).join("");
+
+  const status=roomData?.status || "waiting";
+  const qText=status==="started" ? `第 ${Number(roomData?.current_question || 0)+1} 題` : "等待開始";
+  const modeText = battleModeText(Battle.battleMode);
+  const limitText = Battle.battleMode === "profit" ? `｜限制 ${Number(Battle.profitLimitBars || 20)} 根 K` : "";
+
+  panel.innerHTML=`
+    <h2 class="text-lg font-black text-white mb-3">即時對戰</h2>
+    <div class="rounded-2xl bg-slate-950 border border-slate-700 p-3 mb-3">
+      <div class="text-xs text-slate-500 font-bold">房號</div>
+      <div class="text-2xl font-black text-amber-300 tracking-wide">${Battle.roomCode}</div>
+      <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+        <div><div class="text-slate-500 text-xs font-bold">玩家</div><div class="text-emerald-300 font-black">${escapeHtml(Battle.playerName)}</div></div>
+        <div><div class="text-slate-500 text-xs font-bold">狀態</div><div class="text-blue-300 font-black">${qText}</div></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-3 font-bold">模式：${modeText}${limitText}</div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <button onclick="startBattleRoom()" class="btn btn-main px-3 py-3">開始 / 重開</button>
+      <button onclick="nextBattleQuestion()" class="btn btn-dark px-3 py-3">下一題</button>
+      <button onclick="resetBattleRoom()" class="btn btn-dark px-3 py-3">重置</button>
+      <button onclick="leaveBattleRoom()" class="btn btn-dark px-3 py-3">離開</button>
+    </div>
+    <h3 class="text-sm font-black text-slate-300 mb-2">排行榜</h3>
+    <div class="space-y-2">${rows || `<div class="text-slate-500 text-sm">等待玩家加入...</div>`}</div>
+    <p class="text-xs text-slate-500 mt-3">排行榜每 ${BATTLE_POLL_MS/1000} 秒同步一次；Realtime 生效時會更快更新。</p>`;
 }
 
 window.addEventListener("DOMContentLoaded", () => { init().then(() => restoreBattleSession()).catch(err => { console.error(err); showLoadError(err); refreshBattlePanel(); }); });
