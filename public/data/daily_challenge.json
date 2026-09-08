@@ -1,54 +1,54 @@
 {
   "date": "2026-09-08",
-  "title": "2026-09-08 今日裸 K 五連戰",
-  "description": "不看消息、不看指標，只看 K 線判斷後續走勢。",
+  "title": "今日裸 K 五連戰",
   "range_threshold_pct": 1.2,
+  "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
-      "id": "2026-09-08-q1",
-      "ticker": "0050.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/0050_TW_1d.json",
-      "start_idx": 337,
-      "visible_bars": 60,
-      "reveal_bars": 10
+      "question_no": 1,
+      "ticker": "AAPL",
+      "interval": "1mo",
+      "data_path": "public/data/klines/AAPL_1mo_json",
+      "start_idx": 288,
+      "visible_bars": 36,
+      "reveal_bars": 6
     },
     {
-      "id": "2026-09-08-q2",
+      "question_no": 2,
       "ticker": "2454.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2454_TW_1d.json",
-      "start_idx": 243,
+      "data_path": "public/data/klines/2454_TW_1d_json",
+      "start_idx": 878,
       "visible_bars": 60,
       "reveal_bars": 10
     },
     {
-      "id": "2026-09-08-q3",
-      "ticker": "NVDA",
-      "interval": "1d",
-      "data_path": "public/data/klines/NVDA_1d.json",
-      "start_idx": 179,
-      "visible_bars": 60,
-      "reveal_bars": 10
+      "question_no": 3,
+      "ticker": "QQQ",
+      "interval": "1mo",
+      "data_path": "public/data/klines/QQQ_1mo_json",
+      "start_idx": 174,
+      "visible_bars": 36,
+      "reveal_bars": 6
     },
     {
-      "id": "2026-09-08-q4",
-      "ticker": "2317.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2317_TW_1d.json",
-      "start_idx": 223,
-      "visible_bars": 60,
-      "reveal_bars": 10
-    },
-    {
-      "id": "2026-09-08-q5",
+      "question_no": 4,
       "ticker": "2330.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2330_TW_1d.json",
-      "start_idx": 85,
+      "data_path": "public/data/klines/2330_TW_1d_json",
+      "start_idx": 532,
+      "visible_bars": 60,
+      "reveal_bars": 10
+    },
+    {
+      "question_no": 5,
+      "ticker": "2454.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/2454_TW_1d_json",
+      "start_idx": 134,
       "visible_bars": 60,
       "reveal_bars": 10
     }
   ],
-  "disclaimer": "本網站僅供 K 線閱讀練習與教育用途，不提供任何投資建議，也不構成買賣推薦。"
+  "updated_at": "2026-09-08T16:34:35.077178+08:00"
 }
