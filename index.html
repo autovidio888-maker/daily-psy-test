@@ -43,7 +43,7 @@
         <p class="text-slate-400 mt-2">不看消息、不看籌碼、不看股票名稱。只看 K 線，練你的盤感。</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button id="latest-btn" class="btn btn-dark px-5 py-3">最新題段</button>
+        <button id="latest-btn" class="btn btn-dark px-5 py-3">隨機題段</button>
         <button id="new-random-btn" class="btn btn-main px-5 py-3">隨機出題</button>
         <button id="restart-btn" class="btn btn-dark px-5 py-3">重新開始</button>
         <button id="copy-share-btn" class="btn btn-dark px-5 py-3">複製戰績</button>
@@ -340,27 +340,27 @@ function shuffleArray(arr){
   return out;
 }
 
-async function init(){ populateSymbolSelect(); bindUI(); createChart(); initDrawingCanvas(); await loadManualQuestion(false, false); await renderQuestion(); updateStats(); }
+async function init(){ populateSymbolSelect(); bindUI(); createChart(); initDrawingCanvas(); await loadManualQuestion(true, false); await renderQuestion(); updateStats(); }
 
 function bindUI(){
-  $("latest-btn").onclick = () => safeAsync(() => loadManualQuestion(false, true));
+  $("latest-btn").onclick = () => safeAsync(() => loadManualQuestion(true, true));
   $("new-random-btn").onclick = () => safeAsync(() => loadManualQuestion(true, true));
   $("restart-btn").onclick = () => safeAsync(restart);
   $("next-btn").onclick = () => safeAsync(nextQuestion);
   $("copy-share-btn").onclick = copyShare;
-  $("symbol-select").onchange = () => safeAsync(() => loadManualQuestion(false, true));
-  $("bars-select").onchange = () => safeAsync(() => loadManualQuestion(false, true));
+  $("symbol-select").onchange = () => safeAsync(() => loadManualQuestion(true, true));
+  $("bars-select").onchange = () => safeAsync(() => loadManualQuestion(true, true));
 
   document.querySelectorAll(".interval-btn").forEach(btn => {
     btn.onclick = () => safeAsync(async () => {
       App.interval = btn.dataset.interval;
       syncIntervalButtons();
-      await loadManualQuestion(false, true);
+      await loadManualQuestion(true, true);
     });
   });
 
-  $("mode-quiz").onclick = () => setMode("quiz");
-  $("mode-backtest").onclick = () => setMode("backtest");
+  $("mode-quiz").onclick = () => safeAsync(async () => { setMode("quiz"); await loadManualQuestion(true, true); });
+  $("mode-backtest").onclick = () => safeAsync(async () => { setMode("backtest"); await loadManualQuestion(true, true); });
   $("mode-battle").onclick = () => setMode("battle");
 
   document.querySelectorAll(".indicator-toggle").forEach(btn => {
@@ -553,25 +553,69 @@ function makeQuestion(ticker, interval, startIdx, visibleBars, revealBars, quest
   return { question_no:questionNo, ticker, interval, data_path:dataPath(ticker, interval), start_idx:startIdx, visible_bars:visibleBars, reveal_bars:revealBars, threshold_pct:thresholdByInterval(interval), random_start:false };
 }
 
-async function loadManualQuestion(randomStart=false, renderNow=true){
-  const ticker = $("symbol-select").value;
+async function loadManualQuestion(randomStart=true, renderNow=true){
   const interval = App.interval;
   const visibleBars = Number($("bars-select").value || 240);
   const revealBars = revealBarsByInterval(interval);
-  const path = dataPath(ticker, interval);
-  const data = await loadKlines(path);
-  if(data.length < visibleBars + revealBars + 10) throw new Error(`K 線資料太少：${path}，目前 ${data.length} 根。`);
-  const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
-  const step = Math.max(1, Math.floor((visibleBars + revealBars) * 0.72));
+  const pool = await battleCandidatePool(interval, visibleBars, revealBars);
   const questions = [];
-  if(randomStart){
-    for(let i=0;i<5;i++){ const s=Math.floor(Math.random()*Math.max(1,maxStart)); questions.push(makeQuestion(ticker, interval, s, visibleBars, revealBars, i+1)); }
-  } else {
-    let s=maxStart;
-    for(let i=0;i<5;i++){ questions.push(makeQuestion(ticker, interval, Math.max(0,s), visibleBars, revealBars, i+1)); s -= step; }
+  const used = new Set();
+
+  for(const item of pool){
+    if(questions.length >= 5) break;
+
+    try {
+      const path = item.path || dataPath(item.ticker, interval);
+      const data = await loadKlines(path);
+
+      if(data.length < visibleBars + revealBars + 10) continue;
+
+      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
+      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
+      const key = `${item.ticker}_${startIdx}`;
+
+      if(used.has(key)) continue;
+      used.add(key);
+
+      questions.push(makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
+    } catch(e) {
+      console.warn("skip random ticker", item.ticker, e);
+    }
   }
-  App.questions=questions; App.questionIndex=0; App.currentData=data; App.currentDataPath=path; App.score=0; App.hits=0; App.answers=[]; App.revealed=false;
-  $("interval-badge").innerText=intervalText(interval); $("symbol-badge").innerText="代號隱藏"; $("blind-badge").innerText="BLIND MODE";
+
+  if(!questions.length){
+    throw new Error(`隨機股票題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions。`);
+  }
+
+  while(questions.length < 5){
+    const base = questions[questions.length % Math.max(1, questions.length)];
+    const path = base.data_path;
+
+    try {
+      const data = await loadKlines(path);
+      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
+      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
+      questions.push(makeQuestion(base.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
+    } catch(e) {
+      questions.push({ ...base, question_no: questions.length + 1 });
+    }
+  }
+
+  App.questions = questions;
+  App.questionIndex = 0;
+  App.currentData = [];
+  App.currentDataPath = "";
+  App.score = 0;
+  App.hits = 0;
+  App.answers = [];
+  App.revealed = false;
+  App.profit = null;
+
+  syncSymbolAndBarsUI(questions[0].ticker, interval, visibleBars);
+  $("interval-badge").innerText = intervalText(interval);
+  $("symbol-badge").innerText = "隨機股票 · 代號隱藏";
+  $("blind-badge").innerText = "RANDOM MODE";
+
   if(renderNow) await renderQuestion();
 }
 
@@ -677,7 +721,7 @@ async function renderQuestion(){
     }
 
     if(!q){
-      throw new Error("找不到題目設定，請按『最新題段』重新建立題目。");
+      throw new Error("找不到題目設定，請按『隨機題段』重新建立題目。");
     }
 
     App.currentQuestion = q;
@@ -739,7 +783,7 @@ function normalizeQuestionBounds(q){
   q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
 
   if(q._visibleEnd < 0 || q._revealEnd <= q._visibleEnd){
-    throw new Error("題目索引異常，請按『最新題段』重新整理題目。");
+    throw new Error("題目索引異常，請按『隨機題段』重新整理題目。");
   }
 }
 
@@ -941,7 +985,25 @@ function feedbackText(answer,out,correct){
 }
 function setAnswerDisabled(disabled){ document.querySelectorAll(".answer-btn").forEach(btn => { btn.disabled=disabled; btn.classList.toggle("opacity-50", disabled); }); }
 async function nextQuestion(){ if(Battle.roomCode){ await nextBattleQuestion(); return; } if(App.questionIndex < App.questions.length-1){ App.questionIndex += 1; await renderQuestion(); } }
-async function restart(){ App.questionIndex=0; App.score=0; App.hits=0; App.answers=[]; await loadManualQuestion(false, true); updateStats(); if(Battle.roomCode) await submitBattleScore(); }
+async function restart(){
+  App.questionIndex=0;
+  App.score=0;
+  App.hits=0;
+  App.answers=[];
+  App.profit=null;
+
+  if(Battle.roomCode){
+    App.questions=[];
+    await loadBattleRandomQuestions(false);
+    await renderQuestion();
+    await updateBattleRoomConfigOnly();
+    await submitBattleScore();
+  } else {
+    await loadManualQuestion(true, true);
+  }
+
+  updateStats();
+}
 function updateStats(){ const total=App.questions.length || 1; $("stat-progress").innerText=`${App.answers.length}/${total}`; $("stat-hit").innerText=App.hits; $("stat-score").innerText=App.score; $("score-badge").innerText=`分數 ${App.score}`; }
 function finishChallenge(){ const total=App.questions.length || 1; let title="被洗出去的人"; if(App.score>=90) title="裸 K 老狐狸"; else if(App.score>=70) title="不追高戰士"; else if(App.score>=45) title="盤感修煉中"; $("result-box").innerHTML += `<div class="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4"><h3 class="text-xl font-black text-blue-200">本輪完成：${title}</h3><p class="text-sm text-slate-300 mt-1">命中 ${App.hits}/${total}，總分 ${App.score}。</p></div>`; localStorage.setItem(`kline_score_${new Date().toISOString().slice(0,10)}`, JSON.stringify({score:App.score,hits:App.hits,answers:App.answers,saved_at:new Date().toISOString()})); }
 function copyShare(){ const total=App.questions.length || 1; const text=`我剛完成裸 K 訓練\n命中：${App.hits}/${total}\n分數：${App.score}\n\n不看消息、不看指標，只看 K 線。\n#裸K訓練場 #K線練習`; navigator.clipboard.writeText(text).then(()=>alert("戰績已複製")); }
@@ -1217,6 +1279,23 @@ function currentBattleConfig(){
     created_at:new Date().toISOString()
   };
 }
+
+async function updateBattleRoomConfigOnly(){
+  if(!Battle.roomCode) return;
+
+  const { error } = await SB
+    .from("battle_rooms")
+    .update({
+      current_question:0,
+      config:currentBattleConfig()
+    })
+    .eq("room_code", Battle.roomCode);
+
+  if(error){
+    console.error("updateBattleRoomConfigOnly error:", error);
+  }
+}
+
 async function applyBattleConfig(config, renderNow=true){
   if(!config) return;
   Battle.battleMode = config.battle_mode || "direction";
