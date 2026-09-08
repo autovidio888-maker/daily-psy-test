@@ -15,11 +15,68 @@ TAIWAN_TZ = timezone(timedelta(hours=8))
 OUTPUT_DIR = "public/data"
 KLINE_DIR = os.path.join(OUTPUT_DIR, "klines")
 DAILY_CHALLENGE_PATH = os.path.join(OUTPUT_DIR, "daily_challenge.json")
+MANIFEST_PATH = os.path.join(OUTPUT_DIR, "manifest.json")
 
 TICKERS = [
-    "2330.TW", "2317.TW", "2454.TW", "2303.TW", "0050.TW",
-    "NVDA", "AAPL", "MSFT", "SPY", "QQQ", "BTC-USD",
+    "0050.TW",
+    "2330.TW",
+    "2454.TW",
+    "2308.TW",
+    "2317.TW",
+    "3711.TW",
+    "2383.TW",
+    "2303.TW",
+    "3037.TW",
+    "2891.TW",
+    "2345.TW",
+    "2881.TW",
+    "2882.TW",
+    "1303.TW",
+    "2327.TW",
+    "3017.TW",
+    "2887.TW",
+    "2382.TW",
+    "2360.TW",
+    "2885.TW",
+    "2059.TW",
+    "6669.TW",
+    "2886.TW",
+    "2884.TW",
+    "3231.TW",
+    "2408.TW",
+    "2344.TW",
+    "2357.TW",
+    "2301.TW",
+    "2412.TW",
+    "2890.TW",
+    "2883.TW",
+    "3008.TW",
+    "2880.TW",
+    "2892.TW",
+    "3665.TW",
+    "1216.TW",
+    "3443.TW",
+    "3653.TW",
+    "4958.TW",
+    "7769.TW",
+    "2368.TW",
+    "2395.TW",
+    "3661.TW",
+    "2449.TW",
+    "5880.TW",
+    "8046.TW",
+    "2603.TW",
+    "4904.TW",
+    "3045.TW",
+    "6505.TW",
+    "NVDA",
+    "AAPL",
+    "MSFT",
+    "SPY",
+    "QQQ",
+    "BTC-USD",
 ]
+
 
 INTERVALS = {
     "1d": {"period": "5y", "visible_bars": 240, "reveal_bars": 20, "range_threshold_pct": 1.2},
@@ -230,6 +287,15 @@ def main() -> None:
                 print(f"[ERROR] {ticker} {interval}: {e}")
     if not available_files:
         raise RuntimeError("No kline files generated.")
+    manifest = {
+        "updated_at": datetime.now(TAIWAN_TZ).isoformat(),
+        "ticker_count": len(TICKERS),
+        "tickers": TICKERS,
+        "files": available_files,
+    }
+    save_json(MANIFEST_PATH, manifest)
+    print(f"[OK] Saved {MANIFEST_PATH}")
+
     challenge = build_daily_challenge(available_files)
     save_json(DAILY_CHALLENGE_PATH, challenge)
     print(f"[OK] Saved {DAILY_CHALLENGE_PATH}")
