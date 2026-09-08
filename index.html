@@ -1,169 +1,1371 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
+<!doctype html>
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>裸 K 訓練場｜日K 週K 月K 回測練習</title>
+  <meta name="description" content="裸 K 訓練場提供日K、週K、月K的K線判斷練習、技術指標、畫線工具與自動計分。僅供教育用途，不構成投資建議。" />
+
   <meta name="google-adsense-account" content="ca-pub-3822526422033370">
 
-  <!-- Google Analytics (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D0XC0V7CP1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-D0XC0V7CP1');
-  </script>
-
-  <title>裸 K 訓練場｜KLine Replay Arena</title>
-  <meta name="description" content="不看消息、不看指標，只看裸 K。每天 5 題 Bar Replay 練習，訓練盤感與進出場判斷。" />
-  <meta property="og:title" content="裸 K 訓練場｜KLine Replay Arena" />
-  <meta property="og:description" content="每天 5 題裸 K 挑戰，猜後續走勢、回放 K 線、練盤感。" />
-  <meta property="og:type" content="website" />
-
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370" crossorigin="anonymous"></script>
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370"
+    crossorigin="anonymous"></script>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 固定用 v4，避免 v5 API 不相容 -->
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 
   <style>
-    :root { color-scheme: dark; }
-    body { background: radial-gradient(circle at top left,#172554 0,#020617 42%,#000 100%); }
-    .glass { background: rgba(15,23,42,.78); backdrop-filter: blur(14px); border: 1px solid rgba(148,163,184,.2); }
-    .panel { background: rgba(2,6,23,.86); border: 1px solid rgba(51,65,85,.9); }
-    .btn { border-radius: 14px; font-weight: 900; transition: .15s; }
-    .btn:active { transform: scale(.98); }
-    .tool-btn.active { background: #2563eb !important; color: white !important; border-color: #60a5fa !important; }
-    #chart-wrap { position: relative; }
-    #draw-canvas { position: absolute; inset: 0; z-index: 15; pointer-events: auto; }
-    .drawing-disabled #draw-canvas { pointer-events: none; }
-    .tiny-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
-    .tiny-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    html, body {
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn {
+      border-radius: 14px;
+      font-weight: 900;
+      transition: 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-main {
+      background: #2563eb;
+      color: white;
+      border: 1px solid #2563eb;
+    }
+
+    .btn-dark {
+      background: #0f172a;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+
+    .btn-dark:hover {
+      background: #1e293b;
+      color: white;
+    }
+
+    .btn-green {
+      background: #059669;
+      color: white;
+    }
+
+    .btn-red {
+      background: #e11d48;
+      color: white;
+    }
+
+    .btn-gray {
+      background: #334155;
+      color: white;
+    }
+
+    .active-pill {
+      background: #2563eb !important;
+      color: white !important;
+      border-color: #2563eb !important;
+    }
+
+    #chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 650px;
+      min-height: 520px;
+      background: #020617;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    #chart {
+      width: 100%;
+      height: 100%;
+    }
+
+    #draw-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .tool-active {
+      background: #f59e0b !important;
+      color: #111827 !important;
+      border-color: #f59e0b !important;
+    }
+
+    @media (max-width: 768px) {
+      #chart-wrap {
+        height: 560px;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen text-slate-100">
-  <div class="max-w-7xl mx-auto px-3 md:px-6 py-4">
-    <header class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-4">
+
+<body class="min-h-screen">
+  <main class="max-w-[1500px] mx-auto px-4 py-5">
+
+    <section class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-200 text-xs font-black mb-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          每日裸 K 五連戰
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-black mb-3">
+          ● 每日裸 K 五連戰
         </div>
-        <h1 class="text-2xl md:text-4xl font-black tracking-tight">裸 K 訓練場</h1>
-        <p class="text-slate-400 text-sm mt-1">不看消息、不看指標、不看股票名稱。只看 K 線，練你的盤感。</p>
-      </div>
-      <div class="flex gap-2 flex-wrap">
-        <button id="mode-practice" class="btn px-4 py-2 bg-blue-600 text-white">單人練習</button>
-        <button id="mode-backtest" class="btn px-4 py-2 bg-slate-800 border border-slate-700 text-slate-200">回測練習</button>
-        <button id="mode-battle" class="btn px-4 py-2 bg-slate-800 border border-slate-700 text-slate-200">即時對戰</button>
-      </div>
-    </header>
 
-    <section class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-      <main class="glass rounded-3xl p-3 md:p-4 shadow-2xl">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+        <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white">
+          裸 K 訓練場
+        </h1>
+
+        <p class="text-slate-400 mt-2">
+          不看消息、不看籌碼、不看股票名稱。只看 K 線，練你的盤感。
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button id="new-random-btn" class="btn btn-main px-5 py-3">隨機出題</button>
+        <button id="restart-btn" class="btn btn-dark px-5 py-3">重新開始</button>
+        <button id="copy-share-btn" class="btn btn-dark px-5 py-3">複製戰績</button>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5">
+
+      <section class="glass rounded-3xl p-4">
+
+        <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.8fr_1.1fr] gap-3 mb-4">
           <div>
-            <p id="challenge-title" class="text-sm text-slate-400 font-bold">載入今日挑戰中...</p>
-            <h2 id="question-title" class="text-lg md:text-xl font-black">第 1 題</h2>
+            <label class="block text-xs text-slate-400 font-bold mb-2">股票 / 商品</label>
+            <select id="symbol-select" class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
+              <option value="2330.TW">台積電 2330</option>
+              <option value="2317.TW">鴻海 2317</option>
+              <option value="2454.TW">聯發科 2454</option>
+              <option value="2303.TW">聯電 2303</option>
+              <option value="0050.TW">0050</option>
+              <option value="NVDA">NVDA</option>
+              <option value="AAPL">AAPL</option>
+              <option value="MSFT">MSFT</option>
+              <option value="SPY">SPY</option>
+              <option value="QQQ">QQQ</option>
+              <option value="BTC-USD">BTC</option>
+            </select>
           </div>
-          <div class="flex flex-wrap gap-2 text-xs font-black">
-            <span id="blind-badge" class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-200">BLIND MODE</span>
-            <span id="symbol-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">代號隱藏</span>
-            <span id="score-badge" class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-200">分數 0</span>
+
+          <div>
+            <label class="block text-xs text-slate-400 font-bold mb-2">K 線週期</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button class="interval-btn btn btn-dark px-3 py-3 active-pill" data-interval="1d">日 K</button>
+              <button class="interval-btn btn btn-dark px-3 py-3" data-interval="1wk">週 K</button>
+              <button class="interval-btn btn btn-dark px-3 py-3" data-interval="1mo">月 K</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 font-bold mb-2">模式</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="mode-quiz" class="mode-btn btn btn-dark px-3 py-3 active-pill">猜方向</button>
+              <button id="mode-backtest" class="mode-btn btn btn-dark px-3 py-3">回測練習</button>
+            </div>
           </div>
         </div>
 
-        <div id="toolbar" class="tiny-scroll overflow-x-auto flex items-center gap-2 mb-3 pb-1">
-          <button data-tool="cursor" class="tool-btn active shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">游標</button>
-          <button data-tool="trend" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">趨勢線</button>
-          <button data-tool="ray" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">射線</button>
-          <button data-tool="hline" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">水平線</button>
-          <button data-tool="vline" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">垂直線</button>
-          <button data-tool="rect" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">區間框</button>
-          <button data-tool="fib" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">斐波</button>
-          <button data-tool="text" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">文字</button>
-          <button data-tool="delete" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-rose-950/60 border border-rose-800 text-xs font-black">刪除</button>
-          <button id="undo-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">復原</button>
-          <button id="redo-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">重做</button>
-          <button id="clear-draw-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">清空畫線</button>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <span id="blind-badge" class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-black">
+            BLIND MODE
+          </span>
+
+          <span id="symbol-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-black">
+            代號隱藏
+          </span>
+
+          <span id="interval-badge" class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs font-black">
+            日 K
+          </span>
+
+          <span id="score-badge" class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-black">
+            分數 0
+          </span>
         </div>
 
-        <div id="chart-wrap" class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 drawing-disabled">
-          <div id="chart" class="w-full h-[520px] md:h-[680px]"></div>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs active-pill" data-indicator="volume">成交量</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs active-pill" data-indicator="ma">MA</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="ema">EMA</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="bb">布林</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="rsi">RSI</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="macd">MACD</button>
+          <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="atr">ATR</button>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs tool-active" data-tool="cursor">游標</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="trend">趨勢線</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="hline">水平線</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="vline">垂直線</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="rect">區間框</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="text">文字</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="erase">刪除</button>
+          <button id="clear-draw-btn" class="btn btn-dark px-3 py-2 text-xs">清空畫線</button>
+        </div>
+
+        <div id="chart-wrap">
+          <div id="chart"></div>
           <canvas id="draw-canvas"></canvas>
         </div>
 
-        <div id="answer-area" class="grid grid-cols-3 gap-2 mt-4">
-          <button data-answer="up" class="answer-btn btn py-4 bg-emerald-600 hover:bg-emerald-500 text-white">看漲</button>
-          <button data-answer="range" class="answer-btn btn py-4 bg-slate-700 hover:bg-slate-600 text-white">盤整</button>
-          <button data-answer="down" class="answer-btn btn py-4 bg-rose-600 hover:bg-rose-500 text-white">看跌</button>
-        </div>
+        <section id="answer-area" class="grid grid-cols-3 gap-2 mt-4">
+          <button class="answer-btn btn btn-green py-4" data-answer="up">看漲</button>
+          <button class="answer-btn btn btn-gray py-4" data-answer="range">盤整</button>
+          <button class="answer-btn btn btn-red py-4" data-answer="down">看跌</button>
+        </section>
 
-        <div id="backtest-area" class="hidden mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
-          <button id="bt-buy" class="btn py-3 bg-emerald-600 text-white">買進</button>
-          <button id="bt-sell" class="btn py-3 bg-rose-600 text-white">賣出</button>
-          <button id="bt-next" class="btn py-3 bg-blue-600 text-white">下一根</button>
-          <button id="bt-auto" class="btn py-3 bg-slate-700 text-white">自動播放</button>
-          <button id="bt-reset" class="btn py-3 bg-slate-800 border border-slate-700 text-white">重置回測</button>
-        </div>
+        <section id="backtest-area" class="hidden grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">
+          <button id="bt-buy" class="btn btn-green py-3">買進</button>
+          <button id="bt-sell" class="btn btn-red py-3">賣出</button>
+          <button id="bt-next" class="btn btn-main py-3">下一根</button>
+          <button id="bt-auto" class="btn btn-dark py-3">自動播放</button>
+          <button id="bt-reset" class="btn btn-dark py-3">重置回測</button>
+        </section>
 
-        <div id="result-box" class="hidden mt-4 panel rounded-2xl p-4"></div>
-      </main>
+        <section id="result-box" class="hidden mt-4 rounded-2xl border border-slate-700 bg-slate-950 p-4"></section>
+
+        <button id="next-btn" class="hidden w-full btn btn-main py-4 mt-4">
+          下一題
+        </button>
+      </section>
 
       <aside class="space-y-4">
-        <div class="panel rounded-3xl p-4">
-          <h3 class="font-black text-lg mb-2">今日進度</h3>
-          <div class="grid grid-cols-3 gap-2 text-center text-xs font-black">
-            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
-              <div class="text-slate-500">題數</div>
-              <div id="stat-progress" class="text-xl text-white mt-1">0/5</div>
+        <section class="glass rounded-3xl p-4">
+          <h2 class="text-lg font-black text-white mb-3">今日進度</h2>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center">
+              <div class="text-xs text-slate-500 font-bold">題數</div>
+              <div id="stat-progress" class="text-2xl font-black text-white">0/5</div>
             </div>
-            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
-              <div class="text-slate-500">命中</div>
-              <div id="stat-hit" class="text-xl text-emerald-300 mt-1">0</div>
+
+            <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center">
+              <div class="text-xs text-slate-500 font-bold">命中</div>
+              <div id="stat-hit" class="text-2xl font-black text-emerald-300">0</div>
             </div>
-            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
-              <div class="text-slate-500">分數</div>
-              <div id="stat-score" class="text-xl text-blue-300 mt-1">0</div>
+
+            <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center">
+              <div class="text-xs text-slate-500 font-bold">分數</div>
+              <div id="stat-score" class="text-2xl font-black text-blue-300">0</div>
             </div>
           </div>
-          <button id="next-question" class="hidden btn w-full mt-3 py-3 bg-blue-600 text-white">下一題</button>
-          <button id="restart-btn" class="btn w-full mt-3 py-3 bg-slate-800 border border-slate-700 text-slate-200">重新開始</button>
-          <button id="copy-share" class="btn w-full mt-2 py-3 bg-white text-slate-900">複製戰績文</button>
-          <p class="text-[11px] text-slate-500 leading-relaxed mt-3">本網站僅供 K 線閱讀練習與教育用途，不提供任何投資建議，也不構成買賣推薦。</p>
-        </div>
 
-        <div id="battle-panel" class="panel rounded-3xl p-4 hidden">
-          <h3 class="font-black text-lg mb-2">即時對戰房間</h3>
-          <div class="space-y-2">
-            <input id="battle-name" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="玩家名稱" />
-            <input id="battle-room" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="房號，例如 ROOM001" value="ROOM001" />
-            <div class="grid grid-cols-2 gap-2">
-              <button id="battle-create" class="btn py-2 bg-blue-600 text-white text-sm">建立房間</button>
-              <button id="battle-join" class="btn py-2 bg-slate-800 border border-slate-700 text-sm">加入房間</button>
-            </div>
-          </div>
-          <p id="battle-status" class="text-xs text-slate-400 mt-3">尚未連線。需設定 Supabase 才能使用。</p>
-          <div id="battle-leaderboard" class="mt-3 space-y-2 text-sm"></div>
-        </div>
+          <p class="text-xs text-slate-500 mt-3 leading-relaxed">
+            題目會顯示前段 K 線，隱藏未來數根。作答後才揭曉後續走勢並自動計分。
+          </p>
+        </section>
 
-        <div class="panel rounded-3xl p-4">
-          <h3 class="font-black text-lg mb-2">練習說明</h3>
-          <ul class="text-sm text-slate-300 leading-7 list-disc pl-5">
-            <li>單人練習：猜後 10 根 K 棒方向。</li>
-            <li>回測練習：一根一根播放，手動買進賣出。</li>
-            <li>畫線工具：支援趨勢線、射線、水平線、垂直線、區間框、斐波與文字。</li>
-            <li>即時對戰：用 Supabase 同步房間與排行榜。</li>
+        <section class="glass rounded-3xl p-4">
+          <h2 class="text-lg font-black text-white mb-3">自動計分規則</h2>
+
+          <ul class="text-sm text-slate-300 space-y-2 leading-relaxed">
+            <li>後續漲幅大於門檻：答案為看漲</li>
+            <li>後續跌幅小於負門檻：答案為看跌</li>
+            <li>介於門檻內：答案為盤整</li>
+            <li>答對方向 +20 分，答對盤整 +25 分</li>
+            <li>每題股票代號會先隱藏，作答後揭曉</li>
           </ul>
-        </div>
+        </section>
+
+        <section class="glass rounded-3xl p-4">
+          <h2 class="text-lg font-black text-white mb-3">免責聲明</h2>
+
+          <p class="text-sm text-slate-400 leading-relaxed">
+            本網站僅供 K 線閱讀練習、回測模擬與教育用途，不提供任何投資建議，也不構成買賣推薦。
+            所有資料僅供練習，實際投資請自行承擔風險。
+          </p>
+        </section>
       </aside>
     </section>
-  </div>
+  </main>
 
-  <script src="public/js/config.js"></script>
-  <script src="public/js/drawing-tools.js"></script>
-  <script src="public/js/battle.js"></script>
-  <script src="public/js/app.js"></script>
+<script>
+const App = {
+  interval: "1d",
+  mode: "quiz",
+  challenge: null,
+  questions: [],
+  questionIndex: 0,
+  currentData: [],
+  currentQuestion: null,
+
+  chart: null,
+  candleSeries: null,
+  volumeSeries: null,
+  indicatorSeries: {},
+
+  indicators: {
+    volume: true,
+    ma: true,
+    ema: false,
+    bb: false,
+    rsi: false,
+    macd: false,
+    atr: false
+  },
+
+  revealed: false,
+  score: 0,
+  hits: 0,
+  answers: [],
+
+  backtest: null,
+  autoplayTimer: null,
+
+  drawings: [],
+  drawTool: "cursor",
+  drawStart: null
+};
+
+const $ = id => document.getElementById(id);
+
+function sanitizeFileName(ticker, interval) {
+  return `${ticker}_${interval}.json`.replaceAll(".", "_").replaceAll("-", "_");
+}
+
+function dataPath(ticker, interval) {
+  return `public/data/klines/${sanitizeFileName(ticker, interval)}`;
+}
+
+function intervalText(interval) {
+  if (interval === "1d") return "日 K";
+  if (interval === "1wk") return "週 K";
+  if (interval === "1mo") return "月 K";
+  return interval;
+}
+
+function pct(v) {
+  const n = Number(v || 0);
+  return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+}
+
+function money(v) {
+  return Number(v || 0).toLocaleString("zh-TW", { maximumFractionDigits: 0 });
+}
+
+async function init() {
+  bindUI();
+  createChart();
+  initDrawingCanvas();
+
+  await loadDailyChallenge();
+  await renderQuestion();
+
+  updateStats();
+}
+
+function bindUI() {
+  $("restart-btn").onclick = restart;
+  $("new-random-btn").onclick = buildManualQuestion;
+  $("next-btn").onclick = nextQuestion;
+  $("copy-share-btn").onclick = copyShare;
+
+  $("symbol-select").onchange = buildManualQuestion;
+
+  document.querySelectorAll(".interval-btn").forEach(btn => {
+    btn.onclick = () => {
+      App.interval = btn.dataset.interval;
+
+      document.querySelectorAll(".interval-btn").forEach(b => b.classList.remove("active-pill"));
+      btn.classList.add("active-pill");
+
+      $("interval-badge").innerText = intervalText(App.interval);
+
+      buildManualQuestion();
+    };
+  });
+
+  $("mode-quiz").onclick = () => setMode("quiz");
+  $("mode-backtest").onclick = () => setMode("backtest");
+
+  document.querySelectorAll(".indicator-toggle").forEach(btn => {
+    btn.onclick = () => {
+      const name = btn.dataset.indicator;
+      App.indicators[name] = !App.indicators[name];
+      btn.classList.toggle("active-pill", App.indicators[name]);
+      updateChartVisibleData();
+    };
+  });
+
+  document.querySelectorAll(".answer-btn").forEach(btn => {
+    btn.onclick = () => submitAnswer(btn.dataset.answer);
+  });
+
+  document.querySelectorAll(".tool-btn").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("tool-active"));
+      btn.classList.add("tool-active");
+      setDrawTool(btn.dataset.tool);
+    };
+  });
+
+  $("clear-draw-btn").onclick = () => {
+    App.drawings = [];
+    saveDrawings();
+    redrawCanvas();
+  };
+
+  $("bt-buy").onclick = backtestBuy;
+  $("bt-sell").onclick = backtestSell;
+  $("bt-next").onclick = backtestNext;
+  $("bt-auto").onclick = toggleAutoplay;
+  $("bt-reset").onclick = () => setupBacktest(true);
+}
+
+function setMode(mode) {
+  App.mode = mode;
+
+  document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active-pill"));
+
+  if (mode === "quiz") {
+    $("mode-quiz").classList.add("active-pill");
+    $("answer-area").classList.remove("hidden");
+    $("backtest-area").classList.add("hidden");
+  } else {
+    $("mode-backtest").classList.add("active-pill");
+    $("answer-area").classList.add("hidden");
+    $("backtest-area").classList.remove("hidden");
+    setupBacktest(true);
+  }
+}
+
+function createChart() {
+  const chartEl = $("chart");
+  const rect = chartEl.getBoundingClientRect();
+
+  App.chart = LightweightCharts.createChart(chartEl, {
+    width: Math.max(800, Math.floor(rect.width || 1000)),
+    height: Math.max(520, Math.floor(rect.height || 650)),
+    layout: {
+      background: { type: "solid", color: "#020617" },
+      textColor: "#cbd5e1"
+    },
+    grid: {
+      vertLines: { color: "rgba(51,65,85,.35)" },
+      horzLines: { color: "rgba(51,65,85,.35)" }
+    },
+    rightPriceScale: {
+      borderColor: "rgba(148,163,184,.25)"
+    },
+    timeScale: {
+      borderColor: "rgba(148,163,184,.25)",
+      timeVisible: false
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal
+    },
+    localization: {
+      locale: "zh-TW"
+    }
+  });
+
+  App.candleSeries = App.chart.addCandlestickSeries({
+    upColor: "#22c55e",
+    downColor: "#ef4444",
+    borderUpColor: "#22c55e",
+    borderDownColor: "#ef4444",
+    wickUpColor: "#22c55e",
+    wickDownColor: "#ef4444"
+  });
+
+  App.volumeSeries = App.chart.addHistogramSeries({
+    priceFormat: { type: "volume" },
+    priceScaleId: "volume",
+    color: "rgba(148,163,184,.35)"
+  });
+
+  App.chart.priceScale("volume").applyOptions({
+    scaleMargins: { top: 0.82, bottom: 0 }
+  });
+
+  window.addEventListener("resize", () => {
+    const r = chartEl.getBoundingClientRect();
+    App.chart.applyOptions({
+      width: Math.floor(r.width),
+      height: Math.floor(r.height)
+    });
+    resizeCanvas();
+  });
+}
+
+function clearIndicatorSeries() {
+  Object.values(App.indicatorSeries).forEach(series => {
+    try {
+      App.chart.removeSeries(series);
+    } catch (e) {}
+  });
+
+  App.indicatorSeries = {};
+}
+
+function addLine(name, options) {
+  App.indicatorSeries[name] = App.chart.addLineSeries({
+    lineWidth: 1,
+    priceLineVisible: false,
+    lastValueVisible: false,
+    ...options
+  });
+
+  return App.indicatorSeries[name];
+}
+
+function setIndicatorData(candles) {
+  clearIndicatorSeries();
+
+  if (App.indicators.ma) {
+    const ma20 = addLine("MA20", { color: "#60a5fa" });
+    const ma60 = addLine("MA60", { color: "#f59e0b" });
+
+    ma20.setData(candles.filter(x => x.ma20 != null).map(x => ({ time: x.time, value: x.ma20 })));
+    ma60.setData(candles.filter(x => x.ma60 != null).map(x => ({ time: x.time, value: x.ma60 })));
+  }
+
+  if (App.indicators.ema) {
+    const ema20 = addLine("EMA20", { color: "#a78bfa" });
+    const ema60 = addLine("EMA60", { color: "#fb7185" });
+
+    ema20.setData(candles.filter(x => x.ema20 != null).map(x => ({ time: x.time, value: x.ema20 })));
+    ema60.setData(candles.filter(x => x.ema60 != null).map(x => ({ time: x.time, value: x.ema60 })));
+  }
+
+  if (App.indicators.bb) {
+    const upper = addLine("BBU", { color: "#38bdf8" });
+    const middle = addLine("BBM", { color: "#64748b" });
+    const lower = addLine("BBL", { color: "#38bdf8" });
+
+    upper.setData(candles.filter(x => x.bb_upper != null).map(x => ({ time: x.time, value: x.bb_upper })));
+    middle.setData(candles.filter(x => x.bb_mid != null).map(x => ({ time: x.time, value: x.bb_mid })));
+    lower.setData(candles.filter(x => x.bb_lower != null).map(x => ({ time: x.time, value: x.bb_lower })));
+  }
+
+  if (App.indicators.rsi) {
+    const rsi = addLine("RSI14", {
+      color: "#22d3ee",
+      priceScaleId: "rsi"
+    });
+
+    App.chart.priceScale("rsi").applyOptions({
+      scaleMargins: { top: 0.72, bottom: 0.14 }
+    });
+
+    rsi.setData(candles.filter(x => x.rsi14 != null).map(x => ({ time: x.time, value: x.rsi14 })));
+  }
+
+  if (App.indicators.macd) {
+    const macd = addLine("MACD", {
+      color: "#c084fc",
+      priceScaleId: "macd"
+    });
+
+    const signal = addLine("MACD_SIGNAL", {
+      color: "#fb7185",
+      priceScaleId: "macd"
+    });
+
+    App.chart.priceScale("macd").applyOptions({
+      scaleMargins: { top: 0.76, bottom: 0.05 }
+    });
+
+    macd.setData(candles.filter(x => x.macd != null).map(x => ({ time: x.time, value: x.macd })));
+    signal.setData(candles.filter(x => x.macd_signal != null).map(x => ({ time: x.time, value: x.macd_signal })));
+  }
+
+  if (App.indicators.atr) {
+    const atr = addLine("ATR14", {
+      color: "#f97316",
+      priceScaleId: "atr"
+    });
+
+    App.chart.priceScale("atr").applyOptions({
+      scaleMargins: { top: 0.80, bottom: 0.02 }
+    });
+
+    atr.setData(candles.filter(x => x.atr14 != null).map(x => ({ time: x.time, value: x.atr14 })));
+  }
+}
+
+async function loadDailyChallenge() {
+  try {
+    const res = await fetch(`public/data/daily_challenge.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error("daily_challenge.json not found");
+
+    App.challenge = await res.json();
+    App.questions = App.challenge.questions || [];
+  } catch (err) {
+    console.warn("daily challenge missing, use manual question", err);
+    App.challenge = {
+      date: new Date().toISOString().slice(0, 10),
+      range_threshold_pct: 1.2,
+      questions: []
+    };
+    buildManualQuestion(false);
+  }
+}
+
+async function loadKlines(path) {
+  const res = await fetch(`${path}?t=${Date.now()}`);
+
+  if (!res.ok) {
+    throw new Error(`K 線資料載入失敗：${path}`);
+  }
+
+  const raw = await res.json();
+
+  return raw.map(x => ({
+    time: x.time,
+    open: Number(x.open),
+    high: Number(x.high),
+    low: Number(x.low),
+    close: Number(x.close),
+    volume: Number(x.volume || 0),
+
+    ma5: nval(x.ma5),
+    ma20: nval(x.ma20),
+    ma60: nval(x.ma60),
+    ema20: nval(x.ema20),
+    ema60: nval(x.ema60),
+    rsi14: nval(x.rsi14),
+    macd: nval(x.macd),
+    macd_signal: nval(x.macd_signal),
+    macd_hist: nval(x.macd_hist),
+    bb_upper: nval(x.bb_upper),
+    bb_mid: nval(x.bb_mid),
+    bb_lower: nval(x.bb_lower),
+    atr14: nval(x.atr14)
+  })).filter(x =>
+    x.time &&
+    Number.isFinite(x.open) &&
+    Number.isFinite(x.high) &&
+    Number.isFinite(x.low) &&
+    Number.isFinite(x.close)
+  );
+}
+
+function nval(v) {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function buildManualQuestion(renderNow = true) {
+  const ticker = $("symbol-select").value;
+  const interval = App.interval;
+
+  const visibleBars = interval === "1d" ? 60 : interval === "1wk" ? 52 : 36;
+  const revealBars = interval === "1d" ? 10 : interval === "1wk" ? 8 : 6;
+
+  App.questions = [{
+    ticker,
+    interval,
+    data_path: dataPath(ticker, interval),
+    start_idx: null,
+    visible_bars: visibleBars,
+    reveal_bars: revealBars
+  }];
+
+  App.questionIndex = 0;
+
+  if (renderNow) {
+    renderQuestion();
+  }
+}
+
+async function renderQuestion() {
+  clearInterval(App.autoplayTimer);
+  App.autoplayTimer = null;
+
+  App.revealed = false;
+  $("result-box").classList.add("hidden");
+  $("next-btn").classList.add("hidden");
+
+  setAnswerDisabled(false);
+
+  let q = App.questions[App.questionIndex];
+
+  if (!q) {
+    buildManualQuestion(false);
+    q = App.questions[0];
+  }
+
+  App.currentQuestion = q;
+  App.currentData = await loadKlines(q.data_path);
+
+  if (App.currentData.length < 120) {
+    throw new Error("K 線資料太少，請先讓 GitHub Actions 更新資料。");
+  }
+
+  const visibleBars = Number(q.visible_bars || 60);
+  const revealBars = Number(q.reveal_bars || 10);
+
+  if (q.start_idx === null || q.start_idx === undefined) {
+    const maxStart = App.currentData.length - visibleBars - revealBars - 1;
+    q.start_idx = Math.max(0, Math.floor(Math.random() * maxStart));
+  }
+
+  q._visibleEnd = q.start_idx + visibleBars - 1;
+  q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
+
+  updateChartVisibleData();
+
+  $("symbol-badge").innerText = "代號隱藏";
+  $("blind-badge").innerText = "BLIND MODE";
+  $("interval-badge").innerText = intervalText(q.interval || App.interval);
+
+  loadDrawings();
+  redrawCanvas();
+
+  if (App.mode === "backtest") {
+    setupBacktest(true);
+  }
+
+  updateStats();
+}
+
+function updateChartVisibleData() {
+  const q = App.currentQuestion;
+  if (!q || !App.currentData.length) return;
+
+  const end = App.revealed ? q._revealEnd : q._visibleEnd;
+  const candles = App.currentData.slice(q.start_idx, end + 1);
+
+  App.candleSeries.setData(candles.map(x => ({
+    time: x.time,
+    open: x.open,
+    high: x.high,
+    low: x.low,
+    close: x.close
+  })));
+
+  if (App.indicators.volume) {
+    App.volumeSeries.setData(candles.map(x => ({
+      time: x.time,
+      value: x.volume || 0,
+      color: x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
+    })));
+  } else {
+    App.volumeSeries.setData([]);
+  }
+
+  setIndicatorData(candles);
+
+  App.chart.timeScale().fitContent();
+
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    redrawCanvas();
+  });
+}
+
+function computeOutcome() {
+  const q = App.currentQuestion;
+  const base = App.currentData[q._visibleEnd];
+  const last = App.currentData[q._revealEnd];
+  const future = App.currentData.slice(q._visibleEnd + 1, q._revealEnd + 1);
+
+  const ret = ((last.close - base.close) / base.close) * 100;
+
+  const high = Math.max(...future.map(x => x.high));
+  const low = Math.min(...future.map(x => x.low));
+
+  const maxUp = ((high - base.close) / base.close) * 100;
+  const maxDown = ((low - base.close) / base.close) * 100;
+
+  const threshold = Number(App.challenge?.range_threshold_pct || 1.2);
+
+  let direction = "range";
+
+  if (ret > threshold) direction = "up";
+  if (ret < -threshold) direction = "down";
+
+  return {
+    direction,
+    ret,
+    maxUp,
+    maxDown,
+    baseClose: base.close,
+    finalClose: last.close
+  };
+}
+
+function submitAnswer(answer) {
+  if (App.revealed) return;
+
+  App.revealed = true;
+  setAnswerDisabled(true);
+
+  updateChartVisibleData();
+
+  const out = computeOutcome();
+  const correct = answer === out.direction;
+  const gained = correct ? (out.direction === "range" ? 25 : 20) : 0;
+
+  if (correct) App.hits += 1;
+  App.score += gained;
+
+  App.answers.push({
+    no: App.questionIndex + 1,
+    ticker: App.currentQuestion.ticker,
+    interval: App.currentQuestion.interval,
+    answer,
+    correct: out.direction,
+    gained,
+    ret: out.ret
+  });
+
+  $("symbol-badge").innerText = `${App.currentQuestion.ticker} · ${intervalText(App.currentQuestion.interval)}`;
+  $("blind-badge").innerText = correct ? "命中" : "失誤";
+
+  showResult(answer, out, correct, gained);
+  updateStats();
+
+  if (App.questionIndex < App.questions.length - 1) {
+    $("next-btn").classList.remove("hidden");
+  } else {
+    finishChallenge();
+  }
+}
+
+function directionText(d) {
+  if (d === "up") return "看漲";
+  if (d === "down") return "看跌";
+  return "盤整";
+}
+
+function showResult(answer, out, correct, gained) {
+  const box = $("result-box");
+  box.classList.remove("hidden");
+
+  box.innerHTML = `
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <h3 class="text-xl font-black ${correct ? "text-emerald-300" : "text-rose-300"}">
+        ${correct ? "判斷正確" : "判斷失誤"}
+      </h3>
+      <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-black">
+        +${gained} 分
+      </span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-bold">
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">你的答案</div>
+        <div>${directionText(answer)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">實際結果</div>
+        <div>${directionText(out.direction)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">收盤變化</div>
+        <div class="${out.ret >= 0 ? "text-emerald-300" : "text-rose-300"}">${pct(out.ret)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">最大波動</div>
+        <div>上 ${pct(out.maxUp)} / 下 ${pct(out.maxDown)}</div>
+      </div>
+    </div>
+
+    <p class="text-sm text-slate-400 mt-3">
+      ${feedbackText(answer, out, correct)}
+    </p>
+  `;
+}
+
+function feedbackText(answer, out, correct) {
+  if (correct) {
+    return "這題你抓到主要方向。重點不是猜對一次，而是累積樣本後檢查自己的誤判習慣。";
+  }
+
+  if (out.direction === "range") {
+    return "實際走勢偏盤整。裸 K 練習不只是猜漲跌，也要學會承認沒有明確方向。";
+  }
+
+  if (answer === "up" && out.direction === "down") {
+    return "你偏向追強，但後段轉弱。下次注意突破後是否能守住前低與支撐。";
+  }
+
+  if (answer === "down" && out.direction === "up") {
+    return "你被前段壓力影響，但後續買盤延續。下次注意低點是否沒有再破。";
+  }
+
+  return "這題判斷和後續結果不同，建議回看支撐、壓力與量能變化是否有矛盾。";
+}
+
+function setAnswerDisabled(disabled) {
+  document.querySelectorAll(".answer-btn").forEach(btn => {
+    btn.disabled = disabled;
+    btn.classList.toggle("opacity-50", disabled);
+  });
+}
+
+function nextQuestion() {
+  if (App.questionIndex < App.questions.length - 1) {
+    App.questionIndex += 1;
+    renderQuestion();
+  }
+}
+
+function restart() {
+  App.questionIndex = 0;
+  App.score = 0;
+  App.hits = 0;
+  App.answers = [];
+
+  loadDailyChallenge().then(renderQuestion).then(updateStats);
+}
+
+function updateStats() {
+  const total = App.questions.length || 5;
+
+  $("stat-progress").innerText = `${App.answers.length}/${total}`;
+  $("stat-hit").innerText = App.hits;
+  $("stat-score").innerText = App.score;
+  $("score-badge").innerText = `分數 ${App.score}`;
+}
+
+function finishChallenge() {
+  const total = App.questions.length || 5;
+
+  let title = "被洗出去的人";
+  if (App.score >= 90) title = "裸 K 老狐狸";
+  else if (App.score >= 70) title = "不追高戰士";
+  else if (App.score >= 45) title = "盤感修煉中";
+
+  $("result-box").innerHTML += `
+    <div class="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
+      <h3 class="text-xl font-black text-blue-200">今日挑戰完成：${title}</h3>
+      <p class="text-sm text-slate-300 mt-1">
+        命中 ${App.hits}/${total}，總分 ${App.score}。
+      </p>
+    </div>
+  `;
+
+  localStorage.setItem(`kline_score_${new Date().toISOString().slice(0, 10)}`, JSON.stringify({
+    score: App.score,
+    hits: App.hits,
+    answers: App.answers,
+    saved_at: new Date().toISOString()
+  }));
+}
+
+function copyShare() {
+  const total = App.questions.length || 5;
+
+  const text =
+`我剛完成裸 K 五連戰
+命中：${App.hits}/${total}
+分數：${App.score}
+
+不看消息、不看指標，只看 K 線。
+#裸K訓練場 #K線練習`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert("戰績已複製");
+  });
+}
+
+/* =========================
+   回測練習
+========================= */
+
+function setupBacktest() {
+  const q = App.currentQuestion;
+  if (!q) return;
+
+  App.backtest = {
+    idx: q._visibleEnd,
+    end: q._revealEnd,
+    cash: 1000000,
+    shares: 0,
+    avgCost: 0,
+    trades: []
+  };
+
+  App.revealed = true;
+  updateChartVisibleData();
+  showBacktestStatus("回測開始。你可以買進、賣出或逐根播放。");
+}
+
+function backtestPrice() {
+  const bt = App.backtest;
+  return App.currentData[bt.idx].close;
+}
+
+function backtestBuy() {
+  const bt = App.backtest;
+  if (!bt) return;
+
+  const price = backtestPrice();
+  const qty = Math.floor(bt.cash / price);
+
+  if (qty <= 0) return showBacktestStatus("現金不足，無法買進。");
+
+  bt.cash -= qty * price;
+  bt.avgCost = bt.shares > 0
+    ? ((bt.avgCost * bt.shares) + (price * qty)) / (bt.shares + qty)
+    : price;
+  bt.shares += qty;
+
+  bt.trades.push({ type: "buy", price, qty, idx: bt.idx });
+
+  showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`);
+}
+
+function backtestSell() {
+  const bt = App.backtest;
+  if (!bt) return;
+
+  if (bt.shares <= 0) return showBacktestStatus("目前沒有持股可賣出。");
+
+  const price = backtestPrice();
+  const qty = bt.shares;
+
+  bt.cash += qty * price;
+  bt.trades.push({ type: "sell", price, qty, idx: bt.idx });
+
+  bt.shares = 0;
+  bt.avgCost = 0;
+
+  showBacktestStatus(`賣出 ${qty} 股，價格 ${price.toFixed(2)}。`);
+}
+
+function backtestNext() {
+  const bt = App.backtest;
+  if (!bt) return;
+
+  if (bt.idx >= bt.end) return finishBacktest();
+
+  bt.idx += 1;
+
+  const candles = App.currentData.slice(App.currentQuestion.start_idx, bt.idx + 1);
+
+  App.candleSeries.setData(candles.map(x => ({
+    time: x.time,
+    open: x.open,
+    high: x.high,
+    low: x.low,
+    close: x.close
+  })));
+
+  App.chart.timeScale().fitContent();
+
+  if (bt.idx >= bt.end) finishBacktest();
+  else showBacktestStatus("已前進一根 K。");
+}
+
+function toggleAutoplay() {
+  if (App.autoplayTimer) {
+    clearInterval(App.autoplayTimer);
+    App.autoplayTimer = null;
+    $("bt-auto").innerText = "自動播放";
+    return;
+  }
+
+  $("bt-auto").innerText = "停止播放";
+
+  App.autoplayTimer = setInterval(() => {
+    const bt = App.backtest;
+    if (!bt || bt.idx >= bt.end) {
+      clearInterval(App.autoplayTimer);
+      App.autoplayTimer = null;
+      $("bt-auto").innerText = "自動播放";
+      finishBacktest();
+      return;
+    }
+
+    backtestNext();
+  }, 700);
+}
+
+function showBacktestStatus(message) {
+  const bt = App.backtest;
+  if (!bt) return;
+
+  const price = backtestPrice();
+  const equity = bt.cash + bt.shares * price;
+  const ret = ((equity - 1000000) / 1000000) * 100;
+
+  const box = $("result-box");
+  box.classList.remove("hidden");
+
+  box.innerHTML = `
+    <h3 class="text-xl font-black mb-2">回測練習</h3>
+    <p class="text-sm text-slate-400 mb-3">${message}</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-bold">
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">目前價格</div>
+        <div>${price.toFixed(2)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">現金</div>
+        <div>${money(bt.cash)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">持股</div>
+        <div>${money(bt.shares)}</div>
+      </div>
+
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
+        <div class="text-slate-500 text-xs">權益變化</div>
+        <div class="${ret >= 0 ? "text-emerald-300" : "text-rose-300"}">${pct(ret)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function finishBacktest() {
+  const bt = App.backtest;
+  if (!bt) return;
+
+  const price = backtestPrice();
+  const equity = bt.cash + bt.shares * price;
+  const ret = ((equity - 1000000) / 1000000) * 100;
+
+  showBacktestStatus(`回測結束。交易次數 ${bt.trades.length}，最後權益 ${money(equity)}，報酬 ${pct(ret)}。`);
+}
+
+/* =========================
+   畫線工具
+========================= */
+
+function setDrawTool(tool) {
+  App.drawTool = tool;
+  const canvas = $("draw-canvas");
+  canvas.style.pointerEvents = tool === "cursor" ? "none" : "auto";
+}
+
+function drawingKey() {
+  const q = App.currentQuestion;
+  if (!q) return "drawings_default";
+  return `drawings_${q.ticker}_${q.interval}_${q.start_idx}`;
+}
+
+function saveDrawings() {
+  localStorage.setItem(drawingKey(), JSON.stringify(App.drawings));
+}
+
+function loadDrawings() {
+  try {
+    App.drawings = JSON.parse(localStorage.getItem(drawingKey()) || "[]");
+  } catch (e) {
+    App.drawings = [];
+  }
+}
+
+function initDrawingCanvas() {
+  const canvas = $("draw-canvas");
+
+  canvas.addEventListener("mousedown", e => {
+    if (App.drawTool === "cursor") return;
+
+    const p = mousePoint(e);
+
+    if (App.drawTool === "erase") {
+      eraseAt(p);
+      return;
+    }
+
+    if (App.drawTool === "hline") {
+      App.drawings.push({ type: "hline", price: p.price });
+      saveDrawings();
+      redrawCanvas();
+      return;
+    }
+
+    if (App.drawTool === "vline") {
+      App.drawings.push({ type: "vline", time: p.time });
+      saveDrawings();
+      redrawCanvas();
+      return;
+    }
+
+    if (App.drawTool === "text") {
+      const text = prompt("輸入標註文字");
+      if (text) {
+        App.drawings.push({ type: "text", time: p.time, price: p.price, text });
+        saveDrawings();
+        redrawCanvas();
+      }
+      return;
+    }
+
+    App.drawStart = p;
+  });
+
+  canvas.addEventListener("mouseup", e => {
+    if (!App.drawStart) return;
+
+    const p2 = mousePoint(e);
+    const p1 = App.drawStart;
+
+    if (App.drawTool === "trend") {
+      App.drawings.push({ type: "trend", t1: p1.time, p1: p1.price, t2: p2.time, p2: p2.price });
+    }
+
+    if (App.drawTool === "rect") {
+      App.drawings.push({ type: "rect", t1: p1.time, p1: p1.price, t2: p2.time, p2: p2.price });
+    }
+
+    App.drawStart = null;
+    saveDrawings();
+    redrawCanvas();
+  });
+
+  resizeCanvas();
+}
+
+function resizeCanvas() {
+  const canvas = $("draw-canvas");
+  const wrap = $("chart-wrap");
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+  canvas.style.width = `${rect.width}px`;
+  canvas.style.height = `${rect.height}px`;
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  redrawCanvas();
+}
+
+function mousePoint(e) {
+  const canvas = $("draw-canvas");
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const time = App.chart.timeScale().coordinateToTime(x);
+  const price = App.candleSeries.coordinateToPrice(y);
+
+  return { x, y, time, price };
+}
+
+function xOf(time) {
+  return App.chart.timeScale().timeToCoordinate(time);
+}
+
+function yOf(price) {
+  return App.candleSeries.priceToCoordinate(price);
+}
+
+function redrawCanvas() {
+  const canvas = $("draw-canvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.lineWidth = 2;
+  ctx.font = "13px sans-serif";
+
+  for (const d of App.drawings) {
+    ctx.strokeStyle = "#f59e0b";
+    ctx.fillStyle = "#f59e0b";
+
+    if (d.type === "trend") {
+      const x1 = xOf(d.t1), y1 = yOf(d.p1), x2 = xOf(d.t2), y2 = yOf(d.p2);
+      if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    if (d.type === "hline") {
+      const y = yOf(d.price);
+      if (y == null) continue;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(rect.width, y);
+      ctx.stroke();
+    }
+
+    if (d.type === "vline") {
+      const x = xOf(d.time);
+      if (x == null) continue;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, rect.height);
+      ctx.stroke();
+    }
+
+    if (d.type === "rect") {
+      const x1 = xOf(d.t1), y1 = yOf(d.p1), x2 = xOf(d.t2), y2 = yOf(d.p2);
+      if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
+      ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+    }
+
+    if (d.type === "text") {
+      const x = xOf(d.time), y = yOf(d.price);
+      if (x == null || y == null) continue;
+      ctx.fillText(d.text, x, y);
+    }
+  }
+}
+
+function eraseAt(p) {
+  const px = 12;
+
+  App.drawings = App.drawings.filter(d => {
+    if (d.type === "hline") {
+      const y = yOf(d.price);
+      return y == null || Math.abs(y - p.y) > px;
+    }
+
+    if (d.type === "vline") {
+      const x = xOf(d.time);
+      return x == null || Math.abs(x - p.x) > px;
+    }
+
+    if (d.type === "text") {
+      const x = xOf(d.time), y = yOf(d.price);
+      if (x == null || y == null) return true;
+      return Math.hypot(x - p.x, y - p.y) > 30;
+    }
+
+    return true;
+  });
+
+  saveDrawings();
+  redrawCanvas();
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  init().catch(err => {
+    console.error(err);
+    const box = $("result-box");
+    box.classList.remove("hidden");
+    box.innerHTML = `
+      <h3 class="text-xl font-black text-rose-300 mb-2">載入失敗</h3>
+      <p class="text-sm text-slate-300">${err.message}</p>
+      <p class="text-xs text-slate-500 mt-2">請先確認 GitHub Actions 已成功產生 public/data/klines 與 daily_challenge.json。</p>
+    `;
+  });
+});
+</script>
 </body>
 </html>
