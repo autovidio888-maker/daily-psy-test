@@ -216,6 +216,67 @@ const SUPABASE_URL = "https://yyniwynnwngutugyjywk.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5bml3eW5ud25ndXR1Z3lqeXdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTQ1NDksImV4cCI6MjEwNDE3MDU0OX0.IIJU4rZsUybViZDX7p2P3gXAaZBbA7CMqrhga88RmDc";
 const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const BATTLE_POLL_MS = 1500;
+const STOCK_UNIVERSE = [
+  { ticker:"0050.TW", label:"元大台灣50 0050", group:"ETF" },
+  { ticker:"2330.TW", label:"台積電 2330", group:"0050成分股" },
+  { ticker:"2454.TW", label:"聯發科 2454", group:"0050成分股" },
+  { ticker:"2308.TW", label:"台達電 2308", group:"0050成分股" },
+  { ticker:"2317.TW", label:"鴻海 2317", group:"0050成分股" },
+  { ticker:"3711.TW", label:"日月光投控 3711", group:"0050成分股" },
+  { ticker:"2383.TW", label:"台光電 2383", group:"0050成分股" },
+  { ticker:"2303.TW", label:"聯電 2303", group:"0050成分股" },
+  { ticker:"3037.TW", label:"欣興 3037", group:"0050成分股" },
+  { ticker:"2891.TW", label:"中信金 2891", group:"0050成分股" },
+  { ticker:"2345.TW", label:"智邦 2345", group:"0050成分股" },
+  { ticker:"2881.TW", label:"富邦金 2881", group:"0050成分股" },
+  { ticker:"2882.TW", label:"國泰金 2882", group:"0050成分股" },
+  { ticker:"1303.TW", label:"南亞 1303", group:"0050成分股" },
+  { ticker:"2327.TW", label:"國巨 2327", group:"0050成分股" },
+  { ticker:"3017.TW", label:"奇鋐 3017", group:"0050成分股" },
+  { ticker:"2887.TW", label:"台新新光金 2887", group:"0050成分股" },
+  { ticker:"2382.TW", label:"廣達 2382", group:"0050成分股" },
+  { ticker:"2360.TW", label:"致茂 2360", group:"0050成分股" },
+  { ticker:"2885.TW", label:"元大金 2885", group:"0050成分股" },
+  { ticker:"2059.TW", label:"川湖 2059", group:"0050成分股" },
+  { ticker:"6669.TW", label:"緯穎 6669", group:"0050成分股" },
+  { ticker:"2886.TW", label:"兆豐金 2886", group:"0050成分股" },
+  { ticker:"2884.TW", label:"玉山金 2884", group:"0050成分股" },
+  { ticker:"3231.TW", label:"緯創 3231", group:"0050成分股" },
+  { ticker:"2408.TW", label:"南亞科 2408", group:"0050成分股" },
+  { ticker:"2344.TW", label:"華邦電 2344", group:"0050成分股" },
+  { ticker:"2357.TW", label:"華碩 2357", group:"0050成分股" },
+  { ticker:"2301.TW", label:"光寶科 2301", group:"0050成分股" },
+  { ticker:"2412.TW", label:"中華電 2412", group:"0050成分股" },
+  { ticker:"2890.TW", label:"永豐金 2890", group:"0050成分股" },
+  { ticker:"2883.TW", label:"凱基金 2883", group:"0050成分股" },
+  { ticker:"3008.TW", label:"大立光 3008", group:"0050成分股" },
+  { ticker:"2880.TW", label:"華南金 2880", group:"0050成分股" },
+  { ticker:"2892.TW", label:"第一金 2892", group:"0050成分股" },
+  { ticker:"3665.TW", label:"貿聯-KY 3665", group:"0050成分股" },
+  { ticker:"1216.TW", label:"統一 1216", group:"0050成分股" },
+  { ticker:"3443.TW", label:"創意 3443", group:"0050成分股" },
+  { ticker:"3653.TW", label:"健策 3653", group:"0050成分股" },
+  { ticker:"4958.TW", label:"臻鼎-KY 4958", group:"0050成分股" },
+  { ticker:"7769.TW", label:"鴻勁 7769", group:"0050成分股" },
+  { ticker:"2368.TW", label:"金像電 2368", group:"0050成分股" },
+  { ticker:"2395.TW", label:"研華 2395", group:"0050成分股" },
+  { ticker:"3661.TW", label:"世芯-KY 3661", group:"0050成分股" },
+  { ticker:"2449.TW", label:"京元電子 2449", group:"0050成分股" },
+  { ticker:"5880.TW", label:"合庫金 5880", group:"0050成分股" },
+  { ticker:"8046.TW", label:"南電 8046", group:"0050成分股" },
+  { ticker:"2603.TW", label:"長榮 2603", group:"0050成分股" },
+  { ticker:"4904.TW", label:"遠傳 4904", group:"0050成分股" },
+  { ticker:"3045.TW", label:"台灣大 3045", group:"0050成分股" },
+  { ticker:"6505.TW", label:"台塑化 6505", group:"0050成分股" },
+  { ticker:"NVDA", label:"NVDA", group:"美股/ETF" },
+  { ticker:"AAPL", label:"AAPL", group:"美股/ETF" },
+  { ticker:"MSFT", label:"MSFT", group:"美股/ETF" },
+  { ticker:"SPY", label:"SPY", group:"美股/ETF" },
+  { ticker:"QQQ", label:"QQQ", group:"美股/ETF" },
+  { ticker:"BTC-USD", label:"BTC", group:"加密資產" }
+];
+const BATTLE_RANDOM_TICKERS = STOCK_UNIVERSE.map(x => x.ticker);
+
 
 const Battle = {
   roomCode:"",
@@ -232,7 +293,7 @@ const Battle = {
 
 const App = {
   interval:"1d", mode:"quiz", challenge:null, questions:[], questionIndex:0,
-  currentData:[], currentDataPath:"", currentQuestion:null, loadingQuestion:false,
+  currentData:[], currentDataPath:"", currentQuestion:null, loadingQuestion:false, manifest:null, klineCache:{},
   chart:null, candleSeries:null, volumeSeries:null, indicatorSeries:{},
   indicators:{ volume:true, ma:true, ema:false, bb:false, rsi:false, macd:false, atr:false },
   revealed:false, score:0, hits:0, answers:[], backtest:null, autoplayTimer:null, profit:null,
@@ -254,7 +315,32 @@ function nval(v){ if(v===null || v===undefined) return null; const n=Number(v); 
 function escapeHtml(text){ return String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
 function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : `id_${Date.now()}_${Math.random().toString(16).slice(2)}`; }
 
-async function init(){ bindUI(); createChart(); initDrawingCanvas(); await loadManualQuestion(false, false); await renderQuestion(); updateStats(); }
+function populateSymbolSelect(){
+  const select = $("symbol-select");
+  if(!select) return;
+
+  const groups = [...new Set(STOCK_UNIVERSE.map(x => x.group))];
+  select.innerHTML = groups.map(group => {
+    const options = STOCK_UNIVERSE
+      .filter(x => x.group === group)
+      .map(x => `<option value="${x.ticker}">${escapeHtml(x.label)}</option>`)
+      .join("");
+    return `<optgroup label="${escapeHtml(group)}">${options}</optgroup>`;
+  }).join("");
+
+  if(select.querySelector('option[value="2330.TW"]')) select.value = "2330.TW";
+}
+
+function shuffleArray(arr){
+  const out = [...arr];
+  for(let i = out.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+async function init(){ populateSymbolSelect(); bindUI(); createChart(); initDrawingCanvas(); await loadManualQuestion(false, false); await renderQuestion(); updateStats(); }
 
 function bindUI(){
   $("latest-btn").onclick = () => safeAsync(() => loadManualQuestion(false, true));
@@ -415,12 +501,21 @@ function setIndicatorData(candles){
 }
 
 async function loadKlines(path){
+  if(App.klineCache && App.klineCache[path]) return App.klineCache[path];
+
   const res = await fetch(`${path}?t=${Date.now()}`);
   if(!res.ok) throw new Error(`K 線資料載入失敗：${path}。請確認 GitHub Actions 已產生這個 .json 檔案。`);
   const raw = await res.json();
-  const data = raw.map(x => ({ time:x.time, open:Number(x.open), high:Number(x.high), low:Number(x.low), close:Number(x.close), volume:Number(x.volume || 0), ma5:nval(x.ma5), ma20:nval(x.ma20), ma60:nval(x.ma60), ema20:nval(x.ema20), ema60:nval(x.ema60), rsi14:nval(x.rsi14), macd:nval(x.macd), macd_signal:nval(x.macd_signal), macd_hist:nval(x.macd_hist), bb_upper:nval(x.bb_upper), bb_mid:nval(x.bb_mid), bb_lower:nval(x.bb_lower), atr14:nval(x.atr14) }))
-    .filter(x => x.time && Number.isFinite(x.open) && Number.isFinite(x.high) && Number.isFinite(x.low) && Number.isFinite(x.close));
-  return enrichIndicators(data);
+  const data = raw.map(x => ({
+    time:x.time, open:Number(x.open), high:Number(x.high), low:Number(x.low), close:Number(x.close), volume:Number(x.volume || 0),
+    ma5:nval(x.ma5), ma20:nval(x.ma20), ma60:nval(x.ma60), ema20:nval(x.ema20), ema60:nval(x.ema60),
+    rsi14:nval(x.rsi14), macd:nval(x.macd), macd_signal:nval(x.macd_signal), macd_hist:nval(x.macd_hist),
+    bb_upper:nval(x.bb_upper), bb_mid:nval(x.bb_mid), bb_lower:nval(x.bb_lower), atr14:nval(x.atr14)
+  })).filter(x => x.time && Number.isFinite(x.open) && Number.isFinite(x.high) && Number.isFinite(x.low) && Number.isFinite(x.close));
+
+  const enriched = enrichIndicators(data);
+  App.klineCache[path] = enriched;
+  return enriched;
 }
 
 function enrichIndicators(data){
@@ -477,6 +572,89 @@ async function loadManualQuestion(randomStart=false, renderNow=true){
   }
   App.questions=questions; App.questionIndex=0; App.currentData=data; App.currentDataPath=path; App.score=0; App.hits=0; App.answers=[]; App.revealed=false;
   $("interval-badge").innerText=intervalText(interval); $("symbol-badge").innerText="代號隱藏"; $("blind-badge").innerText="BLIND MODE";
+  if(renderNow) await renderQuestion();
+}
+
+async function loadDataManifest(){
+  if(App.manifest) return App.manifest;
+
+  try {
+    const res = await fetch(`public/data/manifest.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error("manifest missing");
+    App.manifest = await res.json();
+  } catch(e) {
+    App.manifest = { files: [] };
+  }
+
+  return App.manifest;
+}
+
+async function battleCandidatePool(interval, visibleBars, revealBars){
+  const manifest = await loadDataManifest();
+  const need = visibleBars + revealBars + 10;
+  const files = Array.isArray(manifest.files) ? manifest.files : [];
+
+  const fromManifest = files
+    .filter(x => x.interval === interval && Number(x.count || 0) >= need)
+    .filter(x => BATTLE_RANDOM_TICKERS.includes(x.ticker))
+    .map(x => ({ ticker:x.ticker, path:x.path || dataPath(x.ticker, interval), count:Number(x.count || 0) }));
+
+  if(fromManifest.length) return shuffleArray(fromManifest);
+
+  return shuffleArray(BATTLE_RANDOM_TICKERS.map(ticker => ({
+    ticker,
+    path:dataPath(ticker, interval),
+    count:0
+  })));
+}
+
+async function loadBattleRandomQuestions(renderNow=true){
+  const interval = App.interval;
+  const visibleBars = Number($("bars-select").value || 240);
+  const revealBars = Battle.battleMode === "profit" ? selectedProfitLimitBars() : revealBarsByInterval(interval);
+  const pool = await battleCandidatePool(interval, visibleBars, revealBars);
+  const questions = [];
+  const errors = [];
+
+  for(const item of pool){
+    if(questions.length >= 5) break;
+
+    try {
+      const data = await loadKlines(item.path);
+      if(data.length < visibleBars + revealBars + 10) continue;
+
+      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
+      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
+      questions.push(makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
+    } catch(e) {
+      errors.push(`${item.ticker}: ${e.message}`);
+      console.warn("skip battle ticker", item.ticker, e);
+    }
+  }
+
+  if(!questions.length){
+    throw new Error(`對戰隨機股票題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions。`);
+  }
+
+  while(questions.length < 5){
+    const base = questions[questions.length % Math.max(1, questions.length)];
+    questions.push({ ...base, question_no: questions.length + 1 });
+  }
+
+  App.questions = questions;
+  App.questionIndex = 0;
+  App.score = 0;
+  App.hits = 0;
+  App.answers = [];
+  App.revealed = false;
+  App.currentData = [];
+  App.currentDataPath = "";
+
+  syncSymbolAndBarsUI(questions[0].ticker, interval, visibleBars);
+  $("interval-badge").innerText = intervalText(interval);
+  $("symbol-badge").innerText = "對戰隨機股票";
+  $("blind-badge").innerText = "BATTLE RANDOM";
+
   if(renderNow) await renderQuestion();
 }
 
@@ -1026,12 +1204,15 @@ function normalizeRoomCode(room){ return String(room || "").trim().toUpperCase()
 function normalizePlayerName(name){ return String(name || "").trim().slice(0,24); }
 function currentBattleConfig(){
   applyBattleModeToQuestions();
+  const firstTicker = App.questions?.[0]?.ticker || $("symbol-select").value;
   return {
-    ticker:$("symbol-select").value,
+    ticker:firstTicker,
     interval:App.interval,
     bars:Number($("bars-select").value || 240),
     battle_mode:Battle.battleMode || "direction",
     profit_limit_bars:Number(Battle.profitLimitBars || 20),
+    random_stocks:true,
+    ticker_pool:"0050_components_plus_major_assets",
     questions:App.questions,
     created_at:new Date().toISOString()
   };
@@ -1054,7 +1235,7 @@ async function createBattleRoom(){
   const player=normalizePlayerName(prompt("輸入你的玩家名稱")); if(!player){ alert("玩家名稱不能空白"); return; }
   Battle.battleMode = selectedBattleMode();
   Battle.profitLimitBars = selectedProfitLimitBars();
-  await loadManualQuestion(false, true);
+  await loadBattleRandomQuestions(true);
   applyBattleModeToQuestions();
   const room=randomRoomCode(); const config=currentBattleConfig();
   const { error:roomError } = await SB.from("battle_rooms").insert({ room_code:room, host_name:player, status:"waiting", current_question:0, config });
@@ -1152,6 +1333,7 @@ async function nextBattleQuestion(){
 
 async function resetBattleRoom(){
   if(!Battle.roomCode){ alert("請先建立或加入房間"); return; }
+  await loadBattleRandomQuestions(false);
   await SB.from("battle_rooms").update({ status:"waiting", current_question:0, started_at:null, config:currentBattleConfig() }).eq("room_code", Battle.roomCode);
   await SB.from("battle_players").update({ score:0, hits:0, answers:[], updated_at:new Date().toISOString() }).eq("room_code", Battle.roomCode);
   App.questionIndex=0; App.score=0; App.hits=0; App.answers=[]; App.profit=null; await renderQuestion(); await refreshBattlePanel();
@@ -1215,7 +1397,7 @@ async function refreshBattlePanel(){
   if(!Battle.roomCode){
     panel.innerHTML=`
       <h2 class="text-lg font-black text-white mb-3">即時對戰</h2>
-      <p class="text-sm text-slate-400 mb-3 leading-relaxed">建立房間後，把房號傳給朋友。可選「猜方向」或「獲利」對戰。</p>
+      <p class="text-sm text-slate-400 mb-3 leading-relaxed">建立房間後會自動從 0050 成分股與主要標的隨機抽 5 題，朋友加入後會看到同一組題目。可選「猜方向」或「獲利」對戰。</p>
       <div class="space-y-2 mb-3">
         <label class="block text-xs text-slate-500 font-black">對戰類型</label>
         <select id="battle-kind-select" class="w-full px-3 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
