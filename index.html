@@ -181,6 +181,7 @@
             <li>對戰不再限制房主切下一題，任一玩家都可下一題。</li>
             <li>排行榜每 1.5 秒輪詢一次，Realtime 失效也不用 F5。</li>
             <li>指標由前端補算，EMA / MA / BB / RSI / MACD / ATR 都會顯示。</li>
+            <li>最新題段、隨機出題、顯示根數改變後會自動定位到目前價格右側。</li>
           </ul>
         </section>
         <section class="glass rounded-3xl p-4">
@@ -445,17 +446,80 @@ async function renderQuestion(){
   updateStats();
 }
 
+function visibleBarSpacing(len){
+  if(len >= 420) return 1.2;
+  if(len >= 300) return 1.6;
+  if(len >= 240) return 2.0;
+  if(len >= 180) return 2.6;
+  if(len >= 120) return 3.4;
+  return 5.5;
+}
+
+function focusCurrentPrice(candles){
+  if(!App.chart || !App.candleSeries || !candles || !candles.length) return;
+
+  const len = candles.length;
+  const spacing = visibleBarSpacing(len);
+  const rightOffset = Math.max(8, Math.min(18, Math.round(len * 0.035)));
+  const bottomMargin = App.indicators.volume ? 0.24 : 0.10;
+
+  try {
+    App.chart.priceScale("right").applyOptions({
+      autoScale: true,
+      scaleMargins: {
+        top: 0.08,
+        bottom: bottomMargin
+      }
+    });
+  } catch(e) {}
+
+  try {
+    App.chart.timeScale().applyOptions({
+      barSpacing: spacing,
+      minBarSpacing: 1,
+      rightOffset,
+      fixLeftEdge: false,
+      fixRightEdge: false,
+      lockVisibleTimeRangeOnResize: false
+    });
+  } catch(e) {}
+
+  try {
+    App.chart.timeScale().fitContent();
+  } catch(e) {}
+
+  setTimeout(() => {
+    try {
+      App.chart.timeScale().setVisibleLogicalRange({
+        from: 0,
+        to: len + rightOffset
+      });
+    } catch(e) {}
+
+    try {
+      App.chart.priceScale("right").applyOptions({ autoScale: true });
+    } catch(e) {}
+
+    resizeCanvas();
+    redrawCanvas();
+  }, 30);
+}
+
 function updateChartVisibleData(){
   const q=App.currentQuestion; if(!q || !App.currentData.length) return;
   const end=App.revealed ? q._revealEnd : q._visibleEnd;
   const candles=App.currentData.slice(q.start_idx, end+1);
+
   App.candleSeries.setData(candles.map(x=>({time:x.time, open:x.open, high:x.high, low:x.low, close:x.close})));
-  App.volumeSeries.setData(App.indicators.volume ? candles.map(x=>({time:x.time, value:x.volume || 0, color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})) : []);
+
+  App.volumeSeries.setData(App.indicators.volume ? candles.map(x=>({
+    time:x.time,
+    value:x.volume || 0,
+    color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"
+  })) : []);
+
   setIndicatorData(candles);
-  const spacing = candles.length>=420?1.2 : candles.length>=300?1.6 : candles.length>=240?2.0 : candles.length>=180?2.6 : candles.length>=120?3.4 : 5.5;
-  App.chart.timeScale().applyOptions({ barSpacing:spacing, minBarSpacing:1, rightOffset:6 });
-  App.chart.timeScale().fitContent();
-  setTimeout(() => { try { App.chart.timeScale().setVisibleLogicalRange({ from:0, to:candles.length+6 }); } catch(e){} resizeCanvas(); redrawCanvas(); }, 30);
+  focusCurrentPrice(candles);
 }
 
 function computeOutcome(){
@@ -507,11 +571,11 @@ function copyShare(){ const total=App.questions.length || 1; const text=`我剛�
 function showLoadError(err){ const box=$("result-box"); box.classList.remove("hidden"); box.innerHTML=`<h3 class="text-xl font-black text-rose-300 mb-2">載入失敗</h3><p class="text-sm text-slate-300">${escapeHtml(err.message)}</p><p class="text-xs text-slate-500 mt-2">請確認對應 JSON 可以讀取，例如 public/data/klines/2330_TW_1wk.json。</p>`; }
 
 /* 回測 */
-function setupBacktest(){ const q=App.currentQuestion; if(!q) return; App.backtest={ idx:q._visibleEnd, end:q._revealEnd, cash:1000000, shares:0, avgCost:0, trades:[] }; App.revealed=false; const candles=App.currentData.slice(q.start_idx, q._visibleEnd+1); App.candleSeries.setData(candles.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close}))); showBacktestStatus("回測開始。你可以買進、賣出或逐根播放。"); }
+function setupBacktest(){ const q=App.currentQuestion; if(!q) return; App.backtest={ idx:q._visibleEnd, end:q._revealEnd, cash:1000000, shares:0, avgCost:0, trades:[] }; App.revealed=false; const candles=App.currentData.slice(q.start_idx, q._visibleEnd+1); App.candleSeries.setData(candles.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close}))); App.volumeSeries.setData(App.indicators.volume?candles.map(x=>({time:x.time,value:x.volume||0,color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})):[]); setIndicatorData(candles); focusCurrentPrice(candles); showBacktestStatus("回測開始。你可以買進、賣出或逐根播放。"); }
 function backtestPrice(){ return App.currentData[App.backtest.idx].close; }
 function backtestBuy(){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const qty=Math.floor(bt.cash/price); if(qty<=0){ showBacktestStatus("現金不足，無法買進。"); return; } bt.cash-=qty*price; bt.avgCost=bt.shares>0?((bt.avgCost*bt.shares)+(price*qty))/(bt.shares+qty):price; bt.shares+=qty; bt.trades.push({type:"buy",price,qty,idx:bt.idx}); showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`); }
 function backtestSell(){ const bt=App.backtest; if(!bt) return; if(bt.shares<=0){ showBacktestStatus("目前沒有持股可賣出。"); return; } const price=backtestPrice(); const qty=bt.shares; bt.cash+=qty*price; bt.trades.push({type:"sell",price,qty,idx:bt.idx}); bt.shares=0; bt.avgCost=0; showBacktestStatus(`賣出 ${qty} 股，價格 ${price.toFixed(2)}。`); }
-function backtestNext(){ const bt=App.backtest; if(!bt) return; if(bt.idx>=bt.end){ finishBacktest(); return; } bt.idx += 1; const candles=App.currentData.slice(App.currentQuestion.start_idx, bt.idx+1); App.candleSeries.setData(candles.map(x=>({time:x.time, open:x.open, high:x.high, low:x.low, close:x.close}))); App.volumeSeries.setData(App.indicators.volume?candles.map(x=>({time:x.time,value:x.volume||0,color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})):[]); setIndicatorData(candles); App.chart.timeScale().fitContent(); if(bt.idx>=bt.end) finishBacktest(); else showBacktestStatus("已前進一根 K。"); }
+function backtestNext(){ const bt=App.backtest; if(!bt) return; if(bt.idx>=bt.end){ finishBacktest(); return; } bt.idx += 1; const candles=App.currentData.slice(App.currentQuestion.start_idx, bt.idx+1); App.candleSeries.setData(candles.map(x=>({time:x.time, open:x.open, high:x.high, low:x.low, close:x.close}))); App.volumeSeries.setData(App.indicators.volume?candles.map(x=>({time:x.time,value:x.volume||0,color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})):[]); setIndicatorData(candles); focusCurrentPrice(candles); if(bt.idx>=bt.end) finishBacktest(); else showBacktestStatus("已前進一根 K。"); }
 function toggleAutoplay(){ if(App.autoplayTimer){ clearInterval(App.autoplayTimer); App.autoplayTimer=null; $("bt-auto").innerText="自動播放"; return; } $("bt-auto").innerText="停止播放"; App.autoplayTimer=setInterval(()=>{ const bt=App.backtest; if(!bt || bt.idx>=bt.end){ clearInterval(App.autoplayTimer); App.autoplayTimer=null; $("bt-auto").innerText="自動播放"; finishBacktest(); return; } backtestNext(); },700); }
 function showBacktestStatus(message){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const equity=bt.cash+bt.shares*price; const ret=((equity-1000000)/1000000)*100; const box=$("result-box"); box.classList.remove("hidden"); box.innerHTML=`<h3 class="text-xl font-black mb-2">回測練習</h3><p class="text-sm text-slate-400 mb-3">${message}</p><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-bold"><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前價格</div><div>${price.toFixed(2)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">現金</div><div>${money(bt.cash)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">持股</div><div>${money(bt.shares)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">權益變化</div><div class="${ret>=0?"text-emerald-300":"text-rose-300"}">${pct(ret)}</div></div></div>`; }
 function finishBacktest(){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const equity=bt.cash+bt.shares*price; const ret=((equity-1000000)/1000000)*100; showBacktestStatus(`回測結束。交易次數 ${bt.trades.length}，最後權益 ${money(equity)}，報酬 ${pct(ret)}。`); }
