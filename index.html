@@ -31,11 +31,85 @@
     #draw-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:20; pointer-events:none; }
     #drawing-hint { position:absolute; left:12px; bottom:10px; z-index:30; background:rgba(2,6,23,.76); border:1px solid rgba(148,163,184,.25); color:#cbd5e1; font-size:12px; padding:6px 10px; border-radius:999px; pointer-events:none; }
     @media (max-width:768px) { #chart-wrap { height:640px; } }
+
+    .landing-hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.24), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(16,185,129,.16), transparent 38%),
+        #020617;
+    }
+    .mode-card {
+      border: 1px solid rgba(148,163,184,.24);
+      background: rgba(15,23,42,.88);
+      border-radius: 28px;
+      padding: 26px;
+      min-height: 230px;
+      transition: .18s ease;
+      cursor: pointer;
+    }
+    .mode-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(96,165,250,.75);
+      box-shadow: 0 22px 80px rgba(37,99,235,.20);
+    }
+    .mode-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      background: rgba(37,99,235,.18);
+      border: 1px solid rgba(96,165,250,.38);
+    }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <main class="max-w-[1700px] mx-auto px-4 py-5">
+  <section id="landing-screen" class="landing-hero">
+    <div class="max-w-6xl w-full">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-black mb-4">
+          ● 裸 K Replay 訓練場
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white">選擇訓練模式</h1>
+        <p class="text-slate-400 mt-4 text-lg">進入後再調整日 K / 週 K / 月 K、顯示根數、指標與畫線工具。</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <button class="mode-card text-left start-mode-btn" data-start-mode="battle">
+          <div class="mode-icon mb-5">⚔️</div>
+          <h2 class="text-2xl font-black text-white mb-3">即時對戰</h2>
+          <p class="text-slate-400 leading-relaxed mb-5">和朋友同房間同步題目，可選猜方向或獲利模式，排行榜即時更新。</p>
+          <div class="text-blue-300 font-black">開始對戰 →</div>
+        </button>
+
+        <button class="mode-card text-left start-mode-btn" data-start-mode="backtest">
+          <div class="mode-icon mb-5">📈</div>
+          <h2 class="text-2xl font-black text-white mb-3">回測練習</h2>
+          <p class="text-slate-400 leading-relaxed mb-5">隨機股票與隨機歷史時間，逐根 K 線買進、賣出，訓練進出場。</p>
+          <div class="text-blue-300 font-black">開始回測 →</div>
+        </button>
+
+        <button class="mode-card text-left start-mode-btn" data-start-mode="quiz">
+          <div class="mode-icon mb-5">🎯</div>
+          <h2 class="text-2xl font-black text-white mb-3">猜方向</h2>
+          <p class="text-slate-400 leading-relaxed mb-5">隨機股票與隨機時間，只看前段 K 線判斷看漲、盤整或看跌。</p>
+          <div class="text-blue-300 font-black">開始猜方向 →</div>
+        </button>
+      </div>
+
+      <p class="text-center text-xs text-slate-500 mt-8">本網站僅供 K 線閱讀練習與教育用途，不提供投資建議。</p>
+    </div>
+  </section>
+
+  <main id="app-screen" class="hidden max-w-[1700px] mx-auto px-4 py-5">
     <section class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-black mb-3">● 裸 K Replay 訓練</div>
@@ -43,8 +117,9 @@
         <p class="text-slate-400 mt-2">不看消息、不看籌碼、不看股票名稱。只看 K 線，練你的盤感。</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button id="latest-btn" class="btn btn-dark px-5 py-3">隨機題段</button>
-        <button id="new-random-btn" class="btn btn-main px-5 py-3">隨機出題</button>
+        <button id="home-btn" class="btn btn-dark px-5 py-3">回主選單</button>
+        <button id="latest-btn" class="btn btn-dark px-5 py-3">最新題段</button>
+        <button id="new-random-btn" class="btn btn-main px-5 py-3">隨機題段</button>
         <button id="restart-btn" class="btn btn-dark px-5 py-3">重新開始</button>
         <button id="copy-share-btn" class="btn btn-dark px-5 py-3">複製戰績</button>
       </div>
@@ -80,10 +155,16 @@
           <div>
             <label class="block text-xs text-slate-400 font-bold mb-2">顯示根數</label>
             <select id="bars-select" class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
+              <option value="60">60</option>
+              <option value="90">90</option>
+              <option value="120">120</option>
               <option value="180">180</option>
               <option value="240" selected>240</option>
               <option value="300">300</option>
               <option value="420">420</option>
+              <option value="600">600</option>
+              <option value="800">800</option>
+              <option value="1000">1000</option>
             </select>
           </div>
           <div>
@@ -292,7 +373,7 @@ const Battle = {
 };
 
 const App = {
-  interval:"1d", mode:"quiz", challenge:null, questions:[], questionIndex:0,
+  interval:"1d", mode:"quiz", appStarted:false, challenge:null, questions:[], questionIndex:0,
   currentData:[], currentDataPath:"", currentQuestion:null, loadingQuestion:false, manifest:null, klineCache:{},
   chart:null, candleSeries:null, volumeSeries:null, indicatorSeries:{},
   indicators:{ volume:true, ma:true, ema:false, bb:false, rsi:false, macd:false, atr:false },
@@ -340,28 +421,42 @@ function shuffleArray(arr){
   return out;
 }
 
-async function init(){ populateSymbolSelect(); bindUI(); createChart(); initDrawingCanvas(); await loadManualQuestion(true, false); await renderQuestion(); updateStats(); }
+async function init(){
+  populateSymbolSelect();
+  bindUI();
+  createChart();
+  initDrawingCanvas();
+  await loadManualQuestion(true, false);
+  await renderQuestion();
+  updateStats();
+  showLandingScreen();
+}
 
 function bindUI(){
-  $("latest-btn").onclick = () => safeAsync(() => loadManualQuestion(true, true));
+  document.querySelectorAll(".start-mode-btn").forEach(btn => {
+    btn.onclick = () => safeAsync(() => startFromLanding(btn.dataset.startMode));
+  });
+
+  $("home-btn").onclick = showLandingScreen;
+  $("latest-btn").onclick = () => safeAsync(() => loadManualQuestion(false, true));
   $("new-random-btn").onclick = () => safeAsync(() => loadManualQuestion(true, true));
   $("restart-btn").onclick = () => safeAsync(restart);
   $("next-btn").onclick = () => safeAsync(nextQuestion);
   $("copy-share-btn").onclick = copyShare;
-  $("symbol-select").onchange = () => safeAsync(() => loadManualQuestion(true, true));
-  $("bars-select").onchange = () => safeAsync(() => loadManualQuestion(true, true));
+
+  // 手動選股：固定該股，時間隨機；不是從整個股票池抽。
+  $("symbol-select").onchange = () => safeAsync(() => loadManualQuestion(true, true, { ticker:$("symbol-select").value }));
+
+  // 更改顯示根數：固定同一檔股票、同一個時間錨點，只改顯示根數。
+  $("bars-select").onchange = () => safeAsync(() => reloadCurrentContext());
 
   document.querySelectorAll(".interval-btn").forEach(btn => {
-    btn.onclick = () => safeAsync(async () => {
-      App.interval = btn.dataset.interval;
-      syncIntervalButtons();
-      await loadManualQuestion(true, true);
-    });
+    btn.onclick = () => safeAsync(() => switchIntervalKeepContext(btn.dataset.interval));
   });
 
-  $("mode-quiz").onclick = () => safeAsync(async () => { setMode("quiz"); await loadManualQuestion(true, true); });
-  $("mode-backtest").onclick = () => safeAsync(async () => { setMode("backtest"); await loadManualQuestion(true, true); });
-  $("mode-battle").onclick = () => setMode("battle");
+  $("mode-quiz").onclick = () => safeAsync(async () => { showAppScreen(); setMode("quiz"); await loadManualQuestion(true, true); });
+  $("mode-backtest").onclick = () => safeAsync(async () => { showAppScreen(); setMode("backtest"); await loadManualQuestion(true, true); });
+  $("mode-battle").onclick = () => { showAppScreen(); setMode("battle"); };
 
   document.querySelectorAll(".indicator-toggle").forEach(btn => {
     btn.onclick = () => {
@@ -402,6 +497,101 @@ function bindUI(){
 async function safeAsync(fn){ try { await fn(); } catch(err){ console.error(err); showLoadError(err); } }
 function syncIntervalButtons(){ document.querySelectorAll(".interval-btn").forEach(b => b.classList.toggle("active-pill", b.dataset.interval === App.interval)); $("interval-badge").innerText = intervalText(App.interval); }
 function syncSymbolAndBarsUI(ticker, interval, bars){ if(ticker && $("symbol-select").querySelector(`option[value="${ticker}"]`)) $("symbol-select").value=ticker; if(interval){ App.interval=interval; syncIntervalButtons(); } if(bars) $("bars-select").value=String(bars); }
+
+function showLandingScreen(){
+  const landing = $("landing-screen");
+  const app = $("app-screen");
+  if(landing) landing.classList.remove("hidden");
+  if(app) app.classList.add("hidden");
+  App.appStarted = false;
+}
+
+function showAppScreen(){
+  const landing = $("landing-screen");
+  const app = $("app-screen");
+  if(landing) landing.classList.add("hidden");
+  if(app) app.classList.remove("hidden");
+  App.appStarted = true;
+  setTimeout(() => {
+    try {
+      const r = $("chart").getBoundingClientRect();
+      App.chart.applyOptions({ width:Math.floor(r.width || 1300), height:Math.floor(r.height || 760) });
+      focusCurrentPrice(visibleCandles());
+    } catch(e) {}
+  }, 50);
+}
+
+async function startFromLanding(mode){
+  showAppScreen();
+  setMode(mode);
+  if(mode === "battle"){
+    await refreshBattlePanel();
+    return;
+  }
+  await loadManualQuestion(true, true);
+}
+
+function desiredVisibleBars(){
+  return Math.max(20, Number($("bars-select")?.value || 240));
+}
+
+function currentAnchorTime(){
+  const q = App.currentQuestion;
+  if(q && App.currentData && App.currentData[q._visibleEnd]) return App.currentData[q._visibleEnd].time;
+  if(q && q.anchor_time) return q.anchor_time;
+  return null;
+}
+
+function findIndexAtOrBefore(data, anchorTime){
+  if(!anchorTime || !Array.isArray(data) || !data.length) return -1;
+  let best = -1;
+  for(let i=0; i<data.length; i++){
+    if(String(data[i].time) <= String(anchorTime)) best = i;
+    else break;
+  }
+  return best;
+}
+
+function clampVisibleBarsForData(dataLen, desired, revealBars){
+  const maxVisible = Math.max(20, dataLen - revealBars - 2);
+  return Math.max(20, Math.min(Number(desired || 240), maxVisible));
+}
+
+function pickStartIdx(data, visibleBars, revealBars, randomStart, anchorTime){
+  const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
+  if(anchorTime){
+    const maxVisibleEnd = Math.max(visibleBars - 1, data.length - revealBars - 1);
+    let visibleEnd = findIndexAtOrBefore(data, anchorTime);
+    if(visibleEnd < 0) visibleEnd = maxVisibleEnd;
+    visibleEnd = Math.max(visibleBars - 1, Math.min(visibleEnd, maxVisibleEnd));
+    return Math.max(0, Math.min(visibleEnd - visibleBars + 1, maxStart));
+  }
+  return randomStart ? Math.floor(Math.random() * Math.max(1, maxStart)) : maxStart;
+}
+
+function visibleCandles(){
+  const q = App.currentQuestion;
+  if(!q || !App.currentData.length) return [];
+  const end = App.revealed ? q._revealEnd : q._visibleEnd;
+  return App.currentData.slice(q.start_idx, end + 1);
+}
+
+async function reloadCurrentContext(){
+  const q = App.currentQuestion;
+  const ticker = q?.ticker || $("symbol-select").value;
+  const anchorTime = currentAnchorTime();
+  await loadManualQuestion(false, true, { ticker, anchorTime });
+}
+
+async function switchIntervalKeepContext(newInterval){
+  if(!newInterval) return;
+  const q = App.currentQuestion;
+  const ticker = q?.ticker || $("symbol-select").value;
+  const anchorTime = currentAnchorTime();
+  App.interval = newInterval;
+  syncIntervalButtons();
+  await loadManualQuestion(false, true, { ticker, interval:newInterval, anchorTime });
+}
 
 function setMode(mode){
   App.mode = mode;
@@ -553,11 +743,16 @@ function makeQuestion(ticker, interval, startIdx, visibleBars, revealBars, quest
   return { question_no:questionNo, ticker, interval, data_path:dataPath(ticker, interval), start_idx:startIdx, visible_bars:visibleBars, reveal_bars:revealBars, threshold_pct:thresholdByInterval(interval), random_start:false };
 }
 
-async function loadManualQuestion(randomStart=true, renderNow=true){
-  const interval = App.interval;
-  const visibleBars = Number($("bars-select").value || 240);
+async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
+  const interval = options.interval || App.interval;
+  const requestedVisibleBars = desiredVisibleBars();
   const revealBars = revealBarsByInterval(interval);
-  const pool = await battleCandidatePool(interval, visibleBars, revealBars);
+  const fixedTicker = options.ticker || null;
+  const anchorTime = options.anchorTime || null;
+  const pool = fixedTicker
+    ? [{ ticker:fixedTicker, path:dataPath(fixedTicker, interval), count:0 }]
+    : await battleCandidatePool(interval, 20, revealBars);
+
   const questions = [];
   const used = new Set();
 
@@ -568,37 +763,43 @@ async function loadManualQuestion(randomStart=true, renderNow=true){
       const path = item.path || dataPath(item.ticker, interval);
       const data = await loadKlines(path);
 
-      if(data.length < visibleBars + revealBars + 10) continue;
+      if(data.length < revealBars + 22) continue;
 
-      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
-      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
-      const key = `${item.ticker}_${startIdx}`;
+      const visibleBars = clampVisibleBarsForData(data.length, requestedVisibleBars, revealBars);
+      const startIdx = pickStartIdx(data, visibleBars, revealBars, randomStart, questions.length === 0 ? anchorTime : null);
+      const visibleEnd = Math.min(startIdx + visibleBars - 1, data.length - revealBars - 1);
+      const key = `${item.ticker}_${interval}_${startIdx}`;
 
       if(used.has(key)) continue;
       used.add(key);
 
-      questions.push(makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
+      const q = makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1);
+      q.anchor_time = data[visibleEnd]?.time || anchorTime || null;
+      questions.push(q);
+
+      // 固定股票/時間錨點時，第一題要保留同一檔與同一時間；後面四題用同檔股票隨機時間，保留下一題可用。
+      if(fixedTicker && questions.length === 1){
+        for(let k=1; k<5; k++){
+          const s = pickStartIdx(data, visibleBars, revealBars, true, null);
+          const qe = Math.min(s + visibleBars - 1, data.length - revealBars - 1);
+          const qq = makeQuestion(item.ticker, interval, s, visibleBars, revealBars, k + 1);
+          qq.anchor_time = data[qe]?.time || null;
+          questions.push(qq);
+        }
+        break;
+      }
     } catch(e) {
-      console.warn("skip random ticker", item.ticker, e);
+      console.warn("skip ticker", item.ticker, interval, e);
     }
   }
 
   if(!questions.length){
-    throw new Error(`隨機股票題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions。`);
+    throw new Error(`題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions，或把顯示根數調小。`);
   }
 
   while(questions.length < 5){
     const base = questions[questions.length % Math.max(1, questions.length)];
-    const path = base.data_path;
-
-    try {
-      const data = await loadKlines(path);
-      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
-      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
-      questions.push(makeQuestion(base.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
-    } catch(e) {
-      questions.push({ ...base, question_no: questions.length + 1 });
-    }
+    questions.push({ ...base, question_no:questions.length + 1 });
   }
 
   App.questions = questions;
@@ -611,10 +812,10 @@ async function loadManualQuestion(randomStart=true, renderNow=true){
   App.revealed = false;
   App.profit = null;
 
-  syncSymbolAndBarsUI(questions[0].ticker, interval, visibleBars);
+  syncSymbolAndBarsUI(questions[0].ticker, interval, requestedVisibleBars);
   $("interval-badge").innerText = intervalText(interval);
-  $("symbol-badge").innerText = "隨機股票 · 代號隱藏";
-  $("blind-badge").innerText = "RANDOM MODE";
+  $("symbol-badge").innerText = fixedTicker ? "同股票 · 同時間錨點" : "隨機股票 · 代號隱藏";
+  $("blind-badge").innerText = fixedTicker ? "CONTEXT LOCK" : "RANDOM MODE";
 
   if(renderNow) await renderQuestion();
 }
@@ -654,9 +855,9 @@ async function battleCandidatePool(interval, visibleBars, revealBars){
 
 async function loadBattleRandomQuestions(renderNow=true){
   const interval = App.interval;
-  const visibleBars = Number($("bars-select").value || 240);
+  const requestedVisibleBars = desiredVisibleBars();
   const revealBars = Battle.battleMode === "profit" ? selectedProfitLimitBars() : revealBarsByInterval(interval);
-  const pool = await battleCandidatePool(interval, visibleBars, revealBars);
+  const pool = await battleCandidatePool(interval, 20, revealBars);
   const questions = [];
   const errors = [];
 
@@ -665,11 +866,14 @@ async function loadBattleRandomQuestions(renderNow=true){
 
     try {
       const data = await loadKlines(item.path);
-      if(data.length < visibleBars + revealBars + 10) continue;
+      if(data.length < revealBars + 22) continue;
 
-      const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
-      const startIdx = Math.floor(Math.random() * Math.max(1, maxStart));
-      questions.push(makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1));
+      const visibleBars = clampVisibleBarsForData(data.length, requestedVisibleBars, revealBars);
+      const startIdx = pickStartIdx(data, visibleBars, revealBars, true, null);
+      const visibleEnd = Math.min(startIdx + visibleBars - 1, data.length - revealBars - 1);
+      const q = makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1);
+      q.anchor_time = data[visibleEnd]?.time || null;
+      questions.push(q);
     } catch(e) {
       errors.push(`${item.ticker}: ${e.message}`);
       console.warn("skip battle ticker", item.ticker, e);
@@ -677,12 +881,12 @@ async function loadBattleRandomQuestions(renderNow=true){
   }
 
   if(!questions.length){
-    throw new Error(`對戰隨機股票題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions。`);
+    throw new Error(`對戰隨機股票題目建立失敗：找不到可用的 ${intervalText(interval)} JSON。請重新跑 GitHub Actions，或把顯示根數調小。`);
   }
 
   while(questions.length < 5){
     const base = questions[questions.length % Math.max(1, questions.length)];
-    questions.push({ ...base, question_no: questions.length + 1 });
+    questions.push({ ...base, question_no:questions.length + 1 });
   }
 
   App.questions = questions;
@@ -694,7 +898,7 @@ async function loadBattleRandomQuestions(renderNow=true){
   App.currentData = [];
   App.currentDataPath = "";
 
-  syncSymbolAndBarsUI(questions[0].ticker, interval, visibleBars);
+  syncSymbolAndBarsUI(questions[0].ticker, interval, requestedVisibleBars);
   $("interval-badge").innerText = intervalText(interval);
   $("symbol-badge").innerText = "對戰隨機股票";
   $("blind-badge").innerText = "BATTLE RANDOM";
@@ -763,14 +967,18 @@ function normalizeQuestionBounds(q){
     throw new Error("題目或 K 線資料尚未載入完成。");
   }
 
-  const visibleBars = Math.max(20, Number(q.visible_bars || $("bars-select")?.value || 240));
   const revealBars = Math.max(1, Number(q.reveal_bars || revealBarsByInterval(q.interval || App.interval)));
 
-  if(App.currentData.length < visibleBars + revealBars + 2){
-    throw new Error(`K 線資料不足：目前 ${App.currentData.length} 根，需要至少 ${visibleBars + revealBars + 2} 根。`);
+  if(App.currentData.length < revealBars + 22){
+    throw new Error(`K 線資料不足：目前 ${App.currentData.length} 根，揭曉根數 ${revealBars}，請重新跑 GitHub Actions。`);
   }
 
+  let visibleBars = clampVisibleBarsForData(App.currentData.length, q.visible_bars || desiredVisibleBars(), revealBars);
   const maxStart = Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
+
+  if(q.anchor_time && (q.start_idx === null || q.start_idx === undefined || q.keep_anchor)){
+    q.start_idx = pickStartIdx(App.currentData, visibleBars, revealBars, false, q.anchor_time);
+  }
 
   if(q.start_idx === null || q.start_idx === undefined || !Number.isFinite(Number(q.start_idx))){
     q.start_idx = maxStart;
@@ -781,6 +989,7 @@ function normalizeQuestionBounds(q){
   q.reveal_bars = revealBars;
   q._visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
   q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
+  q.anchor_time = App.currentData[q._visibleEnd]?.time || q.anchor_time || null;
 
   if(q._visibleEnd < 0 || q._revealEnd <= q._visibleEnd){
     throw new Error("題目索引異常，請按『隨機題段』重新整理題目。");
@@ -788,11 +997,15 @@ function normalizeQuestionBounds(q){
 }
 
 function visibleBarSpacing(len){
+  if(len >= 1000) return 0.8;
+  if(len >= 800) return 0.9;
+  if(len >= 600) return 1.0;
   if(len >= 420) return 1.2;
   if(len >= 300) return 1.6;
   if(len >= 240) return 2.0;
   if(len >= 180) return 2.6;
   if(len >= 120) return 3.4;
+  if(len >= 90) return 4.2;
   return 5.5;
 }
 
@@ -1464,6 +1677,7 @@ async function pollBattleRoom(){ if(!Battle.roomCode) return; const { data:room 
 async function restoreBattleSession(){
   const room=localStorage.getItem("kline_battle_room") || "", player=localStorage.getItem("kline_battle_player") || "", host=localStorage.getItem("kline_battle_host") || "0";
   if(!room || !player){ await refreshBattlePanel(); return; }
+  showAppScreen();
   Battle.roomCode=room; Battle.playerName=player; Battle.isHost=host==="1"; setMode("battle");
   const { data:roomData } = await SB.from("battle_rooms").select("*").eq("room_code", room).single(); if(roomData){ await applyBattleConfig(roomData.config, true); await syncBattleRoom(roomData); }
   await subscribeBattleRoom(room); startBattlePolling(); await refreshBattlePanel();
