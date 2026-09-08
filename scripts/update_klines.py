@@ -1,162 +1,345 @@
 # scripts/update_klines.py
-# GitHub Actions 用：每日更新 K 線 JSON 與 daily_challenge.json。
-# 注意：本程式只整理歷史資料，不產生投資建議。
-
-from __future__ import annotations
+# Yahoo/yfinance 抓取日K、週K、月K，計算常用技術指標，輸出成 GitHub Pages 可讀取的 JSON。
 
 import json
+import math
+import os
 import random
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yfinance as yf
 
-ROOT = Path(__file__).resolve().parents[1]
-KLINE_DIR = ROOT / "public" / "data" / "klines"
-CHALLENGE_PATH = ROOT / "public" / "data" / "daily_challenge.json"
 
-# 先用高流動性標的，避免資料太少或冷門股造成挑戰無法生成。
+TAIWAN_TZ = timezone(timedelta(hours=8))
+
+OUTPUT_DIR = "public/data"
+KLINE_DIR = os.path.join(OUTPUT_DIR, "klines")
+DAILY_CHALLENGE_PATH = os.path.join(OUTPUT_DIR, "daily_challenge.json")
+
 TICKERS = [
-    "2330.TW", "2317.TW", "2454.TW", "2303.TW", "2881.TW",
-    "2882.TW", "2891.TW", "3711.TW", "2382.TW", "3037.TW",
-    "0050.TW", "0056.TW", "00878.TW", "006208.TW",
-    "AAPL", "MSFT", "NVDA", "TSLA", "SPY", "QQQ",
-    "BTC-USD", "ETH-USD",
+    "2330.TW",
+    "2317.TW",
+    "2454.TW",
+    "2303.TW",
+    "0050.TW",
+    "NVDA",
+    "AAPL",
+    "MSFT",
+    "SPY",
+    "QQQ",
+    "BTC-USD",
 ]
 
-PERIOD = "3y"
-INTERVAL = "1d"
-VISIBLE_BARS = 60
-REVEAL_BARS = 10
-QUESTION_COUNT = 5
-RANGE_THRESHOLD_PCT = 1.2
+INTERVALS = {
+    "1d": {
+        "period": "5y",
+        "visible_bars": 60,
+        "reveal_bars": 10,
+        "range_threshold_pct": 1.2,
+    },
+    "1wk": {
+        "period": "10y",
+        "visible_bars": 52,
+        "reveal_bars": 8,
+        "range_threshold_pct": 3.0,
+    },
+    "1mo": {
+        "period": "max",
+        "visible_bars": 36,
+        "reveal_bars": 6,
+        "range_threshold_pct": 6.0,
+    },
+}
 
-def taipei_today() -> str:
-    tz = timezone(timedelta(hours=8))
-    return datetime.now(tz).strftime("%Y-%m-%d")
+
+def safe_float(value):
+    if value is None:
+        return None
+
+    try:
+        value = float(value)
+    except Exception:
+        return None
+
+    if not math.isfinite(value):
+        return None
+
+    return round(value, 6)
 
 
-def file_safe_ticker(ticker: str) -> str:
-    return ticker.replace(".", "_").replace("-", "_").replace("/", "_")
+def sanitize_file_name(ticker: str, interval: str) -> str:
+    return f"{ticker}_{interval}.json".replace(".", "_").replace("-", "_")
 
 
-def normalize_frame(df: pd.DataFrame) -> list[dict]:
-    if df is None or df.empty:
-        return []
+def compute_rsi(close: pd.Series, period: int = 14) -> pd.Series:
+    delta = close.diff()
+
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean()
+
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi
+
+
+def compute_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    high = df["High"]
+    low = df["Low"]
+    close = df["Close"]
+
+    prev_close = close.shift(1)
+
+    tr1 = high - low
+    tr2 = (high - prev_close).abs()
+    tr3 = (low - prev_close).abs()
+
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+    return tr.ewm(alpha=1 / period, adjust=False).mean()
+
+
+def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    close = df["Close"]
+
+    df["MA5"] = close.rolling(5).mean()
+    df["MA20"] = close.rolling(20).mean()
+    df["MA60"] = close.rolling(60).mean()
+
+    df["EMA20"] = close.ewm(span=20, adjust=False).mean()
+    df["EMA60"] = close.ewm(span=60, adjust=False).mean()
+
+    df["RSI14"] = compute_rsi(close, 14)
+
+    ema12 = close.ewm(span=12, adjust=False).mean()
+    ema26 = close.ewm(span=26, adjust=False).mean()
+
+    df["MACD"] = ema12 - ema26
+    df["MACD_SIGNAL"] = df["MACD"].ewm(span=9, adjust=False).mean()
+    df["MACD_HIST"] = df["MACD"] - df["MACD_SIGNAL"]
+
+    bb_mid = close.rolling(20).mean()
+    bb_std = close.rolling(20).std()
+
+    df["BB_MID"] = bb_mid
+    df["BB_UPPER"] = bb_mid + 2 * bb_std
+    df["BB_LOWER"] = bb_mid - 2 * bb_std
+
+    df["ATR14"] = compute_atr(df, 14)
+    df["VOL_MA20"] = df["Volume"].rolling(20).mean()
+
+    return df
+
+
+def normalize_downloaded_frame(data: pd.DataFrame, ticker: str) -> pd.DataFrame:
+    if data is None or data.empty:
+        return pd.DataFrame()
+
+    df = data.copy()
 
     if isinstance(df.columns, pd.MultiIndex):
-        df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
+        try:
+            if ticker in df.columns.get_level_values(0):
+                df = df[ticker].copy()
+            elif ticker in df.columns.get_level_values(1):
+                df = df.xs(ticker, axis=1, level=1).copy()
+        except Exception:
+            pass
 
-    required = ["Open", "High", "Low", "Close"]
+    required = ["Open", "High", "Low", "Close", "Volume"]
+
     for col in required:
         if col not in df.columns:
-            return []
+            return pd.DataFrame()
 
-    out = []
-    clean = df.dropna(subset=required).copy()
-    for idx, row in clean.iterrows():
-        try:
-            if hasattr(idx, "strftime"):
-                time_value = idx.strftime("%Y-%m-%d")
-            else:
-                time_value = str(idx)[:10]
-            item = {
-                "time": time_value,
-                "open": round(float(row["Open"]), 4),
-                "high": round(float(row["High"]), 4),
-                "low": round(float(row["Low"]), 4),
-                "close": round(float(row["Close"]), 4),
-                "volume": int(float(row.get("Volume", 0) or 0)),
-            }
-            if item["high"] >= item["low"] > 0 and item["open"] > 0 and item["close"] > 0:
-                out.append(item)
-        except Exception:
-            continue
-    return out
+    df = df[required].copy()
+    df = df.dropna(subset=["Open", "High", "Low", "Close"])
+    df = df[df["Close"] > 0]
+
+    return df
 
 
-def download_one(ticker: str) -> tuple[str, list[dict]]:
-    print(f"[INFO] Download {ticker}")
-    df = yf.download(
-        ticker,
-        period=PERIOD,
-        interval=INTERVAL,
+def download_one(ticker: str, interval: str, period: str) -> pd.DataFrame:
+    print(f"[INFO] Download {ticker} {interval} {period}")
+
+    data = yf.download(
+        tickers=ticker,
+        period=period,
+        interval=interval,
         auto_adjust=False,
         progress=False,
         threads=False,
     )
-    return ticker, normalize_frame(df)
+
+    df = normalize_downloaded_frame(data, ticker)
+
+    if df.empty:
+        print(f"[WARN] Empty data: {ticker} {interval}")
+        return df
+
+    df = add_indicators(df)
+
+    return df
 
 
-def write_klines() -> list[dict]:
-    KLINE_DIR.mkdir(parents=True, exist_ok=True)
-    available = []
+def df_to_records(df: pd.DataFrame) -> list[dict]:
+    records = []
 
-    for ticker in TICKERS:
-        try:
-            symbol, rows = download_one(ticker)
-            if len(rows) < VISIBLE_BARS + REVEAL_BARS + 30:
-                print(f"[WARN] Skip {symbol}: only {len(rows)} rows")
-                continue
-            filename = f"{file_safe_ticker(symbol)}_1d.json"
-            path = KLINE_DIR / filename
-            with path.open("w", encoding="utf-8") as f:
-                json.dump(rows, f, ensure_ascii=False, indent=2)
-            available.append({
-                "ticker": symbol,
-                "path": f"public/data/klines/{filename}",
-                "rows": len(rows),
-            })
-            print(f"[OK] {symbol}: {len(rows)} rows -> {filename}")
-        except Exception as e:
-            print(f"[ERROR] {ticker}: {e}")
+    for idx, row in df.iterrows():
+        if hasattr(idx, "strftime"):
+            time_text = idx.strftime("%Y-%m-%d")
+        else:
+            time_text = str(idx)[:10]
 
-    if len(available) < QUESTION_COUNT:
-        raise RuntimeError(f"可用 K 線資料不足：{len(available)}")
+        item = {
+            "time": time_text,
+            "open": safe_float(row.get("Open")),
+            "high": safe_float(row.get("High")),
+            "low": safe_float(row.get("Low")),
+            "close": safe_float(row.get("Close")),
+            "volume": safe_float(row.get("Volume")),
 
-    return available
+            "ma5": safe_float(row.get("MA5")),
+            "ma20": safe_float(row.get("MA20")),
+            "ma60": safe_float(row.get("MA60")),
+            "ema20": safe_float(row.get("EMA20")),
+            "ema60": safe_float(row.get("EMA60")),
+            "rsi14": safe_float(row.get("RSI14")),
+            "macd": safe_float(row.get("MACD")),
+            "macd_signal": safe_float(row.get("MACD_SIGNAL")),
+            "macd_hist": safe_float(row.get("MACD_HIST")),
+            "bb_upper": safe_float(row.get("BB_UPPER")),
+            "bb_mid": safe_float(row.get("BB_MID")),
+            "bb_lower": safe_float(row.get("BB_LOWER")),
+            "atr14": safe_float(row.get("ATR14")),
+            "vol_ma20": safe_float(row.get("VOL_MA20")),
+        }
+
+        if all(item[k] is not None for k in ["open", "high", "low", "close"]):
+            records.append(item)
+
+    records = sorted(records, key=lambda x: x["time"])
+
+    return records
 
 
-def build_daily_challenge(available: list[dict]) -> None:
-    today = taipei_today()
-    rng = random.Random(f"KLINE_DAILY_CHALLENGE|{today}")
-    selected = rng.sample(available, QUESTION_COUNT)
+def save_json(path: str, data) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def build_daily_challenge(available_files: list[dict]) -> dict:
+    today = datetime.now(TAIWAN_TZ).strftime("%Y-%m-%d")
+
+    rng = random.Random(today)
+
+    candidates = []
+
+    for item in available_files:
+        ticker = item["ticker"]
+        interval = item["interval"]
+        path = item["path"]
+        count = item["count"]
+
+        setting = INTERVALS[interval]
+        required = setting["visible_bars"] + setting["reveal_bars"] + 80
+
+        if count >= required:
+            candidates.append(item)
+
+    if not candidates:
+        raise RuntimeError("No enough kline data to build daily challenge.")
 
     questions = []
-    for i, item in enumerate(selected, start=1):
-        # 避免抽到太靠近最前或最後的位置。
-        min_start = 20
-        max_start = item["rows"] - VISIBLE_BARS - REVEAL_BARS - 5
+
+    for q_no in range(1, 6):
+        item = rng.choice(candidates)
+
+        interval = item["interval"]
+        setting = INTERVALS[interval]
+
+        visible = setting["visible_bars"]
+        reveal = setting["reveal_bars"]
+
+        max_start = item["count"] - visible - reveal - 1
+        min_start = min(80, max_start)
+
         start_idx = rng.randint(min_start, max_start)
+
         questions.append({
-            "id": f"{today}-q{i}",
+            "question_no": q_no,
             "ticker": item["ticker"],
-            "interval": "1d",
+            "interval": interval,
             "data_path": item["path"],
             "start_idx": start_idx,
-            "visible_bars": VISIBLE_BARS,
-            "reveal_bars": REVEAL_BARS,
+            "visible_bars": visible,
+            "reveal_bars": reveal,
         })
 
-    challenge = {
+    return {
         "date": today,
-        "title": f"{today} 今日裸 K 五連戰",
-        "description": "不看消息、不看指標，只看 K 線判斷後續走勢。",
-        "range_threshold_pct": RANGE_THRESHOLD_PCT,
+        "title": "今日裸 K 五連戰",
+        "range_threshold_pct": 1.2,
+        "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
         "questions": questions,
-        "disclaimer": "本網站僅供 K 線閱讀練習與教育用途，不提供任何投資建議，也不構成買賣推薦。",
+        "updated_at": datetime.now(TAIWAN_TZ).isoformat(),
     }
-
-    CHALLENGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with CHALLENGE_PATH.open("w", encoding="utf-8") as f:
-        json.dump(challenge, f, ensure_ascii=False, indent=2)
-    print(f"[OK] Write {CHALLENGE_PATH}")
 
 
 def main() -> None:
-    available = write_klines()
-    build_daily_challenge(available)
+    os.makedirs(KLINE_DIR, exist_ok=True)
+
+    available_files = []
+
+    for ticker in TICKERS:
+        for interval, setting in INTERVALS.items():
+            try:
+                df = download_one(ticker, interval, setting["period"])
+
+                if df.empty:
+                    continue
+
+                records = df_to_records(df)
+
+                if len(records) < 80:
+                    print(f"[WARN] Too few records: {ticker} {interval} {len(records)}")
+                    continue
+
+                filename = sanitize_file_name(ticker, interval)
+                path = os.path.join(KLINE_DIR, filename)
+                public_path = f"public/data/klines/{filename}"
+
+                save_json(path, records)
+
+                available_files.append({
+                    "ticker": ticker,
+                    "interval": interval,
+                    "path": public_path,
+                    "count": len(records),
+                })
+
+                print(f"[OK] Saved {public_path}, rows={len(records)}")
+
+            except Exception as e:
+                print(f"[ERROR] {ticker} {interval}: {e}")
+
+    if not available_files:
+        raise RuntimeError("No kline files generated.")
+
+    challenge = build_daily_challenge(available_files)
+    save_json(DAILY_CHALLENGE_PATH, challenge)
+
+    print(f"[OK] Saved {DAILY_CHALLENGE_PATH}")
+    print(json.dumps(challenge, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
