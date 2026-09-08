@@ -6,17 +6,11 @@
 
   <title>裸 K 訓練場｜日K 週K 月K 回測對戰</title>
   <meta name="description" content="裸 K 訓練場提供日K、週K、月K的K線判斷練習、技術指標、畫線工具、自動計分、回測練習與即時對戰。僅供教育用途，不構成投資建議。" />
-
   <meta name="google-adsense-account" content="ca-pub-3822526422033370">
 
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370"
-    crossorigin="anonymous"></script>
-
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- 固定 v4，避免 v5 API 不相容 -->
   <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 
   <style>
@@ -82,11 +76,15 @@
       border-color: #f59e0b !important;
     }
 
+    input, select {
+      outline: none;
+    }
+
     #chart-wrap {
       position: relative;
       width: 100%;
-      height: 720px;
-      min-height: 560px;
+      height: 760px;
+      min-height: 580px;
       background: #020617;
       border-radius: 18px;
       overflow: hidden;
@@ -107,21 +105,34 @@
       pointer-events: none;
     }
 
+    #drawing-hint {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      z-index: 30;
+      background: rgba(2, 6, 23, 0.76);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: #cbd5e1;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
     @media (max-width: 768px) {
       #chart-wrap {
-        height: 620px;
+        height: 640px;
       }
     }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <main class="max-w-[1600px] mx-auto px-4 py-5">
-
+  <main class="max-w-[1700px] mx-auto px-4 py-5">
     <section class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-black mb-3">
-          ● 每日裸 K 五連戰
+          ● 裸 K Replay 訓練
         </div>
 
         <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white">
@@ -134,19 +145,19 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
+        <button id="latest-btn" class="btn btn-dark px-5 py-3">最新題段</button>
         <button id="new-random-btn" class="btn btn-main px-5 py-3">隨機出題</button>
         <button id="restart-btn" class="btn btn-dark px-5 py-3">重新開始</button>
         <button id="copy-share-btn" class="btn btn-dark px-5 py-3">複製戰績</button>
       </div>
     </section>
 
-    <section class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5">
-
+    <section class="grid grid-cols-1 2xl:grid-cols-[1fr_380px] gap-5">
       <section class="glass rounded-3xl p-4">
-
-        <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.8fr_1.1fr] gap-3 mb-4">
+        <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_.8fr_.65fr_1.1fr] gap-3 mb-4">
           <div>
             <label class="block text-xs text-slate-400 font-bold mb-2">股票 / 商品</label>
+
             <select id="symbol-select" class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
               <option value="2330.TW">台積電 2330</option>
               <option value="2317.TW">鴻海 2317</option>
@@ -164,6 +175,7 @@
 
           <div>
             <label class="block text-xs text-slate-400 font-bold mb-2">K 線週期</label>
+
             <div class="grid grid-cols-3 gap-2">
               <button class="interval-btn btn btn-dark px-3 py-3 active-pill" data-interval="1d">日 K</button>
               <button class="interval-btn btn btn-dark px-3 py-3" data-interval="1wk">週 K</button>
@@ -172,7 +184,19 @@
           </div>
 
           <div>
+            <label class="block text-xs text-slate-400 font-bold mb-2">顯示根數</label>
+
+            <select id="bars-select" class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
+              <option value="180">180</option>
+              <option value="240" selected>240</option>
+              <option value="300">300</option>
+              <option value="420">420</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block text-xs text-slate-400 font-bold mb-2">模式</label>
+
             <div class="grid grid-cols-3 gap-2">
               <button id="mode-quiz" class="mode-btn btn btn-dark px-3 py-3 active-pill">猜方向</button>
               <button id="mode-backtest" class="mode-btn btn btn-dark px-3 py-3">回測</button>
@@ -209,20 +233,46 @@
           <button class="indicator-toggle btn btn-dark px-3 py-2 text-xs" data-indicator="atr">ATR</button>
         </div>
 
-        <div class="flex flex-wrap gap-2 mb-3">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs tool-active" data-tool="cursor">游標</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="select">選取</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="trend">趨勢線</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="ray">射線</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="hline">水平線</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="vline">垂直線</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="rect">區間框</button>
+          <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="fib">斐波</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="text">文字</button>
           <button class="tool-btn btn btn-dark px-3 py-2 text-xs" data-tool="erase">刪除</button>
-          <button id="clear-draw-btn" class="btn btn-dark px-3 py-2 text-xs">清空畫線</button>
+          <button id="undo-draw-btn" class="btn btn-dark px-3 py-2 text-xs">復原</button>
+          <button id="clear-draw-btn" class="btn btn-dark px-3 py-2 text-xs">清空</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
+          <span class="text-slate-400 font-bold">線條設定</span>
+
+          <input id="draw-color" type="color" value="#f59e0b" class="w-10 h-8 rounded bg-slate-900 border border-slate-700" />
+
+          <select id="draw-width" class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold">
+            <option value="1">1px</option>
+            <option value="2" selected>2px</option>
+            <option value="3">3px</option>
+            <option value="4">4px</option>
+          </select>
+
+          <select id="draw-style" class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold">
+            <option value="solid" selected>實線</option>
+            <option value="dashed">虛線</option>
+            <option value="dotted">點線</option>
+          </select>
+
+          <span id="selected-drawing-label" class="text-slate-500">未選取線條</span>
         </div>
 
         <div id="chart-wrap">
           <div id="chart"></div>
           <canvas id="draw-canvas"></canvas>
+          <div id="drawing-hint">游標模式：可拖曳/縮放圖表。畫線時會即時預覽。</div>
         </div>
 
         <section id="answer-area" class="grid grid-cols-3 gap-2 mt-4">
@@ -247,19 +297,7 @@
       </section>
 
       <aside class="space-y-4">
-
-        <section id="battle-status-panel" class="glass rounded-3xl p-4">
-          <h2 class="text-lg font-black text-white mb-3">即時對戰</h2>
-
-          <p class="text-sm text-slate-400 mb-3 leading-relaxed">
-            建立房間後，把房號傳給朋友。雙方會看到同一題裸 K，作答後分數會同步到排行榜。
-          </p>
-
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="createBattleRoom()" class="btn btn-main px-3 py-3">建立房間</button>
-            <button onclick="joinBattleRoom()" class="btn btn-dark px-3 py-3">加入房間</button>
-          </div>
-        </section>
+        <section id="battle-status-panel" class="glass rounded-3xl p-4"></section>
 
         <section class="glass rounded-3xl p-4">
           <h2 class="text-lg font-black text-white mb-3">今日進度</h2>
@@ -280,21 +318,16 @@
               <div id="stat-score" class="text-2xl font-black text-blue-300">0</div>
             </div>
           </div>
-
-          <p class="text-xs text-slate-500 mt-3 leading-relaxed">
-            題目會顯示前段 K 線，隱藏未來數根。作答後才揭曉後續走勢並自動計分。
-          </p>
         </section>
 
         <section class="glass rounded-3xl p-4">
-          <h2 class="text-lg font-black text-white mb-3">自動計分規則</h2>
+          <h2 class="text-lg font-black text-white mb-3">修正版重點</h2>
 
           <ul class="text-sm text-slate-300 space-y-2 leading-relaxed">
-            <li>日 K：顯示 180 根，揭曉後 20 根</li>
-            <li>週 K：顯示 156 根，揭曉後 12 根</li>
-            <li>月 K：顯示 120 根，揭曉後 8 根</li>
-            <li>答對方向 +20 分，答對盤整 +25 分</li>
-            <li>股票代號會先隱藏，作答後揭曉</li>
+            <li>切換日 / 週 / 月 K 會重新載入對應 JSON。</li>
+            <li>切換週期預設看最新題段，不會亂跳到歷史很前面。</li>
+            <li>指標若 JSON 沒有，前端會即時計算。</li>
+            <li>畫線支援即時預覽、射線、斐波、選取後改色 / 線寬 / 線型。</li>
           </ul>
         </section>
 
@@ -357,8 +390,16 @@ const App = {
   autoplayTimer: null,
 
   drawings: [],
+  drawHistory: [],
   drawTool: "cursor",
-  drawStart: null
+  drawStart: null,
+  drawPreview: null,
+  selectedDrawingId: null,
+  drawStyle: {
+    color: "#f59e0b",
+    width: 2,
+    style: "solid"
+  }
 };
 
 const $ = id => document.getElementById(id);
@@ -391,13 +432,22 @@ function thresholdByInterval(interval) {
   return 1.2;
 }
 
+function revealBarsByInterval(interval) {
+  if (interval === "1d") return 20;
+  if (interval === "1wk") return 12;
+  if (interval === "1mo") return 8;
+  return 20;
+}
+
 function pct(v) {
   const n = Number(v || 0);
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
 function money(v) {
-  return Number(v || 0).toLocaleString("zh-TW", { maximumFractionDigits: 0 });
+  return Number(v || 0).toLocaleString("zh-TW", {
+    maximumFractionDigits: 0
+  });
 }
 
 function escapeHtml(text) {
@@ -407,6 +457,12 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function nval(v) {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 async function init() {
@@ -421,21 +477,27 @@ async function init() {
 }
 
 function bindUI() {
+  $("latest-btn").onclick = () => loadManualQuestion(false);
+  $("new-random-btn").onclick = () => loadManualQuestion(true);
   $("restart-btn").onclick = restart;
-  $("new-random-btn").onclick = buildManualQuestion;
   $("next-btn").onclick = nextQuestion;
   $("copy-share-btn").onclick = copyShare;
-  $("symbol-select").onchange = buildManualQuestion;
+
+  $("symbol-select").onchange = () => loadManualQuestion(false);
+  $("bars-select").onchange = () => loadManualQuestion(false);
 
   document.querySelectorAll(".interval-btn").forEach(btn => {
     btn.onclick = () => {
       App.interval = btn.dataset.interval;
 
-      document.querySelectorAll(".interval-btn").forEach(b => b.classList.remove("active-pill"));
-      btn.classList.add("active-pill");
+      document.querySelectorAll(".interval-btn").forEach(b => {
+        b.classList.remove("active-pill");
+      });
 
+      btn.classList.add("active-pill");
       $("interval-badge").innerText = intervalText(App.interval);
-      buildManualQuestion();
+
+      loadManualQuestion(false);
     };
   });
 
@@ -458,16 +520,28 @@ function bindUI() {
 
   document.querySelectorAll(".tool-btn").forEach(btn => {
     btn.onclick = () => {
-      document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("tool-active"));
+      document.querySelectorAll(".tool-btn").forEach(b => {
+        b.classList.remove("tool-active");
+      });
+
       btn.classList.add("tool-active");
       setDrawTool(btn.dataset.tool);
     };
   });
 
+  $("draw-color").oninput = updateDrawStyleFromUI;
+  $("draw-width").onchange = updateDrawStyleFromUI;
+  $("draw-style").onchange = updateDrawStyleFromUI;
+
+  $("undo-draw-btn").onclick = undoDrawing;
+
   $("clear-draw-btn").onclick = () => {
+    pushDrawHistory();
     App.drawings = [];
+    App.selectedDrawingId = null;
     saveDrawings();
     redrawCanvas();
+    updateSelectedDrawingLabel();
   };
 
   $("bt-buy").onclick = backtestBuy;
@@ -480,7 +554,9 @@ function bindUI() {
 function setMode(mode) {
   App.mode = mode;
 
-  document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active-pill"));
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.classList.remove("active-pill");
+  });
 
   if (mode === "quiz") {
     $("mode-quiz").classList.add("active-pill");
@@ -507,18 +583,29 @@ function createChart() {
   const rect = chartEl.getBoundingClientRect();
 
   App.chart = LightweightCharts.createChart(chartEl, {
-    width: Math.max(900, Math.floor(rect.width || 1200)),
-    height: Math.max(560, Math.floor(rect.height || 720)),
+    width: Math.max(900, Math.floor(rect.width || 1300)),
+    height: Math.max(580, Math.floor(rect.height || 760)),
     layout: {
-      background: { type: "solid", color: "#020617" },
+      background: {
+        type: "solid",
+        color: "#020617"
+      },
       textColor: "#cbd5e1"
     },
     grid: {
-      vertLines: { color: "rgba(51,65,85,.35)" },
-      horzLines: { color: "rgba(51,65,85,.35)" }
+      vertLines: {
+        color: "rgba(51,65,85,.35)"
+      },
+      horzLines: {
+        color: "rgba(51,65,85,.35)"
+      }
     },
     rightPriceScale: {
-      borderColor: "rgba(148,163,184,.25)"
+      borderColor: "rgba(148,163,184,.25)",
+      scaleMargins: {
+        top: 0.05,
+        bottom: 0.24
+      }
     },
     timeScale: {
       borderColor: "rgba(148,163,184,.25)",
@@ -548,25 +635,43 @@ function createChart() {
   });
 
   App.volumeSeries = App.chart.addHistogramSeries({
-    priceFormat: { type: "volume" },
+    priceFormat: {
+      type: "volume"
+    },
     priceScaleId: "volume",
-    color: "rgba(148,163,184,.35)"
+    color: "rgba(148,163,184,.35)",
+    priceLineVisible: false,
+    lastValueVisible: false
   });
 
   App.chart.priceScale("volume").applyOptions({
-    scaleMargins: { top: 0.82, bottom: 0 }
+    visible: false,
+    scaleMargins: {
+      top: 0.82,
+      bottom: 0
+    }
   });
 
   App.chart.timeScale().subscribeVisibleTimeRangeChange(() => {
     redrawCanvas();
   });
 
+  ["wheel", "mousedown", "mousemove", "mouseup", "touchmove"].forEach(evt => {
+    $("chart-wrap").addEventListener(evt, () => {
+      requestAnimationFrame(redrawCanvas);
+    }, {
+      passive: true
+    });
+  });
+
   window.addEventListener("resize", () => {
     const r = chartEl.getBoundingClientRect();
+
     App.chart.applyOptions({
       width: Math.floor(r.width),
       height: Math.floor(r.height)
     });
+
     resizeCanvas();
   });
 }
@@ -594,19 +699,22 @@ function addLine(name, options = {}) {
   return series;
 }
 
-function addPriceOverlayLine(name, color) {
-  const series = App.chart.addLineSeries({
-    color,
-    lineWidth: 1,
-    priceScaleId: "right",
+function addHist(name, options = {}) {
+  const series = App.chart.addHistogramSeries({
     priceLineVisible: false,
     lastValueVisible: false,
-    crosshairMarkerVisible: false,
-    autoscaleInfoProvider: () => null
+    ...options
   });
 
   App.indicatorSeries[name] = series;
   return series;
+}
+
+function addPriceLine(name, color) {
+  return addLine(name, {
+    color,
+    priceScaleId: "right"
+  });
 }
 
 function setIndicatorData(candles) {
@@ -615,29 +723,54 @@ function setIndicatorData(candles) {
   if (!candles || candles.length === 0) return;
 
   if (App.indicators.ma) {
-    const ma20 = addPriceOverlayLine("MA20", "#60a5fa");
-    const ma60 = addPriceOverlayLine("MA60", "#f59e0b");
+    const ma20 = addPriceLine("MA20", "#60a5fa");
+    const ma60 = addPriceLine("MA60", "#f59e0b");
 
-    ma20.setData(candles.filter(x => x.ma20 != null).map(x => ({ time: x.time, value: x.ma20 })));
-    ma60.setData(candles.filter(x => x.ma60 != null).map(x => ({ time: x.time, value: x.ma60 })));
+    ma20.setData(candles.filter(x => x.ma20 != null).map(x => ({
+      time: x.time,
+      value: x.ma20
+    })));
+
+    ma60.setData(candles.filter(x => x.ma60 != null).map(x => ({
+      time: x.time,
+      value: x.ma60
+    })));
   }
 
   if (App.indicators.ema) {
-    const ema20 = addPriceOverlayLine("EMA20", "#a78bfa");
-    const ema60 = addPriceOverlayLine("EMA60", "#fb7185");
+    const ema20 = addPriceLine("EMA20", "#a78bfa");
+    const ema60 = addPriceLine("EMA60", "#fb7185");
 
-    ema20.setData(candles.filter(x => x.ema20 != null).map(x => ({ time: x.time, value: x.ema20 })));
-    ema60.setData(candles.filter(x => x.ema60 != null).map(x => ({ time: x.time, value: x.ema60 })));
+    ema20.setData(candles.filter(x => x.ema20 != null).map(x => ({
+      time: x.time,
+      value: x.ema20
+    })));
+
+    ema60.setData(candles.filter(x => x.ema60 != null).map(x => ({
+      time: x.time,
+      value: x.ema60
+    })));
   }
 
   if (App.indicators.bb) {
-    const upper = addPriceOverlayLine("BBU", "#38bdf8");
-    const middle = addPriceOverlayLine("BBM", "#64748b");
-    const lower = addPriceOverlayLine("BBL", "#38bdf8");
+    const upper = addPriceLine("BBU", "#38bdf8");
+    const mid = addPriceLine("BBM", "#64748b");
+    const lower = addPriceLine("BBL", "#38bdf8");
 
-    upper.setData(candles.filter(x => x.bb_upper != null).map(x => ({ time: x.time, value: x.bb_upper })));
-    middle.setData(candles.filter(x => x.bb_mid != null).map(x => ({ time: x.time, value: x.bb_mid })));
-    lower.setData(candles.filter(x => x.bb_lower != null).map(x => ({ time: x.time, value: x.bb_lower })));
+    upper.setData(candles.filter(x => x.bb_upper != null).map(x => ({
+      time: x.time,
+      value: x.bb_upper
+    })));
+
+    mid.setData(candles.filter(x => x.bb_mid != null).map(x => ({
+      time: x.time,
+      value: x.bb_mid
+    })));
+
+    lower.setData(candles.filter(x => x.bb_lower != null).map(x => ({
+      time: x.time,
+      value: x.bb_lower
+    })));
   }
 
   if (App.indicators.rsi) {
@@ -648,10 +781,16 @@ function setIndicatorData(candles) {
 
     App.chart.priceScale("rsi").applyOptions({
       visible: false,
-      scaleMargins: { top: 0.72, bottom: 0.12 }
+      scaleMargins: {
+        top: 0.70,
+        bottom: 0.16
+      }
     });
 
-    rsi.setData(candles.filter(x => x.rsi14 != null).map(x => ({ time: x.time, value: x.rsi14 })));
+    rsi.setData(candles.filter(x => x.rsi14 != null).map(x => ({
+      time: x.time,
+      value: x.rsi14
+    })));
   }
 
   if (App.indicators.macd) {
@@ -665,13 +804,34 @@ function setIndicatorData(candles) {
       priceScaleId: "macd"
     });
 
-    App.chart.priceScale("macd").applyOptions({
-      visible: false,
-      scaleMargins: { top: 0.78, bottom: 0.04 }
+    const hist = addHist("MACD_HIST", {
+      priceScaleId: "macd",
+      color: "rgba(148,163,184,.35)"
     });
 
-    macd.setData(candles.filter(x => x.macd != null).map(x => ({ time: x.time, value: x.macd })));
-    signal.setData(candles.filter(x => x.macd_signal != null).map(x => ({ time: x.time, value: x.macd_signal })));
+    App.chart.priceScale("macd").applyOptions({
+      visible: false,
+      scaleMargins: {
+        top: 0.76,
+        bottom: 0.05
+      }
+    });
+
+    macd.setData(candles.filter(x => x.macd != null).map(x => ({
+      time: x.time,
+      value: x.macd
+    })));
+
+    signal.setData(candles.filter(x => x.macd_signal != null).map(x => ({
+      time: x.time,
+      value: x.macd_signal
+    })));
+
+    hist.setData(candles.filter(x => x.macd_hist != null).map(x => ({
+      time: x.time,
+      value: x.macd_hist,
+      color: x.macd_hist >= 0 ? "rgba(34,197,94,.28)" : "rgba(239,68,68,.28)"
+    })));
   }
 
   if (App.indicators.atr) {
@@ -682,10 +842,16 @@ function setIndicatorData(candles) {
 
     App.chart.priceScale("atr").applyOptions({
       visible: false,
-      scaleMargins: { top: 0.82, bottom: 0.02 }
+      scaleMargins: {
+        top: 0.83,
+        bottom: 0.02
+      }
     });
 
-    atr.setData(candles.filter(x => x.atr14 != null).map(x => ({ time: x.time, value: x.atr14 })));
+    atr.setData(candles.filter(x => x.atr14 != null).map(x => ({
+      time: x.time,
+      value: x.atr14
+    })));
   }
 }
 
@@ -698,17 +864,20 @@ async function loadDailyChallenge() {
     }
 
     App.challenge = await res.json();
-    App.questions = App.challenge.questions || [];
+    App.questions = Array.isArray(App.challenge.questions) ? App.challenge.questions : [];
+
+    if (!App.questions.length) {
+      loadManualQuestion(false, false);
+    }
   } catch (err) {
     console.warn("daily challenge missing, use manual question", err);
 
     App.challenge = {
       date: new Date().toISOString().slice(0, 10),
-      range_threshold_pct: 1.2,
       questions: []
     };
 
-    buildManualQuestion(false);
+    loadManualQuestion(false, false);
   }
 }
 
@@ -716,12 +885,12 @@ async function loadKlines(path) {
   const res = await fetch(`${path}?t=${Date.now()}`);
 
   if (!res.ok) {
-    throw new Error(`K 線資料載入失敗：${path}`);
+    throw new Error(`K 線資料載入失敗：${path}。請確認 GitHub Actions 已產生這個 .json 檔案。`);
   }
 
   const raw = await res.json();
 
-  return raw.map(x => ({
+  const data = raw.map(x => ({
     time: x.time,
     open: Number(x.open),
     high: Number(x.high),
@@ -749,42 +918,132 @@ async function loadKlines(path) {
     Number.isFinite(x.low) &&
     Number.isFinite(x.close)
   );
+
+  return enrichIndicators(data);
 }
 
-function nval(v) {
-  if (v === null || v === undefined) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
+function enrichIndicators(data) {
+  const closes = data.map(x => x.close);
+  const highs = data.map(x => x.high);
+  const lows = data.map(x => x.low);
 
-function buildManualQuestion(renderNow = true) {
+  function sma(i, n) {
+    if (i < n - 1) return null;
+
+    let sum = 0;
+
+    for (let j = i - n + 1; j <= i; j++) {
+      sum += closes[j];
+    }
+
+    return sum / n;
+  }
+
+  function emaArray(values, n) {
+    const k = 2 / (n + 1);
+    const out = [];
+    let prev = null;
+
+    for (const value of values) {
+      prev = prev === null ? value : value * k + prev * (1 - k);
+      out.push(prev);
+    }
+
+    return out;
+  }
+
+  const ema12 = emaArray(closes, 12);
+  const ema20 = emaArray(closes, 20);
+  const ema26 = emaArray(closes, 26);
+  const ema60 = emaArray(closes, 60);
+
+  const macd = ema12.map((v, i) => v - ema26[i]);
+  const signal = emaArray(macd, 9);
+
+  const rsi = [];
+  let avgGain = null;
+  let avgLoss = null;
+
+  for (let i = 0; i < closes.length; i++) {
+    if (i === 0) {
+      rsi.push(null);
+      continue;
+    }
+
+    const diff = closes[i] - closes[i - 1];
+    const gain = Math.max(diff, 0);
+    const loss = Math.max(-diff, 0);
+
+    avgGain = avgGain === null ? gain : (avgGain * 13 + gain) / 14;
+    avgLoss = avgLoss === null ? loss : (avgLoss * 13 + loss) / 14;
+
+    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    rsi.push(100 - (100 / (1 + rs)));
+  }
+
+  const atr = [];
+  let prevAtr = null;
+
+  for (let i = 0; i < data.length; i++) {
+    const prevClose = i > 0 ? closes[i - 1] : closes[i];
+
+    const tr = Math.max(
+      highs[i] - lows[i],
+      Math.abs(highs[i] - prevClose),
+      Math.abs(lows[i] - prevClose)
+    );
+
+    prevAtr = prevAtr === null ? tr : (prevAtr * 13 + tr) / 14;
+    atr.push(prevAtr);
+  }
+
+  for (let i = 0; i < data.length; i++) {
+    const ma20 = sma(i, 20);
+    const ma60 = sma(i, 60);
+
+    let std20 = null;
+
+    if (i >= 19) {
+      const values = closes.slice(i - 19, i + 1);
+
+      std20 = Math.sqrt(
+        values.reduce((sum, value) => sum + (value - ma20) * (value - ma20), 0) / 20
+      );
+    }
+
+    data[i].ma5 = data[i].ma5 ?? sma(i, 5);
+    data[i].ma20 = data[i].ma20 ?? ma20;
+    data[i].ma60 = data[i].ma60 ?? ma60;
+    data[i].ema20 = data[i].ema20 ?? ema20[i];
+    data[i].ema60 = data[i].ema60 ?? ema60[i];
+    data[i].rsi14 = data[i].rsi14 ?? rsi[i];
+    data[i].macd = data[i].macd ?? macd[i];
+    data[i].macd_signal = data[i].macd_signal ?? signal[i];
+    data[i].macd_hist = data[i].macd_hist ?? (macd[i] - signal[i]);
+    data[i].bb_mid = data[i].bb_mid ?? ma20;
+    data[i].bb_upper = data[i].bb_upper ?? (ma20 !== null && std20 !== null ? ma20 + 2 * std20 : null);
+    data[i].bb_lower = data[i].bb_lower ?? (ma20 !== null && std20 !== null ? ma20 - 2 * std20 : null);
+    data[i].atr14 = data[i].atr14 ?? atr[i];
+  }
+
+  return data;
+}
+function loadManualQuestion(randomStart = true, renderNow = true) {
   const ticker = $("symbol-select").value;
   const interval = App.interval;
-
-  let visibleBars = 180;
-  let revealBars = 20;
-  let threshold = 1.2;
-
-  if (interval === "1wk") {
-    visibleBars = 156;
-    revealBars = 12;
-    threshold = 3.0;
-  }
-
-  if (interval === "1mo") {
-    visibleBars = 120;
-    revealBars = 8;
-    threshold = 6.0;
-  }
+  const visibleBars = Number($("bars-select").value || 240);
+  const revealBars = revealBarsByInterval(interval);
 
   App.questions = [{
+    question_no: 1,
     ticker,
     interval,
     data_path: dataPath(ticker, interval),
     start_idx: null,
     visible_bars: visibleBars,
     reveal_bars: revealBars,
-    threshold_pct: threshold
+    threshold_pct: thresholdByInterval(interval),
+    random_start: !!randomStart
   }];
 
   App.questionIndex = 0;
@@ -800,8 +1059,8 @@ function buildManualQuestion(renderNow = true) {
 async function renderQuestion() {
   clearInterval(App.autoplayTimer);
   App.autoplayTimer = null;
-
   App.revealed = false;
+
   $("result-box").classList.add("hidden");
   $("next-btn").classList.add("hidden");
 
@@ -810,26 +1069,29 @@ async function renderQuestion() {
   let q = App.questions[App.questionIndex];
 
   if (!q) {
-    buildManualQuestion(false);
+    loadManualQuestion(false, false);
     q = App.questions[0];
   }
 
   App.currentQuestion = q;
   App.currentData = await loadKlines(q.data_path);
 
-  if (App.currentData.length < 80) {
-    throw new Error("K 線資料太少，請先讓 GitHub Actions 更新資料。");
+  let visibleBars = Number(q.visible_bars || 240);
+  const revealBars = Number(q.reveal_bars || revealBarsByInterval(q.interval));
+
+  if (App.currentData.length < visibleBars + revealBars + 5) {
+    visibleBars = Math.max(30, App.currentData.length - revealBars - 2);
   }
 
-  const visibleBars = Number(q.visible_bars || 180);
-  const revealBars = Number(q.reveal_bars || 20);
+  const maxStart = Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
 
   if (q.start_idx === null || q.start_idx === undefined) {
-    const maxStart = App.currentData.length - visibleBars - revealBars - 1;
-    q.start_idx = Math.max(0, Math.floor(Math.random() * Math.max(1, maxStart)));
+    q.start_idx = q.random_start
+      ? Math.floor(Math.random() * Math.max(1, maxStart))
+      : maxStart;
   }
 
-  q._visibleEnd = q.start_idx + visibleBars - 1;
+  q._visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
   q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
 
   updateChartVisibleData();
@@ -864,24 +1126,20 @@ function updateChartVisibleData() {
     close: x.close
   })));
 
-  if (App.indicators.volume) {
-    App.volumeSeries.setData(candles.map(x => ({
-      time: x.time,
-      value: x.volume || 0,
-      color: x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
-    })));
-  } else {
-    App.volumeSeries.setData([]);
-  }
+  App.volumeSeries.setData(App.indicators.volume ? candles.map(x => ({
+    time: x.time,
+    value: x.volume || 0,
+    color: x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
+  })) : []);
 
   setIndicatorData(candles);
 
-  let spacing = 3;
-
-  if (candles.length <= 80) spacing = 6;
-  if (candles.length > 120) spacing = 4;
-  if (candles.length > 180) spacing = 3;
-  if (candles.length > 240) spacing = 2;
+  const spacing =
+    candles.length > 360 ? 1.4 :
+    candles.length > 260 ? 1.8 :
+    candles.length > 180 ? 2.4 :
+    candles.length > 120 ? 3.2 :
+    5.5;
 
   App.chart.timeScale().applyOptions({
     barSpacing: spacing,
@@ -890,6 +1148,13 @@ function updateChartVisibleData() {
   });
 
   App.chart.timeScale().fitContent();
+
+  try {
+    App.chart.timeScale().setVisibleLogicalRange({
+      from: 0,
+      to: candles.length + 8
+    });
+  } catch (e) {}
 
   requestAnimationFrame(() => {
     resizeCanvas();
@@ -911,7 +1176,7 @@ function computeOutcome() {
   const maxUp = ((high - base.close) / base.close) * 100;
   const maxDown = ((low - base.close) / base.close) * 100;
 
-  const threshold = Number(q.threshold_pct || App.challenge?.range_threshold_pct || thresholdByInterval(q.interval));
+  const threshold = Number(q.threshold_pct || thresholdByInterval(q.interval));
 
   let direction = "range";
 
@@ -923,8 +1188,6 @@ function computeOutcome() {
     ret,
     maxUp,
     maxDown,
-    baseClose: base.close,
-    finalClose: last.close,
     threshold
   };
 }
@@ -941,7 +1204,10 @@ async function submitAnswer(answer) {
   const correct = answer === out.direction;
   const gained = correct ? (out.direction === "range" ? 25 : 20) : 0;
 
-  if (correct) App.hits += 1;
+  if (correct) {
+    App.hits += 1;
+  }
+
   App.score += gained;
 
   App.answers.push({
@@ -986,6 +1252,7 @@ function showResult(answer, out, correct, gained) {
       <h3 class="text-xl font-black ${correct ? "text-emerald-300" : "text-rose-300"}">
         ${correct ? "判斷正確" : "判斷失誤"}
       </h3>
+
       <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-black">
         +${gained} 分
       </span>
@@ -1004,7 +1271,9 @@ function showResult(answer, out, correct, gained) {
 
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
         <div class="text-slate-500 text-xs">收盤變化</div>
-        <div class="${out.ret >= 0 ? "text-emerald-300" : "text-rose-300"}">${pct(out.ret)}</div>
+        <div class="${out.ret >= 0 ? "text-emerald-300" : "text-rose-300"}">
+          ${pct(out.ret)}
+        </div>
       </div>
 
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
@@ -1069,11 +1338,13 @@ function restart() {
   App.hits = 0;
   App.answers = [];
 
-  loadDailyChallenge().then(renderQuestion).then(updateStats);
+  loadDailyChallenge()
+    .then(renderQuestion)
+    .then(updateStats);
 }
 
 function updateStats() {
-  const total = App.questions.length || 5;
+  const total = App.questions.length || 1;
 
   $("stat-progress").innerText = `${App.answers.length}/${total}`;
   $("stat-hit").innerText = App.hits;
@@ -1082,16 +1353,24 @@ function updateStats() {
 }
 
 function finishChallenge() {
-  const total = App.questions.length || 5;
+  const total = App.questions.length || 1;
 
   let title = "被洗出去的人";
-  if (App.score >= 90) title = "裸 K 老狐狸";
-  else if (App.score >= 70) title = "不追高戰士";
-  else if (App.score >= 45) title = "盤感修煉中";
+
+  if (App.score >= 90) {
+    title = "裸 K 老狐狸";
+  } else if (App.score >= 70) {
+    title = "不追高戰士";
+  } else if (App.score >= 45) {
+    title = "盤感修煉中";
+  }
 
   $("result-box").innerHTML += `
     <div class="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
-      <h3 class="text-xl font-black text-blue-200">今日挑戰完成：${title}</h3>
+      <h3 class="text-xl font-black text-blue-200">
+        本輪完成：${title}
+      </h3>
+
       <p class="text-sm text-slate-300 mt-1">
         命中 ${App.hits}/${total}，總分 ${App.score}。
       </p>
@@ -1107,10 +1386,10 @@ function finishChallenge() {
 }
 
 function copyShare() {
-  const total = App.questions.length || 5;
+  const total = App.questions.length || 1;
 
   const text =
-`我剛完成裸 K 五連戰
+`我剛完成裸 K 訓練
 命中：${App.hits}/${total}
 分數：${App.score}
 
@@ -1139,14 +1418,23 @@ function setupBacktest() {
     trades: []
   };
 
-  App.revealed = true;
-  updateChartVisibleData();
+  App.revealed = false;
+
+  const candles = App.currentData.slice(q.start_idx, q._visibleEnd + 1);
+
+  App.candleSeries.setData(candles.map(x => ({
+    time: x.time,
+    open: x.open,
+    high: x.high,
+    low: x.low,
+    close: x.close
+  })));
+
   showBacktestStatus("回測開始。你可以買進、賣出或逐根播放。");
 }
 
 function backtestPrice() {
-  const bt = App.backtest;
-  return App.currentData[bt.idx].close;
+  return App.currentData[App.backtest.idx].close;
 }
 
 function backtestBuy() {
@@ -1156,15 +1444,23 @@ function backtestBuy() {
   const price = backtestPrice();
   const qty = Math.floor(bt.cash / price);
 
-  if (qty <= 0) return showBacktestStatus("現金不足，無法買進。");
+  if (qty <= 0) {
+    showBacktestStatus("現金不足，無法買進。");
+    return;
+  }
 
   bt.cash -= qty * price;
   bt.avgCost = bt.shares > 0
     ? ((bt.avgCost * bt.shares) + (price * qty)) / (bt.shares + qty)
     : price;
-  bt.shares += qty;
 
-  bt.trades.push({ type: "buy", price, qty, idx: bt.idx });
+  bt.shares += qty;
+  bt.trades.push({
+    type: "buy",
+    price,
+    qty,
+    idx: bt.idx
+  });
 
   showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`);
 }
@@ -1173,13 +1469,22 @@ function backtestSell() {
   const bt = App.backtest;
   if (!bt) return;
 
-  if (bt.shares <= 0) return showBacktestStatus("目前沒有持股可賣出。");
+  if (bt.shares <= 0) {
+    showBacktestStatus("目前沒有持股可賣出。");
+    return;
+  }
 
   const price = backtestPrice();
   const qty = bt.shares;
 
   bt.cash += qty * price;
-  bt.trades.push({ type: "sell", price, qty, idx: bt.idx });
+
+  bt.trades.push({
+    type: "sell",
+    price,
+    qty,
+    idx: bt.idx
+  });
 
   bt.shares = 0;
   bt.avgCost = 0;
@@ -1191,7 +1496,10 @@ function backtestNext() {
   const bt = App.backtest;
   if (!bt) return;
 
-  if (bt.idx >= bt.end) return finishBacktest();
+  if (bt.idx >= bt.end) {
+    finishBacktest();
+    return;
+  }
 
   bt.idx += 1;
 
@@ -1205,10 +1513,21 @@ function backtestNext() {
     close: x.close
   })));
 
+  App.volumeSeries.setData(App.indicators.volume ? candles.map(x => ({
+    time: x.time,
+    value: x.volume || 0,
+    color: x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
+  })) : []);
+
+  setIndicatorData(candles);
+
   App.chart.timeScale().fitContent();
 
-  if (bt.idx >= bt.end) finishBacktest();
-  else showBacktestStatus("已前進一根 K。");
+  if (bt.idx >= bt.end) {
+    finishBacktest();
+  } else {
+    showBacktestStatus("已前進一根 K。");
+  }
 }
 
 function toggleAutoplay() {
@@ -1223,6 +1542,7 @@ function toggleAutoplay() {
 
   App.autoplayTimer = setInterval(() => {
     const bt = App.backtest;
+
     if (!bt || bt.idx >= bt.end) {
       clearInterval(App.autoplayTimer);
       App.autoplayTimer = null;
@@ -1248,7 +1568,10 @@ function showBacktestStatus(message) {
 
   box.innerHTML = `
     <h3 class="text-xl font-black mb-2">回測練習</h3>
-    <p class="text-sm text-slate-400 mb-3">${message}</p>
+
+    <p class="text-sm text-slate-400 mb-3">
+      ${message}
+    </p>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-bold">
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
@@ -1268,7 +1591,9 @@ function showBacktestStatus(message) {
 
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3">
         <div class="text-slate-500 text-xs">權益變化</div>
-        <div class="${ret >= 0 ? "text-emerald-300" : "text-rose-300"}">${pct(ret)}</div>
+        <div class="${ret >= 0 ? "text-emerald-300" : "text-rose-300"}">
+          ${pct(ret)}
+        </div>
       </div>
     </div>
   `;
@@ -1291,8 +1616,16 @@ function finishBacktest() {
 
 function setDrawTool(tool) {
   App.drawTool = tool;
-  const canvas = $("draw-canvas");
-  canvas.style.pointerEvents = tool === "cursor" ? "none" : "auto";
+  App.drawStart = null;
+  App.drawPreview = null;
+
+  $("draw-canvas").style.pointerEvents = tool === "cursor" ? "none" : "auto";
+
+  $("drawing-hint").innerText = tool === "cursor"
+    ? "游標模式：可拖曳/縮放圖表。"
+    : tool === "select"
+      ? "選取模式：點擊線條後可改顏色、線寬、線型。"
+      : "畫線模式：按住滑鼠拖曳，放開完成。";
 }
 
 function drawingKey() {
@@ -1311,6 +1644,58 @@ function loadDrawings() {
   } catch (e) {
     App.drawings = [];
   }
+
+  App.selectedDrawingId = null;
+  updateSelectedDrawingLabel();
+}
+
+function pushDrawHistory() {
+  App.drawHistory.push(JSON.stringify(App.drawings));
+
+  if (App.drawHistory.length > 30) {
+    App.drawHistory.shift();
+  }
+}
+
+function undoDrawing() {
+  const last = App.drawHistory.pop();
+
+  if (!last) return;
+
+  App.drawings = JSON.parse(last);
+  App.selectedDrawingId = null;
+
+  saveDrawings();
+  redrawCanvas();
+  updateSelectedDrawingLabel();
+}
+
+function currentStyle() {
+  return {
+    color: $("draw-color").value,
+    width: Number($("draw-width").value || 2),
+    style: $("draw-style").value
+  };
+}
+
+function updateDrawStyleFromUI() {
+  App.drawStyle = currentStyle();
+
+  const d = App.drawings.find(x => x.id === App.selectedDrawingId);
+
+  if (d) {
+    d.color = App.drawStyle.color;
+    d.width = App.drawStyle.width;
+    d.style = App.drawStyle.style;
+
+    saveDrawings();
+    redrawCanvas();
+  }
+}
+
+function updateSelectedDrawingLabel() {
+  const d = App.drawings.find(x => x.id === App.selectedDrawingId);
+  $("selected-drawing-label").innerText = d ? `已選取：${d.type}` : "未選取線條";
 }
 
 function initDrawingCanvas() {
@@ -1321,14 +1706,47 @@ function initDrawingCanvas() {
 
     const p = mousePoint(e);
 
+    if (App.drawTool === "select") {
+      App.selectedDrawingId = hitTest(p);
+
+      const d = App.drawings.find(x => x.id === App.selectedDrawingId);
+
+      if (d) {
+        $("draw-color").value = d.color || "#f59e0b";
+        $("draw-width").value = String(d.width || 2);
+        $("draw-style").value = d.style || "solid";
+      }
+
+      updateSelectedDrawingLabel();
+      redrawCanvas();
+      return;
+    }
+
     if (App.drawTool === "erase") {
-      eraseAt(p);
+      const id = hitTest(p);
+
+      if (id) {
+        pushDrawHistory();
+        App.drawings = App.drawings.filter(x => x.id !== id);
+        saveDrawings();
+        redrawCanvas();
+      }
+
       return;
     }
 
     if (App.drawTool === "hline") {
       if (p.price == null) return;
-      App.drawings.push({ type: "hline", price: p.price });
+
+      pushDrawHistory();
+
+      App.drawings.push({
+        id: crypto.randomUUID(),
+        type: "hline",
+        price: p.price,
+        ...currentStyle()
+      });
+
       saveDrawings();
       redrawCanvas();
       return;
@@ -1336,7 +1754,16 @@ function initDrawingCanvas() {
 
     if (App.drawTool === "vline") {
       if (p.time == null) return;
-      App.drawings.push({ type: "vline", time: p.time });
+
+      pushDrawHistory();
+
+      App.drawings.push({
+        id: crypto.randomUUID(),
+        type: "vline",
+        time: p.time,
+        ...currentStyle()
+      });
+
       saveDrawings();
       redrawCanvas();
       return;
@@ -1344,49 +1771,85 @@ function initDrawingCanvas() {
 
     if (App.drawTool === "text") {
       if (p.time == null || p.price == null) return;
+
       const text = prompt("輸入標註文字");
+
       if (text) {
-        App.drawings.push({ type: "text", time: p.time, price: p.price, text });
+        pushDrawHistory();
+
+        App.drawings.push({
+          id: crypto.randomUUID(),
+          type: "text",
+          time: p.time,
+          price: p.price,
+          text,
+          ...currentStyle()
+        });
+
         saveDrawings();
         redrawCanvas();
       }
+
       return;
     }
 
     App.drawStart = p;
+    App.drawPreview = null;
+  });
+
+  canvas.addEventListener("mousemove", e => {
+    if (!App.drawStart) return;
+
+    const p2 = mousePoint(e);
+    App.drawPreview = makeDrawing(App.drawTool, App.drawStart, p2, true);
+
+    redrawCanvas();
   });
 
   canvas.addEventListener("mouseup", e => {
     if (!App.drawStart) return;
 
     const p2 = mousePoint(e);
-    const p1 = App.drawStart;
-
-    if (p1.time == null || p2.time == null || p1.price == null || p2.price == null) {
-      App.drawStart = null;
-      return;
-    }
-
-    if (App.drawTool === "trend") {
-      App.drawings.push({ type: "trend", t1: p1.time, p1: p1.price, t2: p2.time, p2: p2.price });
-    }
-
-    if (App.drawTool === "rect") {
-      App.drawings.push({ type: "rect", t1: p1.time, p1: p1.price, t2: p2.time, p2: p2.price });
-    }
+    const d = makeDrawing(App.drawTool, App.drawStart, p2, false);
 
     App.drawStart = null;
-    saveDrawings();
+    App.drawPreview = null;
+
+    if (d) {
+      pushDrawHistory();
+      App.drawings.push(d);
+      saveDrawings();
+    }
+
     redrawCanvas();
   });
 
   resizeCanvas();
 }
 
+function makeDrawing(type, p1, p2, preview) {
+  if (p1.time == null || p2.time == null || p1.price == null || p2.price == null) {
+    return null;
+  }
+
+  if (!["trend", "ray", "rect", "fib"].includes(type)) {
+    return null;
+  }
+
+  return {
+    id: preview ? "preview" : crypto.randomUUID(),
+    type,
+    t1: p1.time,
+    p1: p1.price,
+    t2: p2.time,
+    p2: p2.price,
+    ...currentStyle()
+  };
+}
+
 function resizeCanvas() {
   const canvas = $("draw-canvas");
-  const wrap = $("chart-wrap");
-  const rect = wrap.getBoundingClientRect();
+  const rect = $("chart-wrap").getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
 
   canvas.width = Math.floor(rect.width * dpr);
@@ -1401,15 +1864,16 @@ function resizeCanvas() {
 }
 
 function mousePoint(e) {
-  const canvas = $("draw-canvas");
-  const rect = canvas.getBoundingClientRect();
+  const rect = $("draw-canvas").getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  const time = App.chart.timeScale().coordinateToTime(x);
-  const price = App.candleSeries.coordinateToPrice(y);
-
-  return { x, y, time, price };
+  return {
+    x,
+    y,
+    time: App.chart.timeScale().coordinateToTime(x),
+    price: App.candleSeries.coordinateToPrice(y)
+  };
 }
 
 function xOf(time) {
@@ -1420,87 +1884,220 @@ function yOf(price) {
   return App.candleSeries.priceToCoordinate(price);
 }
 
+function applyLineStyle(ctx, d) {
+  ctx.strokeStyle = d.color || "#f59e0b";
+  ctx.fillStyle = d.color || "#f59e0b";
+  ctx.lineWidth = d.width || 2;
+
+  if (d.style === "dashed") {
+    ctx.setLineDash([8, 5]);
+  } else if (d.style === "dotted") {
+    ctx.setLineDash([2, 5]);
+  } else {
+    ctx.setLineDash([]);
+  }
+
+  if (d.id === App.selectedDrawingId) {
+    ctx.shadowColor = d.color || "#f59e0b";
+    ctx.shadowBlur = 8;
+  } else {
+    ctx.shadowBlur = 0;
+  }
+}
+
 function redrawCanvas() {
   const canvas = $("draw-canvas");
+
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
   const rect = canvas.getBoundingClientRect();
 
   ctx.clearRect(0, 0, rect.width, rect.height);
-  ctx.lineWidth = 2;
-  ctx.font = "13px sans-serif";
 
-  for (const d of App.drawings) {
-    ctx.strokeStyle = "#f59e0b";
-    ctx.fillStyle = "#f59e0b";
+  [...App.drawings, App.drawPreview].filter(Boolean).forEach(d => {
+    drawOne(ctx, d, rect);
+  });
+}
 
-    if (d.type === "trend") {
-      const x1 = xOf(d.t1), y1 = yOf(d.p1), x2 = xOf(d.t2), y2 = yOf(d.p2);
-      if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
+function drawOne(ctx, d, rect) {
+  ctx.save();
+
+  applyLineStyle(ctx, d);
+
+  if (d.id === "preview") {
+    ctx.globalAlpha = 0.72;
+  }
+
+  if (d.type === "trend" || d.type === "ray" || d.type === "fib" || d.type === "rect") {
+    const x1 = xOf(d.t1);
+    const y1 = yOf(d.p1);
+    const x2 = xOf(d.t2);
+    const y2 = yOf(d.p2);
+
+    if (x1 == null || x2 == null || y1 == null || y2 == null) {
+      ctx.restore();
+      return;
+    }
+
+    if (d.type === "rect") {
+      ctx.strokeRect(
+        Math.min(x1, x2),
+        Math.min(y1, y2),
+        Math.abs(x2 - x1),
+        Math.abs(y2 - y1)
+      );
+    } else if (d.type === "fib") {
+      [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1].forEach(r => {
+        const y = y1 + (y2 - y1) * r;
+
+        ctx.beginPath();
+        ctx.moveTo(Math.min(x1, x2), y);
+        ctx.lineTo(Math.max(x1, x2), y);
+        ctx.stroke();
+        ctx.fillText(String(r), Math.min(x1, x2) + 4, y - 4);
+      });
+    } else {
+      let ex2 = x2;
+      let ey2 = y2;
+
+      if (d.type === "ray") {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        if (Math.abs(dx) > 1) {
+          ex2 = dx > 0 ? rect.width : 0;
+          ey2 = y1 + dy * ((ex2 - x1) / dx);
+        }
+      }
+
       ctx.beginPath();
       ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.lineTo(ex2, ey2);
       ctx.stroke();
     }
 
-    if (d.type === "hline") {
-      const y = yOf(d.price);
-      if (y == null) continue;
+    if (d.id === App.selectedDrawingId || d.id === "preview") {
+      drawHandle(ctx, x1, y1);
+      drawHandle(ctx, x2, y2);
+    }
+  }
+
+  if (d.type === "hline") {
+    const y = yOf(d.price);
+
+    if (y != null) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(rect.width, y);
       ctx.stroke();
     }
+  }
 
-    if (d.type === "vline") {
-      const x = xOf(d.time);
-      if (x == null) continue;
+  if (d.type === "vline") {
+    const x = xOf(d.time);
+
+    if (x != null) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, rect.height);
       ctx.stroke();
     }
+  }
 
-    if (d.type === "rect") {
-      const x1 = xOf(d.t1), y1 = yOf(d.p1), x2 = xOf(d.t2), y2 = yOf(d.p2);
-      if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
-      ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
-    }
+  if (d.type === "text") {
+    const x = xOf(d.time);
+    const y = yOf(d.price);
 
-    if (d.type === "text") {
-      const x = xOf(d.time), y = yOf(d.price);
-      if (x == null || y == null) continue;
+    if (x != null && y != null) {
+      ctx.font = `${Math.max(12, (d.width || 2) * 7)}px sans-serif`;
       ctx.fillText(d.text, x, y);
     }
   }
+
+  ctx.restore();
 }
 
-function eraseAt(p) {
-  const px = 12;
+function drawHandle(ctx, x, y) {
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(x, y, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
 
-  App.drawings = App.drawings.filter(d => {
-    if (d.type === "hline") {
-      const y = yOf(d.price);
-      return y == null || Math.abs(y - p.y) > px;
+function hitTest(p) {
+  let best = null;
+  let bestDist = 999;
+
+  for (const d of App.drawings) {
+    const dist = distanceToDrawing(d, p);
+
+    if (dist < bestDist) {
+      best = d.id;
+      bestDist = dist;
+    }
+  }
+
+  return bestDist <= 14 ? best : null;
+}
+
+function distanceToDrawing(d, p) {
+  if (d.type === "hline") {
+    const y = yOf(d.price);
+    return y == null ? 999 : Math.abs(y - p.y);
+  }
+
+  if (d.type === "vline") {
+    const x = xOf(d.time);
+    return x == null ? 999 : Math.abs(x - p.x);
+  }
+
+  if (d.type === "text") {
+    const x = xOf(d.time);
+    const y = yOf(d.price);
+    return x == null || y == null ? 999 : Math.hypot(x - p.x, y - p.y);
+  }
+
+  if (["trend", "ray", "rect", "fib"].includes(d.type)) {
+    const x1 = xOf(d.t1);
+    const y1 = yOf(d.p1);
+    const x2 = xOf(d.t2);
+    const y2 = yOf(d.p2);
+
+    if (x1 == null || x2 == null || y1 == null || y2 == null) {
+      return 999;
     }
 
-    if (d.type === "vline") {
-      const x = xOf(d.time);
-      return x == null || Math.abs(x - p.x) > px;
+    if (d.type === "rect") {
+      return Math.min(
+        Math.abs(p.x - x1),
+        Math.abs(p.x - x2),
+        Math.abs(p.y - y1),
+        Math.abs(p.y - y2)
+      );
     }
 
-    if (d.type === "text") {
-      const x = xOf(d.time), y = yOf(d.price);
-      if (x == null || y == null) return true;
-      return Math.hypot(x - p.x, y - p.y) > 30;
-    }
+    return pointLineDistance(p.x, p.y, x1, y1, x2, y2);
+  }
 
-    return true;
-  });
+  return 999;
+}
 
-  saveDrawings();
-  redrawCanvas();
+function pointLineDistance(px, py, x1, y1, x2, y2) {
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len = C * C + D * D;
+
+  const t = Math.max(0, Math.min(1, len ? dot / len : 0));
+
+  return Math.hypot(
+    px - (x1 + t * C),
+    py - (y1 + t * D)
+  );
 }
 
 /* =========================
@@ -1519,7 +2116,9 @@ function normalizeRoomCode(room) {
 }
 
 function normalizePlayerName(name) {
-  return String(name || "").trim().slice(0, 24);
+  return String(name || "")
+    .trim()
+    .slice(0, 24);
 }
 
 async function createBattleRoom() {
@@ -1667,6 +2266,7 @@ async function startBattleRoom() {
   }
 
   setMode("battle");
+
   await renderQuestion();
   await submitBattleScore();
   await refreshBattlePanel();
@@ -1696,18 +2296,16 @@ async function leaveBattleRoom() {
 async function submitBattleScore() {
   if (!Battle.roomCode || !Battle.playerName) return;
 
-  const { error } = await SB
-    .from("battle_players")
-    .upsert({
-      room_code: Battle.roomCode,
-      player_name: Battle.playerName,
-      score: App.score,
-      hits: App.hits,
-      answers: App.answers,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: "room_code,player_name"
-    });
+  const { error } = await SB.from("battle_players").upsert({
+    room_code: Battle.roomCode,
+    player_name: Battle.playerName,
+    score: App.score,
+    hits: App.hits,
+    answers: App.answers,
+    updated_at: new Date().toISOString()
+  }, {
+    onConflict: "room_code,player_name"
+  });
 
   if (error) {
     console.error("submitBattleScore error:", error);
@@ -1742,6 +2340,7 @@ async function nextBattleQuestion() {
   }
 
   App.questionIndex = nextIndex;
+
   await renderQuestion();
   await refreshBattlePanel();
 }
@@ -1752,7 +2351,7 @@ async function resetBattleRoom() {
     return;
   }
 
-  const { error: roomError } = await SB
+  await SB
     .from("battle_rooms")
     .update({
       status: "waiting",
@@ -1761,12 +2360,7 @@ async function resetBattleRoom() {
     })
     .eq("room_code", Battle.roomCode);
 
-  if (roomError) {
-    alert("重置房間失敗：" + roomError.message);
-    return;
-  }
-
-  const { error: playerError } = await SB
+  await SB
     .from("battle_players")
     .update({
       score: 0,
@@ -1775,11 +2369,6 @@ async function resetBattleRoom() {
       updated_at: new Date().toISOString()
     })
     .eq("room_code", Battle.roomCode);
-
-  if (playerError) {
-    alert("重置玩家失敗：" + playerError.message);
-    return;
-  }
 
   App.questionIndex = 0;
   App.score = 0;
@@ -1798,44 +2387,36 @@ async function subscribeBattleRoom(roomCode) {
   const channel = SB.channel(`battle-room-${roomCode}`);
 
   channel
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "battle_rooms",
-        filter: `room_code=eq.${roomCode}`
-      },
-      async payload => {
-        const room = payload.new;
-        if (!room) return;
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "battle_rooms",
+      filter: `room_code=eq.${roomCode}`
+    }, async payload => {
+      const room = payload.new;
 
-        if (room.status === "started") {
-          const newIndex = Number(room.current_question || 0);
+      if (!room) return;
 
-          if (App.questionIndex !== newIndex || !App.currentQuestion) {
-            App.questionIndex = newIndex;
+      if (room.status === "started") {
+        const newIndex = Number(room.current_question || 0);
 
-            setMode("battle");
-            await renderQuestion();
-          }
+        if (App.questionIndex !== newIndex || !App.currentQuestion) {
+          App.questionIndex = newIndex;
+          setMode("battle");
+          await renderQuestion();
         }
+      }
 
-        await refreshBattlePanel();
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "battle_players",
-        filter: `room_code=eq.${roomCode}`
-      },
-      async () => {
-        await refreshBattlePanel();
-      }
-    )
+      await refreshBattlePanel();
+    })
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "battle_players",
+      filter: `room_code=eq.${roomCode}`
+    }, async () => {
+      await refreshBattlePanel();
+    })
     .subscribe();
 
   Battle.channel = channel;
@@ -1895,8 +2476,12 @@ async function refreshBattlePanel() {
     .from("battle_players")
     .select("*")
     .eq("room_code", Battle.roomCode)
-    .order("score", { ascending: false })
-    .order("hits", { ascending: false });
+    .order("score", {
+      ascending: false
+    })
+    .order("hits", {
+      ascending: false
+    });
 
   const rows = (players || []).map((p, i) => {
     const isMe = p.player_name === Battle.playerName;
@@ -1907,14 +2492,20 @@ async function refreshBattlePanel() {
           <div class="font-black text-sm ${isMe ? "text-blue-200" : "text-white"}">
             ${i + 1}. ${escapeHtml(p.player_name)} ${isMe ? "（你）" : ""}
           </div>
+
           <div class="text-xs text-slate-500">
             命中 ${Number(p.hits || 0)} 題
           </div>
         </div>
 
         <div class="text-right">
-          <div class="text-blue-300 font-black">${Number(p.score || 0)}</div>
-          <div class="text-xs text-slate-500">分</div>
+          <div class="text-blue-300 font-black">
+            ${Number(p.score || 0)}
+          </div>
+
+          <div class="text-xs text-slate-500">
+            分
+          </div>
         </div>
       </div>
     `;
@@ -1930,6 +2521,7 @@ async function refreshBattlePanel() {
 
     <div class="rounded-2xl bg-slate-950 border border-slate-700 p-3 mb-3">
       <div class="text-xs text-slate-500 font-bold">房號</div>
+
       <div class="text-2xl font-black text-amber-300 tracking-wide">
         ${Battle.roomCode}
       </div>
@@ -1952,15 +2544,11 @@ async function refreshBattlePanel() {
         <button onclick="startBattleRoom()" class="btn btn-main px-3 py-3">
           開始對戰
         </button>
-      ` : ""}
 
-      ${Battle.isHost ? `
         <button onclick="nextBattleQuestion()" class="btn btn-dark px-3 py-3">
           下一題
         </button>
-      ` : ""}
 
-      ${Battle.isHost ? `
         <button onclick="resetBattleRoom()" class="btn btn-dark px-3 py-3">
           重置
         </button>
@@ -1987,11 +2575,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const box = $("result-box");
       box.classList.remove("hidden");
+
       box.innerHTML = `
         <h3 class="text-xl font-black text-rose-300 mb-2">載入失敗</h3>
-        <p class="text-sm text-slate-300">${err.message}</p>
-        <p class="text-xs text-slate-500 mt-2">請先確認 GitHub Actions 已成功產生 public/data/klines 與 daily_challenge.json。</p>
+
+        <p class="text-sm text-slate-300">
+          ${escapeHtml(err.message)}
+        </p>
+
+        <p class="text-xs text-slate-500 mt-2">
+          請先確認 GitHub Actions 已成功產生 public/data/klines 與 daily_challenge.json。
+        </p>
       `;
+
+      refreshBattlePanel();
     });
 });
 </script>
