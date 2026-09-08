@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-adsense-account" content="ca-pub-3822526422033370">
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D0XC0V7CP1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D0XC0V7CP1');
+  </script>
+
+  <title>裸 K 訓練場｜KLine Replay Arena</title>
+  <meta name="description" content="不看消息、不看指標，只看裸 K。每天 5 題 Bar Replay 練習，訓練盤感與進出場判斷。" />
+  <meta property="og:title" content="裸 K 訓練場｜KLine Replay Arena" />
+  <meta property="og:description" content="每天 5 題裸 K 挑戰，猜後續走勢、回放 K 線、練盤感。" />
+  <meta property="og:type" content="website" />
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3822526422033370" crossorigin="anonymous"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root { color-scheme: dark; }
+    body { background: radial-gradient(circle at top left,#172554 0,#020617 42%,#000 100%); }
+    .glass { background: rgba(15,23,42,.78); backdrop-filter: blur(14px); border: 1px solid rgba(148,163,184,.2); }
+    .panel { background: rgba(2,6,23,.86); border: 1px solid rgba(51,65,85,.9); }
+    .btn { border-radius: 14px; font-weight: 900; transition: .15s; }
+    .btn:active { transform: scale(.98); }
+    .tool-btn.active { background: #2563eb !important; color: white !important; border-color: #60a5fa !important; }
+    #chart-wrap { position: relative; }
+    #draw-canvas { position: absolute; inset: 0; z-index: 15; pointer-events: auto; }
+    .drawing-disabled #draw-canvas { pointer-events: none; }
+    .tiny-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+    .tiny-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100">
+  <div class="max-w-7xl mx-auto px-3 md:px-6 py-4">
+    <header class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-200 text-xs font-black mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          每日裸 K 五連戰
+        </div>
+        <h1 class="text-2xl md:text-4xl font-black tracking-tight">裸 K 訓練場</h1>
+        <p class="text-slate-400 text-sm mt-1">不看消息、不看指標、不看股票名稱。只看 K 線，練你的盤感。</p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button id="mode-practice" class="btn px-4 py-2 bg-blue-600 text-white">單人練習</button>
+        <button id="mode-backtest" class="btn px-4 py-2 bg-slate-800 border border-slate-700 text-slate-200">回測練習</button>
+        <button id="mode-battle" class="btn px-4 py-2 bg-slate-800 border border-slate-700 text-slate-200">即時對戰</button>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
+      <main class="glass rounded-3xl p-3 md:p-4 shadow-2xl">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+          <div>
+            <p id="challenge-title" class="text-sm text-slate-400 font-bold">載入今日挑戰中...</p>
+            <h2 id="question-title" class="text-lg md:text-xl font-black">第 1 題</h2>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-black">
+            <span id="blind-badge" class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-200">BLIND MODE</span>
+            <span id="symbol-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">代號隱藏</span>
+            <span id="score-badge" class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-200">分數 0</span>
+          </div>
+        </div>
+
+        <div id="toolbar" class="tiny-scroll overflow-x-auto flex items-center gap-2 mb-3 pb-1">
+          <button data-tool="cursor" class="tool-btn active shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">游標</button>
+          <button data-tool="trend" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">趨勢線</button>
+          <button data-tool="ray" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">射線</button>
+          <button data-tool="hline" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">水平線</button>
+          <button data-tool="vline" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">垂直線</button>
+          <button data-tool="rect" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">區間框</button>
+          <button data-tool="fib" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">斐波</button>
+          <button data-tool="text" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black">文字</button>
+          <button data-tool="delete" class="tool-btn shrink-0 px-3 py-2 rounded-xl bg-rose-950/60 border border-rose-800 text-xs font-black">刪除</button>
+          <button id="undo-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">復原</button>
+          <button id="redo-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">重做</button>
+          <button id="clear-draw-btn" class="shrink-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-black">清空畫線</button>
+        </div>
+
+        <div id="chart-wrap" class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 drawing-disabled">
+          <div id="chart" class="w-full h-[520px] md:h-[680px]"></div>
+          <canvas id="draw-canvas"></canvas>
+        </div>
+
+        <div id="answer-area" class="grid grid-cols-3 gap-2 mt-4">
+          <button data-answer="up" class="answer-btn btn py-4 bg-emerald-600 hover:bg-emerald-500 text-white">看漲</button>
+          <button data-answer="range" class="answer-btn btn py-4 bg-slate-700 hover:bg-slate-600 text-white">盤整</button>
+          <button data-answer="down" class="answer-btn btn py-4 bg-rose-600 hover:bg-rose-500 text-white">看跌</button>
+        </div>
+
+        <div id="backtest-area" class="hidden mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
+          <button id="bt-buy" class="btn py-3 bg-emerald-600 text-white">買進</button>
+          <button id="bt-sell" class="btn py-3 bg-rose-600 text-white">賣出</button>
+          <button id="bt-next" class="btn py-3 bg-blue-600 text-white">下一根</button>
+          <button id="bt-auto" class="btn py-3 bg-slate-700 text-white">自動播放</button>
+          <button id="bt-reset" class="btn py-3 bg-slate-800 border border-slate-700 text-white">重置回測</button>
+        </div>
+
+        <div id="result-box" class="hidden mt-4 panel rounded-2xl p-4"></div>
+      </main>
+
+      <aside class="space-y-4">
+        <div class="panel rounded-3xl p-4">
+          <h3 class="font-black text-lg mb-2">今日進度</h3>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs font-black">
+            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
+              <div class="text-slate-500">題數</div>
+              <div id="stat-progress" class="text-xl text-white mt-1">0/5</div>
+            </div>
+            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
+              <div class="text-slate-500">命中</div>
+              <div id="stat-hit" class="text-xl text-emerald-300 mt-1">0</div>
+            </div>
+            <div class="bg-slate-900 rounded-2xl p-3 border border-slate-700">
+              <div class="text-slate-500">分數</div>
+              <div id="stat-score" class="text-xl text-blue-300 mt-1">0</div>
+            </div>
+          </div>
+          <button id="next-question" class="hidden btn w-full mt-3 py-3 bg-blue-600 text-white">下一題</button>
+          <button id="restart-btn" class="btn w-full mt-3 py-3 bg-slate-800 border border-slate-700 text-slate-200">重新開始</button>
+          <button id="copy-share" class="btn w-full mt-2 py-3 bg-white text-slate-900">複製戰績文</button>
+          <p class="text-[11px] text-slate-500 leading-relaxed mt-3">本網站僅供 K 線閱讀練習與教育用途，不提供任何投資建議，也不構成買賣推薦。</p>
+        </div>
+
+        <div id="battle-panel" class="panel rounded-3xl p-4 hidden">
+          <h3 class="font-black text-lg mb-2">即時對戰房間</h3>
+          <div class="space-y-2">
+            <input id="battle-name" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="玩家名稱" />
+            <input id="battle-room" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="房號，例如 ROOM001" value="ROOM001" />
+            <div class="grid grid-cols-2 gap-2">
+              <button id="battle-create" class="btn py-2 bg-blue-600 text-white text-sm">建立房間</button>
+              <button id="battle-join" class="btn py-2 bg-slate-800 border border-slate-700 text-sm">加入房間</button>
+            </div>
+          </div>
+          <p id="battle-status" class="text-xs text-slate-400 mt-3">尚未連線。需設定 Supabase 才能使用。</p>
+          <div id="battle-leaderboard" class="mt-3 space-y-2 text-sm"></div>
+        </div>
+
+        <div class="panel rounded-3xl p-4">
+          <h3 class="font-black text-lg mb-2">練習說明</h3>
+          <ul class="text-sm text-slate-300 leading-7 list-disc pl-5">
+            <li>單人練習：猜後 10 根 K 棒方向。</li>
+            <li>回測練習：一根一根播放，手動買進賣出。</li>
+            <li>畫線工具：支援趨勢線、射線、水平線、垂直線、區間框、斐波與文字。</li>
+            <li>即時對戰：用 Supabase 同步房間與排行榜。</li>
+          </ul>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script src="public/js/config.js"></script>
+  <script src="public/js/drawing-tools.js"></script>
+  <script src="public/js/battle.js"></script>
+  <script src="public/js/app.js"></script>
+</body>
+</html>
