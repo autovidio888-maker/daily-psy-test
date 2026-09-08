@@ -15,6 +15,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 固定 v4，避免 v5 API 不相容 -->
   <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 
   <style>
@@ -83,8 +85,8 @@
     #chart-wrap {
       position: relative;
       width: 100%;
-      height: 650px;
-      min-height: 520px;
+      height: 720px;
+      min-height: 560px;
       background: #020617;
       border-radius: 18px;
       overflow: hidden;
@@ -107,14 +109,14 @@
 
     @media (max-width: 768px) {
       #chart-wrap {
-        height: 560px;
+        height: 620px;
       }
     }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <main class="max-w-[1500px] mx-auto px-4 py-5">
+  <main class="max-w-[1600px] mx-auto px-4 py-5">
 
     <section class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
       <div>
@@ -138,7 +140,7 @@
       </div>
     </section>
 
-    <section class="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-5">
+    <section class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5">
 
       <section class="glass rounded-3xl p-4">
 
@@ -288,9 +290,9 @@
           <h2 class="text-lg font-black text-white mb-3">自動計分規則</h2>
 
           <ul class="text-sm text-slate-300 space-y-2 leading-relaxed">
-            <li>後續漲幅大於門檻：答案為看漲</li>
-            <li>後續跌幅小於負門檻：答案為看跌</li>
-            <li>介於門檻內：答案為盤整</li>
+            <li>日 K：顯示 180 根，揭曉後 20 根</li>
+            <li>週 K：顯示 156 根，揭曉後 12 根</li>
+            <li>月 K：顯示 120 根，揭曉後 8 根</li>
             <li>答對方向 +20 分，答對盤整 +25 分</li>
             <li>股票代號會先隱藏，作答後揭曉</li>
           </ul>
@@ -361,8 +363,14 @@ const App = {
 
 const $ = id => document.getElementById(id);
 
+function sanitizeTicker(ticker) {
+  return String(ticker || "")
+    .replaceAll(".", "_")
+    .replaceAll("-", "_");
+}
+
 function sanitizeFileName(ticker, interval) {
-  return `${ticker}_${interval}.json`.replaceAll(".", "_").replaceAll("-", "_");
+  return `${sanitizeTicker(ticker)}_${interval}.json`;
 }
 
 function dataPath(ticker, interval) {
@@ -417,7 +425,6 @@ function bindUI() {
   $("new-random-btn").onclick = buildManualQuestion;
   $("next-btn").onclick = nextQuestion;
   $("copy-share-btn").onclick = copyShare;
-
   $("symbol-select").onchange = buildManualQuestion;
 
   document.querySelectorAll(".interval-btn").forEach(btn => {
@@ -428,7 +435,6 @@ function bindUI() {
       btn.classList.add("active-pill");
 
       $("interval-badge").innerText = intervalText(App.interval);
-
       buildManualQuestion();
     };
   });
@@ -501,8 +507,8 @@ function createChart() {
   const rect = chartEl.getBoundingClientRect();
 
   App.chart = LightweightCharts.createChart(chartEl, {
-    width: Math.max(800, Math.floor(rect.width || 1000)),
-    height: Math.max(520, Math.floor(rect.height || 650)),
+    width: Math.max(900, Math.floor(rect.width || 1200)),
+    height: Math.max(560, Math.floor(rect.height || 720)),
     layout: {
       background: { type: "solid", color: "#020617" },
       textColor: "#cbd5e1"
@@ -516,7 +522,13 @@ function createChart() {
     },
     timeScale: {
       borderColor: "rgba(148,163,184,.25)",
-      timeVisible: false
+      timeVisible: false,
+      barSpacing: 3,
+      minBarSpacing: 1,
+      rightOffset: 8,
+      fixLeftEdge: false,
+      fixRightEdge: false,
+      lockVisibleTimeRangeOnResize: false
     },
     crosshair: {
       mode: LightweightCharts.CrosshairMode.Normal
@@ -569,40 +581,59 @@ function clearIndicatorSeries() {
   App.indicatorSeries = {};
 }
 
-function addLine(name, options) {
-  App.indicatorSeries[name] = App.chart.addLineSeries({
+function addLine(name, options = {}) {
+  const series = App.chart.addLineSeries({
     lineWidth: 1,
     priceLineVisible: false,
     lastValueVisible: false,
+    crosshairMarkerVisible: false,
     ...options
   });
 
-  return App.indicatorSeries[name];
+  App.indicatorSeries[name] = series;
+  return series;
+}
+
+function addPriceOverlayLine(name, color) {
+  const series = App.chart.addLineSeries({
+    color,
+    lineWidth: 1,
+    priceScaleId: "right",
+    priceLineVisible: false,
+    lastValueVisible: false,
+    crosshairMarkerVisible: false,
+    autoscaleInfoProvider: () => null
+  });
+
+  App.indicatorSeries[name] = series;
+  return series;
 }
 
 function setIndicatorData(candles) {
   clearIndicatorSeries();
 
+  if (!candles || candles.length === 0) return;
+
   if (App.indicators.ma) {
-    const ma20 = addLine("MA20", { color: "#60a5fa" });
-    const ma60 = addLine("MA60", { color: "#f59e0b" });
+    const ma20 = addPriceOverlayLine("MA20", "#60a5fa");
+    const ma60 = addPriceOverlayLine("MA60", "#f59e0b");
 
     ma20.setData(candles.filter(x => x.ma20 != null).map(x => ({ time: x.time, value: x.ma20 })));
     ma60.setData(candles.filter(x => x.ma60 != null).map(x => ({ time: x.time, value: x.ma60 })));
   }
 
   if (App.indicators.ema) {
-    const ema20 = addLine("EMA20", { color: "#a78bfa" });
-    const ema60 = addLine("EMA60", { color: "#fb7185" });
+    const ema20 = addPriceOverlayLine("EMA20", "#a78bfa");
+    const ema60 = addPriceOverlayLine("EMA60", "#fb7185");
 
     ema20.setData(candles.filter(x => x.ema20 != null).map(x => ({ time: x.time, value: x.ema20 })));
     ema60.setData(candles.filter(x => x.ema60 != null).map(x => ({ time: x.time, value: x.ema60 })));
   }
 
   if (App.indicators.bb) {
-    const upper = addLine("BBU", { color: "#38bdf8" });
-    const middle = addLine("BBM", { color: "#64748b" });
-    const lower = addLine("BBL", { color: "#38bdf8" });
+    const upper = addPriceOverlayLine("BBU", "#38bdf8");
+    const middle = addPriceOverlayLine("BBM", "#64748b");
+    const lower = addPriceOverlayLine("BBL", "#38bdf8");
 
     upper.setData(candles.filter(x => x.bb_upper != null).map(x => ({ time: x.time, value: x.bb_upper })));
     middle.setData(candles.filter(x => x.bb_mid != null).map(x => ({ time: x.time, value: x.bb_mid })));
@@ -616,7 +647,8 @@ function setIndicatorData(candles) {
     });
 
     App.chart.priceScale("rsi").applyOptions({
-      scaleMargins: { top: 0.72, bottom: 0.14 }
+      visible: false,
+      scaleMargins: { top: 0.72, bottom: 0.12 }
     });
 
     rsi.setData(candles.filter(x => x.rsi14 != null).map(x => ({ time: x.time, value: x.rsi14 })));
@@ -634,7 +666,8 @@ function setIndicatorData(candles) {
     });
 
     App.chart.priceScale("macd").applyOptions({
-      scaleMargins: { top: 0.76, bottom: 0.05 }
+      visible: false,
+      scaleMargins: { top: 0.78, bottom: 0.04 }
     });
 
     macd.setData(candles.filter(x => x.macd != null).map(x => ({ time: x.time, value: x.macd })));
@@ -648,7 +681,8 @@ function setIndicatorData(candles) {
     });
 
     App.chart.priceScale("atr").applyOptions({
-      scaleMargins: { top: 0.80, bottom: 0.02 }
+      visible: false,
+      scaleMargins: { top: 0.82, bottom: 0.02 }
     });
 
     atr.setData(candles.filter(x => x.atr14 != null).map(x => ({ time: x.time, value: x.atr14 })));
@@ -727,8 +761,21 @@ function buildManualQuestion(renderNow = true) {
   const ticker = $("symbol-select").value;
   const interval = App.interval;
 
-  const visibleBars = interval === "1d" ? 60 : interval === "1wk" ? 52 : 36;
-  const revealBars = interval === "1d" ? 10 : interval === "1wk" ? 8 : 6;
+  let visibleBars = 180;
+  let revealBars = 20;
+  let threshold = 1.2;
+
+  if (interval === "1wk") {
+    visibleBars = 156;
+    revealBars = 12;
+    threshold = 3.0;
+  }
+
+  if (interval === "1mo") {
+    visibleBars = 120;
+    revealBars = 8;
+    threshold = 6.0;
+  }
 
   App.questions = [{
     ticker,
@@ -736,7 +783,8 @@ function buildManualQuestion(renderNow = true) {
     data_path: dataPath(ticker, interval),
     start_idx: null,
     visible_bars: visibleBars,
-    reveal_bars: revealBars
+    reveal_bars: revealBars,
+    threshold_pct: threshold
   }];
 
   App.questionIndex = 0;
@@ -773,8 +821,8 @@ async function renderQuestion() {
     throw new Error("K 線資料太少，請先讓 GitHub Actions 更新資料。");
   }
 
-  const visibleBars = Number(q.visible_bars || 60);
-  const revealBars = Number(q.reveal_bars || 10);
+  const visibleBars = Number(q.visible_bars || 180);
+  const revealBars = Number(q.reveal_bars || 20);
 
   if (q.start_idx === null || q.start_idx === undefined) {
     const maxStart = App.currentData.length - visibleBars - revealBars - 1;
@@ -827,6 +875,19 @@ function updateChartVisibleData() {
   }
 
   setIndicatorData(candles);
+
+  let spacing = 3;
+
+  if (candles.length <= 80) spacing = 6;
+  if (candles.length > 120) spacing = 4;
+  if (candles.length > 180) spacing = 3;
+  if (candles.length > 240) spacing = 2;
+
+  App.chart.timeScale().applyOptions({
+    barSpacing: spacing,
+    minBarSpacing: 1,
+    rightOffset: 8
+  });
 
   App.chart.timeScale().fitContent();
 
@@ -1433,10 +1494,6 @@ function eraseAt(p) {
       const x = xOf(d.time), y = yOf(d.price);
       if (x == null || y == null) return true;
       return Math.hypot(x - p.x, y - p.y) > 30;
-    }
-
-    if (d.type === "trend" || d.type === "rect") {
-      return true;
     }
 
     return true;
