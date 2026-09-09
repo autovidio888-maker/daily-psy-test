@@ -155,6 +155,8 @@
           <div>
             <label class="block text-xs text-slate-400 font-bold mb-2">顯示根數</label>
             <select id="bars-select" class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-white font-black">
+              <option value="30">30</option>
+              <option value="45">45</option>
               <option value="60">60</option>
               <option value="90">90</option>
               <option value="120">120</option>
@@ -165,6 +167,9 @@
               <option value="600">600</option>
               <option value="800">800</option>
               <option value="1000">1000</option>
+              <option value="1200">1200</option>
+              <option value="1500">1500</option>
+              <option value="2000">2000</option>
             </select>
           </div>
           <div>
@@ -263,8 +268,39 @@
       </section>
 
       <aside class="space-y-4">
-        <section id="battle-status-panel" class="glass rounded-3xl p-4"></section>
-        <section class="glass rounded-3xl p-4">
+        <section id="battle-status-panel" class="glass rounded-3xl p-4 hidden"></section>
+
+        <section id="backtest-side-panel" class="glass rounded-3xl p-4 hidden">
+          <h2 class="text-lg font-black text-white mb-3">回測狀態</h2>
+          <p id="bt-side-message" class="text-sm text-slate-400 leading-relaxed mb-4">進入回測後會顯示剩餘 K 線、權益與成績。</p>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center">
+              <div class="text-xs text-slate-500 font-bold">剩餘 K 線</div>
+              <div id="bt-remain-side" class="text-3xl font-black text-amber-300">-</div>
+            </div>
+            <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center">
+              <div class="text-xs text-slate-500 font-bold">已走 K 線</div>
+              <div id="bt-played-side" class="text-3xl font-black text-blue-300">-</div>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-sm font-bold">
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">目前價格</span><span id="bt-price-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">現金</span><span id="bt-cash-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">持股</span><span id="bt-shares-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">交易次數</span><span id="bt-trades-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">權益</span><span id="bt-equity-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">報酬</span><span id="bt-return-side" class="text-emerald-300">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">成績</span><span id="bt-score-side" class="text-blue-300">-</span></div>
+          </div>
+
+          <p class="text-xs text-slate-500 leading-relaxed mt-4">
+            到最後一根 K 線時，系統會強制賣出所有持股並計算最終成績。
+          </p>
+        </section>
+
+        <section id="stats-panel" class="glass rounded-3xl p-4">
           <h2 class="text-lg font-black text-white mb-3">今日進度</h2>
           <div class="grid grid-cols-3 gap-2">
             <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center"><div class="text-xs text-slate-500 font-bold">題數</div><div id="stat-progress" class="text-2xl font-black text-white">0/5</div></div>
@@ -272,19 +308,13 @@
             <div class="rounded-2xl bg-slate-900 border border-slate-700 p-3 text-center"><div class="text-xs text-slate-500 font-bold">分數</div><div id="stat-score" class="text-2xl font-black text-blue-300">0</div></div>
           </div>
         </section>
-        <section class="glass rounded-3xl p-4">
-          <h2 class="text-lg font-black text-white mb-3">修正版重點</h2>
-          <ul class="text-sm text-slate-300 space-y-2 leading-relaxed">
-            <li>日 / 週 / 月 K 會強制重建 5 題並載入對應 JSON。</li>
-            <li>對戰分為「猜方向」與「獲利」兩種。</li>
-            <li>獲利對戰可做多 / 做空，限制在指定 K 線數內完成。</li>
-            <li>對戰不再限制房主切下一題，任一玩家都可下一題。</li>
-            <li>排行榜每 1.5 秒輪詢一次，Realtime 失效也不用 F5。</li>
-            <li>指標由前端補算，EMA / MA / BB / RSI / MACD / ATR 都會顯示。</li>
-            <li>最新題段、隨機出題、顯示根數改變後會自動定位到目前價格右側。</li>
-          </ul>
+
+        <section id="patch-notes-panel" class="glass rounded-3xl p-4 hidden">
+          <h2 class="text-lg font-black text-white mb-3">版本說明</h2>
+          <p class="text-sm text-slate-400 leading-relaxed">目前版本已整合主選單、日週月錨點切換、即時對戰、回測與畫線工具。</p>
         </section>
-        <section class="glass rounded-3xl p-4">
+
+        <section id="disclaimer-panel" class="glass rounded-3xl p-4">
           <h2 class="text-lg font-black text-white mb-3">免責聲明</h2>
           <p class="text-sm text-slate-400 leading-relaxed">本網站僅供 K 線閱讀練習、回測模擬與教育用途，不提供任何投資建議，也不構成買賣推薦。所有資料僅供練習，實際投資請自行承擔風險。</p>
         </section>
@@ -390,6 +420,7 @@ function dataPath(ticker, interval){ return `public/data/klines/${sanitizeFileNa
 function intervalText(interval){ if(interval==="1d") return "日 K"; if(interval==="1wk") return "週 K"; if(interval==="1mo") return "月 K"; return interval; }
 function thresholdByInterval(interval){ if(interval==="1d") return 1.2; if(interval==="1wk") return 3.0; if(interval==="1mo") return 6.0; return 1.2; }
 function revealBarsByInterval(interval){ if(interval==="1d") return 20; if(interval==="1wk") return 12; if(interval==="1mo") return 8; return 20; }
+function backtestRevealBarsByInterval(interval){ if(interval==="1d") return 80; if(interval==="1wk") return 40; if(interval==="1mo") return 24; return 80; }
 function pct(v){ const n=Number(v||0); return `${n>=0?"+":""}${n.toFixed(2)}%`; }
 function money(v){ return Number(v || 0).toLocaleString("zh-TW", { maximumFractionDigits:0 }); }
 function nval(v){ if(v===null || v===undefined) return null; const n=Number(v); return Number.isFinite(n)?n:null; }
@@ -517,6 +548,7 @@ function showAppScreen(){
       const r = $("chart").getBoundingClientRect();
       App.chart.applyOptions({ width:Math.floor(r.width || 1300), height:Math.floor(r.height || 760) });
       focusCurrentPrice(visibleCandles());
+      updateModeSidebar();
     } catch(e) {}
   }, 50);
 }
@@ -532,7 +564,7 @@ async function startFromLanding(mode){
 }
 
 function desiredVisibleBars(){
-  return Math.max(20, Number($("bars-select")?.value || 240));
+  return Math.max(30, Number($("bars-select")?.value || 240));
 }
 
 function currentAnchorTime(){
@@ -581,8 +613,9 @@ function findIndexAtOrBefore(data, anchorTime){
 }
 
 function clampVisibleBarsForData(dataLen, desired, revealBars){
-  const maxVisible = Math.max(20, dataLen - revealBars - 2);
-  return Math.max(20, Math.min(Number(desired || 240), maxVisible));
+  const safeReveal = Math.max(1, Number(revealBars || 1));
+  const maxVisible = Math.max(30, Number(dataLen || 0) - safeReveal - 2);
+  return Math.max(30, Math.min(Number(desired || 240), maxVisible));
 }
 
 function pickStartIdx(data, visibleBars, revealBars, randomStart, anchorTime){
@@ -658,6 +691,28 @@ function setMode(mode){
     $("mode-backtest").classList.add("active-pill");
     $("backtest-area").classList.remove("hidden");
     setupBacktest(true);
+  }
+
+  updateModeSidebar();
+}
+
+function setPanelVisible(id, visible){
+  const el = $(id);
+  if(el) el.classList.toggle("hidden", !visible);
+}
+
+function updateModeSidebar(){
+  const isBacktest = App.mode === "backtest";
+  const isBattle = App.mode === "battle";
+
+  setPanelVisible("backtest-side-panel", isBacktest);
+  setPanelVisible("battle-status-panel", isBattle);
+  setPanelVisible("stats-panel", !isBacktest);
+  setPanelVisible("patch-notes-panel", false);
+  setPanelVisible("disclaimer-panel", !isBacktest);
+
+  if(isBacktest){
+    updateBacktestSidePanel();
   }
 }
 
@@ -789,7 +844,7 @@ async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
 
   const interval = options.interval || App.interval;
   const requestedVisibleBars = desiredVisibleBars();
-  const revealBars = revealBarsByInterval(interval);
+  const revealBars = options.revealBars || (App.mode === "backtest" ? backtestRevealBarsByInterval(interval) : revealBarsByInterval(interval));
   const fixedTicker = options.ticker || null;
   const anchorTime = options.anchorTime || null;
   const pool = fixedTicker
@@ -1007,6 +1062,7 @@ async function renderQuestion(){
     }
 
     updateStats();
+    updateModeSidebar();
   } finally {
     App.loadingQuestion = false;
     if(!App.revealed && App.mode !== "backtest" && !(App.mode === "battle" && Battle.battleMode === "profit")){
@@ -1276,20 +1332,277 @@ async function restart(){
 
   updateStats();
 }
-function updateStats(){ const total=App.questions.length || 1; $("stat-progress").innerText=`${App.answers.length}/${total}`; $("stat-hit").innerText=App.hits; $("stat-score").innerText=App.score; $("score-badge").innerText=`分數 ${App.score}`; }
+function updateStats(){
+  const total=App.questions.length || 1;
+  $("stat-progress").innerText=`${App.answers.length}/${total}`;
+  $("stat-hit").innerText=App.hits;
+  $("stat-score").innerText=App.score;
+  $("score-badge").innerText=`分數 ${App.score}`;
+  if(App.mode === "backtest") updateBacktestSidePanel();
+}
 function finishChallenge(){ const total=App.questions.length || 1; let title="被洗出去的人"; if(App.score>=90) title="裸 K 老狐狸"; else if(App.score>=70) title="不追高戰士"; else if(App.score>=45) title="盤感修煉中"; $("result-box").innerHTML += `<div class="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4"><h3 class="text-xl font-black text-blue-200">本輪完成：${title}</h3><p class="text-sm text-slate-300 mt-1">命中 ${App.hits}/${total}，總分 ${App.score}。</p></div>`; localStorage.setItem(`kline_score_${new Date().toISOString().slice(0,10)}`, JSON.stringify({score:App.score,hits:App.hits,answers:App.answers,saved_at:new Date().toISOString()})); }
 function copyShare(){ const total=App.questions.length || 1; const text=`我剛完成裸 K 訓練\n命中：${App.hits}/${total}\n分數：${App.score}\n\n不看消息、不看指標，只看 K 線。\n#裸K訓練場 #K線練習`; navigator.clipboard.writeText(text).then(()=>alert("戰績已複製")); }
 function showLoadError(err){ const box=$("result-box"); box.classList.remove("hidden"); box.innerHTML=`<h3 class="text-xl font-black text-rose-300 mb-2">載入失敗</h3><p class="text-sm text-slate-300">${escapeHtml(err.message)}</p><p class="text-xs text-slate-500 mt-2">請確認對應 JSON 可以讀取，例如 public/data/klines/2330_TW_1wk.json。</p>`; }
 
 /* 回測 */
-function setupBacktest(){ const q=App.currentQuestion; if(!q) return; App.backtest={ idx:q._visibleEnd, end:q._revealEnd, cash:1000000, shares:0, avgCost:0, trades:[] }; App.revealed=false; const candles=App.currentData.slice(q.start_idx, q._visibleEnd+1); App.candleSeries.setData(candles.map(x=>({time:x.time,open:x.open,high:x.high,low:x.low,close:x.close}))); App.volumeSeries.setData(App.indicators.volume?candles.map(x=>({time:x.time,value:x.volume||0,color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})):[]); setIndicatorData(candles); focusCurrentPrice(candles); showBacktestStatus("回測開始。你可以買進、賣出或逐根播放。"); }
-function backtestPrice(){ return App.currentData[App.backtest.idx].close; }
-function backtestBuy(){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const qty=Math.floor(bt.cash/price); if(qty<=0){ showBacktestStatus("現金不足，無法買進。"); return; } bt.cash-=qty*price; bt.avgCost=bt.shares>0?((bt.avgCost*bt.shares)+(price*qty))/(bt.shares+qty):price; bt.shares+=qty; bt.trades.push({type:"buy",price,qty,idx:bt.idx}); showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`); }
-function backtestSell(){ const bt=App.backtest; if(!bt) return; if(bt.shares<=0){ showBacktestStatus("目前沒有持股可賣出。"); return; } const price=backtestPrice(); const qty=bt.shares; bt.cash+=qty*price; bt.trades.push({type:"sell",price,qty,idx:bt.idx}); bt.shares=0; bt.avgCost=0; showBacktestStatus(`賣出 ${qty} 股，價格 ${price.toFixed(2)}。`); }
-function backtestNext(){ const bt=App.backtest; if(!bt) return; if(bt.idx>=bt.end){ finishBacktest(); return; } bt.idx += 1; const candles=App.currentData.slice(App.currentQuestion.start_idx, bt.idx+1); App.candleSeries.setData(candles.map(x=>({time:x.time, open:x.open, high:x.high, low:x.low, close:x.close}))); App.volumeSeries.setData(App.indicators.volume?candles.map(x=>({time:x.time,value:x.volume||0,color:x.close>=x.open?"rgba(34,197,94,.35)":"rgba(239,68,68,.35)"})):[]); setIndicatorData(candles); focusCurrentPrice(candles); if(bt.idx>=bt.end) finishBacktest(); else showBacktestStatus("已前進一根 K。"); }
-function toggleAutoplay(){ if(App.autoplayTimer){ clearInterval(App.autoplayTimer); App.autoplayTimer=null; $("bt-auto").innerText="自動播放"; return; } $("bt-auto").innerText="停止播放"; App.autoplayTimer=setInterval(()=>{ const bt=App.backtest; if(!bt || bt.idx>=bt.end){ clearInterval(App.autoplayTimer); App.autoplayTimer=null; $("bt-auto").innerText="自動播放"; finishBacktest(); return; } backtestNext(); },700); }
-function showBacktestStatus(message){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const equity=bt.cash+bt.shares*price; const ret=((equity-1000000)/1000000)*100; const box=$("result-box"); box.classList.remove("hidden"); box.innerHTML=`<h3 class="text-xl font-black mb-2">回測練習</h3><p class="text-sm text-slate-400 mb-3">${message}</p><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm font-bold"><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前價格</div><div>${price.toFixed(2)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">現金</div><div>${money(bt.cash)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">持股</div><div>${money(bt.shares)}</div></div><div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">權益變化</div><div class="${ret>=0?"text-emerald-300":"text-rose-300"}">${pct(ret)}</div></div></div>`; }
-function finishBacktest(){ const bt=App.backtest; if(!bt) return; const price=backtestPrice(); const equity=bt.cash+bt.shares*price; const ret=((equity-1000000)/1000000)*100; showBacktestStatus(`回測結束。交易次數 ${bt.trades.length}，最後權益 ${money(equity)}，報酬 ${pct(ret)}。`); }
+function setupBacktest(){
+  const q = App.currentQuestion;
+  if(!q) {
+    updateBacktestSidePanel("請先建立回測題段。");
+    return;
+  }
+
+  normalizeQuestionBounds(q);
+
+  App.backtest = {
+    idx:q._visibleEnd,
+    start:q._visibleEnd,
+    end:q._revealEnd,
+    cash:1000000,
+    shares:0,
+    avgCost:0,
+    trades:[],
+    finished:false,
+    finalScore:null
+  };
+
+  App.revealed = false;
+  renderBacktestCandles();
+  showBacktestStatus("回測開始。請在剩餘 K 線內完成買賣；最後一根會自動賣出所有持股。");
+}
+
+function backtestPrice(){
+  const bt = App.backtest;
+  const row = bt && App.currentData[bt.idx];
+  return row ? Number(row.close) : 0;
+}
+
+function backtestEquity(){
+  const bt = App.backtest;
+  if(!bt) return 0;
+  const price = backtestPrice();
+  return bt.cash + bt.shares * price;
+}
+
+function backtestReturnPct(){
+  return ((backtestEquity() - 1000000) / 1000000) * 100;
+}
+
+function backtestScore(){
+  return Math.round(backtestReturnPct() * 100);
+}
+
+function backtestRemainingBars(){
+  const bt = App.backtest;
+  if(!bt) return 0;
+  return Math.max(0, bt.end - bt.idx);
+}
+
+function backtestPlayedBars(){
+  const bt = App.backtest;
+  if(!bt) return 0;
+  return Math.max(0, bt.idx - bt.start);
+}
+
+function renderBacktestCandles(){
+  const bt = App.backtest;
+  const q = App.currentQuestion;
+  if(!bt || !q) return;
+
+  const candles = App.currentData.slice(q.start_idx, bt.idx + 1);
+
+  App.candleSeries.setData(candles.map(x => ({
+    time:x.time,
+    open:x.open,
+    high:x.high,
+    low:x.low,
+    close:x.close
+  })));
+
+  App.volumeSeries.setData(App.indicators.volume ? candles.map(x => ({
+    time:x.time,
+    value:x.volume || 0,
+    color:x.close >= x.open ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)"
+  })) : []);
+
+  setIndicatorData(candles);
+  focusCurrentPrice(candles);
+}
+
+function backtestBuy(){
+  const bt = App.backtest;
+  if(!bt || bt.finished) return;
+
+  const price = backtestPrice();
+  const qty = Math.floor(bt.cash / price);
+
+  if(qty <= 0){
+    showBacktestStatus("現金不足，無法買進。");
+    return;
+  }
+
+  bt.cash -= qty * price;
+  bt.avgCost = bt.shares > 0
+    ? ((bt.avgCost * bt.shares) + (price * qty)) / (bt.shares + qty)
+    : price;
+  bt.shares += qty;
+  bt.trades.push({ type:"buy", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+
+  showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`);
+}
+
+function backtestSell(force=false){
+  const bt = App.backtest;
+  if(!bt || bt.finished) return;
+
+  if(bt.shares <= 0){
+    if(!force) showBacktestStatus("目前沒有持股可賣出。");
+    return;
+  }
+
+  const price = backtestPrice();
+  const qty = bt.shares;
+  bt.cash += qty * price;
+  bt.trades.push({ type:force ? "force_sell" : "sell", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+  bt.shares = 0;
+  bt.avgCost = 0;
+
+  showBacktestStatus(`${force ? "最後一根強制賣出" : "賣出"} ${qty} 股，價格 ${price.toFixed(2)}。`);
+}
+
+function backtestNext(){
+  const bt = App.backtest;
+  if(!bt || bt.finished) return;
+
+  if(bt.idx >= bt.end){
+    finishBacktest();
+    return;
+  }
+
+  bt.idx += 1;
+  renderBacktestCandles();
+
+  if(bt.idx >= bt.end){
+    finishBacktest();
+  } else {
+    showBacktestStatus(`已前進一根 K，剩餘 ${backtestRemainingBars()} 根。`);
+  }
+}
+
+function toggleAutoplay(){
+  if(App.autoplayTimer){
+    clearInterval(App.autoplayTimer);
+    App.autoplayTimer = null;
+    $("bt-auto").innerText = "自動播放";
+    return;
+  }
+
+  $("bt-auto").innerText = "停止播放";
+  App.autoplayTimer = setInterval(() => {
+    const bt = App.backtest;
+    if(!bt || bt.finished || bt.idx >= bt.end){
+      clearInterval(App.autoplayTimer);
+      App.autoplayTimer = null;
+      $("bt-auto").innerText = "自動播放";
+      finishBacktest();
+      return;
+    }
+    backtestNext();
+  }, 700);
+}
+
+function updateBacktestSidePanel(message=""){
+  const panel = $("backtest-side-panel");
+  if(!panel) return;
+
+  const bt = App.backtest;
+
+  if(message && $("bt-side-message")) {
+    $("bt-side-message").innerText = message;
+  }
+
+  if(!bt){
+    ["bt-remain-side","bt-played-side","bt-price-side","bt-cash-side","bt-shares-side","bt-trades-side","bt-equity-side","bt-return-side","bt-score-side"].forEach(id => {
+      if($(id)) $(id).innerText = "-";
+    });
+    return;
+  }
+
+  const price = backtestPrice();
+  const equity = backtestEquity();
+  const ret = backtestReturnPct();
+  const score = bt.finalScore ?? backtestScore();
+
+  $("bt-remain-side").innerText = backtestRemainingBars();
+  $("bt-played-side").innerText = backtestPlayedBars();
+  $("bt-price-side").innerText = price ? price.toFixed(2) : "-";
+  $("bt-cash-side").innerText = money(bt.cash);
+  $("bt-shares-side").innerText = money(bt.shares);
+  $("bt-trades-side").innerText = bt.trades.length;
+  $("bt-equity-side").innerText = money(equity);
+  $("bt-return-side").innerText = pct(ret);
+  $("bt-return-side").className = ret >= 0 ? "text-emerald-300" : "text-rose-300";
+  $("bt-score-side").innerText = `${score} 分`;
+  $("bt-score-side").className = score >= 0 ? "text-blue-300" : "text-rose-300";
+}
+
+function showBacktestStatus(message){
+  const bt = App.backtest;
+  if(!bt) return;
+
+  const price = backtestPrice();
+  const equity = backtestEquity();
+  const ret = backtestReturnPct();
+  const score = bt.finalScore ?? backtestScore();
+  const remaining = backtestRemainingBars();
+
+  updateBacktestSidePanel(message);
+
+  const box = $("result-box");
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <h3 class="text-xl font-black mb-2">回測練習</h3>
+    <p class="text-sm text-slate-400 mb-3">${message}</p>
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm font-bold">
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">剩餘 K 線</div><div class="text-amber-300">${remaining}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前價格</div><div>${price.toFixed(2)}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">現金</div><div>${money(bt.cash)}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">持股</div><div>${money(bt.shares)}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">權益變化</div><div class="${ret>=0?"text-emerald-300":"text-rose-300"}">${pct(ret)}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">成績</div><div class="${score>=0?"text-blue-300":"text-rose-300"}">${score} 分</div></div>
+    </div>`;
+}
+
+function finishBacktest(){
+  const bt = App.backtest;
+  if(!bt || bt.finished) return;
+
+  if(App.autoplayTimer){
+    clearInterval(App.autoplayTimer);
+    App.autoplayTimer = null;
+    $("bt-auto").innerText = "自動播放";
+  }
+
+  let forcedText = "";
+  if(bt.shares > 0){
+    const price = backtestPrice();
+    const qty = bt.shares;
+    bt.cash += qty * price;
+    bt.trades.push({ type:"force_sell", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+    bt.shares = 0;
+    bt.avgCost = 0;
+    forcedText = `最後一根已強制賣出 ${qty} 股。`;
+  }
+
+  bt.finished = true;
+  bt.finalScore = backtestScore();
+  App.score = bt.finalScore;
+  updateStats();
+
+  const equity = backtestEquity();
+  const ret = backtestReturnPct();
+  showBacktestStatus(`${forcedText} 回測結束。交易次數 ${bt.trades.length}，最後權益 ${money(equity)}，報酬 ${pct(ret)}，成績 ${bt.finalScore} 分。`);
+}
 
 /* 畫線工具 */
 function setDrawTool(tool){ App.drawTool=tool; App.drawStart=null; App.drawPreview=null; $("draw-canvas").style.pointerEvents = tool==="cursor" ? "none" : "auto"; $("drawing-hint").innerText = tool==="cursor" ? "游標模式：可拖曳/縮放圖表。" : tool==="select" ? "選取模式：點擊線條後可改顏色、線寬、線型。" : "畫線模式：按住滑鼠拖曳，放開完成。"; }
