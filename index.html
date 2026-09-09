@@ -374,7 +374,7 @@ const Battle = {
 
 const App = {
   interval:"1d", mode:"quiz", appStarted:false, challenge:null, questions:[], questionIndex:0,
-  currentData:[], currentDataPath:"", currentQuestion:null, loadingQuestion:false, manifest:null, klineCache:{},
+  currentData:[], currentDataPath:"", currentQuestion:null, contextAnchorTime:"", loadingQuestion:false, manifest:null, klineCache:{},
   chart:null, candleSeries:null, volumeSeries:null, indicatorSeries:{},
   indicators:{ volume:true, ma:true, ema:false, bb:false, rsi:false, macd:false, atr:false },
   revealed:false, score:0, hits:0, answers:[], backtest:null, autoplayTimer:null, profit:null,
@@ -537,9 +537,37 @@ function desiredVisibleBars(){
 
 function currentAnchorTime(){
   const q = App.currentQuestion;
-  if(q && App.currentData && App.currentData[q._visibleEnd]) return App.currentData[q._visibleEnd].time;
+
+  // 回測 / 獲利模式的「目前價格」是已播放到的那一根 K。
+  if(App.mode === "backtest" && App.backtest && App.currentData?.[App.backtest.idx]){
+    return App.currentData[App.backtest.idx].time;
+  }
+
+  if(App.mode === "battle" && Battle.battleMode === "profit" && App.profit && App.currentData?.[App.profit.idx]){
+    return App.currentData[App.profit.idx].time;
+  }
+
+  // 一般猜方向模式：日/週/月切換要固定同一個「原始時間錨點」。
+  // 不能在切到週 K、月 K 後，把錨點改成週/月 K 自己的 bar 日期，否則再切回日 K 會漂移。
+  if(App.contextAnchorTime) return App.contextAnchorTime;
+  if(q && q.context_anchor_time) return q.context_anchor_time;
   if(q && q.anchor_time) return q.anchor_time;
+
+  const endIdx = q && App.revealed ? q._revealEnd : q?._visibleEnd;
+  if(q && App.currentData && App.currentData[endIdx]) return App.currentData[endIdx].time;
+
   return null;
+}
+
+function setContextAnchorTime(anchorTime){
+  if(anchorTime) App.contextAnchorTime = String(anchorTime);
+}
+
+function displayedAnchorTime(){
+  const q = App.currentQuestion;
+  if(!q || !App.currentData || !App.currentData.length) return currentAnchorTime();
+  const endIdx = App.revealed ? q._revealEnd : q._visibleEnd;
+  return App.currentData[endIdx]?.time || currentAnchorTime();
 }
 
 function findIndexAtOrBefore(data, anchorTime){
@@ -579,18 +607,29 @@ function visibleCandles(){
 async function reloadCurrentContext(){
   const q = App.currentQuestion;
   const ticker = q?.ticker || $("symbol-select").value;
-  const anchorTime = currentAnchorTime();
-  await loadManualQuestion(false, true, { ticker, anchorTime });
+  const anchorTime = currentAnchorTime() || displayedAnchorTime();
+  setContextAnchorTime(anchorTime);
+  await loadManualQuestion(false, true, { ticker, anchorTime, keepAnchor:true });
 }
 
 async function switchIntervalKeepContext(newInterval){
   if(!newInterval) return;
   const q = App.currentQuestion;
   const ticker = q?.ticker || $("symbol-select").value;
-  const anchorTime = currentAnchorTime();
+  const anchorTime = currentAnchorTime() || displayedAnchorTime();
+
+  // 切換日/週/月只改週期，不重新抽股票、不重新抽時間。
+  // 所有週期都用同一個 contextAnchorTime 找最接近該時間的 bar。
+  setContextAnchorTime(anchorTime);
   App.interval = newInterval;
   syncIntervalButtons();
-  await loadManualQuestion(false, true, { ticker, interval:newInterval, anchorTime });
+
+  await loadManualQuestion(false, true, {
+    ticker,
+    interval:newInterval,
+    anchorTime:App.contextAnchorTime,
+    keepAnchor:true
+  });
 }
 
 function setMode(mode){
@@ -744,6 +783,10 @@ function makeQuestion(ticker, interval, startIdx, visibleBars, revealBars, quest
 }
 
 async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
+  if(!options.anchorTime && !options.keepAnchor){
+    App.contextAnchorTime = "";
+  }
+
   const interval = options.interval || App.interval;
   const requestedVisibleBars = desiredVisibleBars();
   const revealBars = revealBarsByInterval(interval);
@@ -774,7 +817,10 @@ async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
       used.add(key);
 
       const q = makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1);
-      q.anchor_time = data[visibleEnd]?.time || anchorTime || null;
+      q.context_anchor_time = anchorTime || data[visibleEnd]?.time || null;
+      q.anchor_time = q.context_anchor_time;
+      q.resolved_anchor_time = data[visibleEnd]?.time || null;
+      q.keep_anchor = !!options.keepAnchor;
       questions.push(q);
 
       // 固定股票/時間錨點時，第一題要保留同一檔與同一時間；後面四題用同檔股票隨機時間，保留下一題可用。
@@ -783,7 +829,9 @@ async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
           const s = pickStartIdx(data, visibleBars, revealBars, true, null);
           const qe = Math.min(s + visibleBars - 1, data.length - revealBars - 1);
           const qq = makeQuestion(item.ticker, interval, s, visibleBars, revealBars, k + 1);
-          qq.anchor_time = data[qe]?.time || null;
+          qq.context_anchor_time = data[qe]?.time || null;
+          qq.anchor_time = qq.context_anchor_time;
+          qq.resolved_anchor_time = data[qe]?.time || null;
           questions.push(qq);
         }
         break;
@@ -811,6 +859,7 @@ async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
   App.answers = [];
   App.revealed = false;
   App.profit = null;
+  App.contextAnchorTime = questions[0].context_anchor_time || questions[0].anchor_time || "";
 
   syncSymbolAndBarsUI(questions[0].ticker, interval, requestedVisibleBars);
   $("interval-badge").innerText = intervalText(interval);
@@ -854,6 +903,7 @@ async function battleCandidatePool(interval, visibleBars, revealBars){
 }
 
 async function loadBattleRandomQuestions(renderNow=true){
+  App.contextAnchorTime = "";
   const interval = App.interval;
   const requestedVisibleBars = desiredVisibleBars();
   const revealBars = Battle.battleMode === "profit" ? selectedProfitLimitBars() : revealBarsByInterval(interval);
@@ -872,7 +922,9 @@ async function loadBattleRandomQuestions(renderNow=true){
       const startIdx = pickStartIdx(data, visibleBars, revealBars, true, null);
       const visibleEnd = Math.min(startIdx + visibleBars - 1, data.length - revealBars - 1);
       const q = makeQuestion(item.ticker, interval, startIdx, visibleBars, revealBars, questions.length + 1);
-      q.anchor_time = data[visibleEnd]?.time || null;
+      q.context_anchor_time = data[visibleEnd]?.time || null;
+      q.anchor_time = q.context_anchor_time;
+      q.resolved_anchor_time = data[visibleEnd]?.time || null;
       questions.push(q);
     } catch(e) {
       errors.push(`${item.ticker}: ${e.message}`);
@@ -897,6 +949,7 @@ async function loadBattleRandomQuestions(renderNow=true){
   App.revealed = false;
   App.currentData = [];
   App.currentDataPath = "";
+  App.contextAnchorTime = questions[0].context_anchor_time || questions[0].anchor_time || "";
 
   syncSymbolAndBarsUI(questions[0].ticker, interval, requestedVisibleBars);
   $("interval-badge").innerText = intervalText(interval);
@@ -976,8 +1029,10 @@ function normalizeQuestionBounds(q){
   let visibleBars = clampVisibleBarsForData(App.currentData.length, q.visible_bars || desiredVisibleBars(), revealBars);
   const maxStart = Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
 
-  if(q.anchor_time && (q.start_idx === null || q.start_idx === undefined || q.keep_anchor)){
-    q.start_idx = pickStartIdx(App.currentData, visibleBars, revealBars, false, q.anchor_time);
+  const stableAnchorTime = q.context_anchor_time || q.anchor_time || App.contextAnchorTime || null;
+
+  if(stableAnchorTime && (q.start_idx === null || q.start_idx === undefined || q.keep_anchor)){
+    q.start_idx = pickStartIdx(App.currentData, visibleBars, revealBars, false, stableAnchorTime);
   }
 
   if(q.start_idx === null || q.start_idx === undefined || !Number.isFinite(Number(q.start_idx))){
@@ -989,7 +1044,11 @@ function normalizeQuestionBounds(q){
   q.reveal_bars = revealBars;
   q._visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
   q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
-  q.anchor_time = App.currentData[q._visibleEnd]?.time || q.anchor_time || null;
+
+  q.context_anchor_time = stableAnchorTime || App.currentData[q._visibleEnd]?.time || null;
+  q.anchor_time = q.context_anchor_time;
+  q.resolved_anchor_time = App.currentData[q._visibleEnd]?.time || null;
+  setContextAnchorTime(q.context_anchor_time);
 
   if(q._visibleEnd < 0 || q._revealEnd <= q._visibleEnd){
     throw new Error("題目索引異常，請按『隨機題段』重新整理題目。");
@@ -1489,6 +1548,7 @@ function currentBattleConfig(){
     random_stocks:true,
     ticker_pool:"0050_components_plus_major_assets",
     questions:App.questions,
+    context_anchor_time:App.contextAnchorTime,
     created_at:new Date().toISOString()
   };
 }
@@ -1514,6 +1574,7 @@ async function applyBattleConfig(config, renderNow=true){
   Battle.battleMode = config.battle_mode || "direction";
   Battle.profitLimitBars = Number(config.profit_limit_bars || config.limit_bars || revealBarsByInterval(config.interval || App.interval) || 20);
   syncSymbolAndBarsUI(config.ticker, config.interval, config.bars);
+  App.contextAnchorTime = config.context_anchor_time || config.questions?.[0]?.context_anchor_time || config.questions?.[0]?.anchor_time || App.contextAnchorTime || "";
   App.questions = Array.isArray(config.questions) && config.questions.length ? config.questions : App.questions;
   applyBattleModeToQuestions();
   App.currentData=[];
