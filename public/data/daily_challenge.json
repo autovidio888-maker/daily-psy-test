@@ -1,58 +1,58 @@
 {
-  "date": "2026-09-09",
+  "date": "2026-09-10",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "2891.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/2891_TW_1mo.json",
-      "start_idx": 81,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
+      "ticker": "2308.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/2308_TW_1d.json",
+      "start_idx": 586,
+      "visible_bars": 240,
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
     },
     {
       "question_no": 2,
-      "ticker": "2383.TW",
+      "ticker": "2395.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/2383_TW_1wk.json",
-      "start_idx": 242,
+      "data_path": "public/data/klines/2395_TW_1wk.json",
+      "start_idx": 178,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 3,
-      "ticker": "2330.TW",
+      "ticker": "3711.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/2330_TW_1wk.json",
-      "start_idx": 248,
+      "data_path": "public/data/klines/3711_TW_1wk.json",
+      "start_idx": 189,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 4,
-      "ticker": "BTC-USD",
-      "interval": "1d",
-      "data_path": "public/data/klines/BTC_USD_1d.json",
-      "start_idx": 92,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "ticker": "2883.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2883_TW_1mo.json",
+      "start_idx": 106,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 5,
-      "ticker": "2880.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/2880_TW_1wk.json",
-      "start_idx": 99,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "ticker": "5880.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/5880_TW_1mo.json",
+      "start_idx": 104,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     }
   ],
-  "updated_at": "2026-09-09T03:23:27.224382+08:00"
+  "updated_at": "2026-09-10T03:13:17.778853+08:00"
 }
