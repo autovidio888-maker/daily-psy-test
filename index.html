@@ -93,7 +93,7 @@
         <button class="mode-card text-left start-mode-btn" data-start-mode="backtest">
           <div class="mode-icon mb-5">📈</div>
           <h2 class="text-2xl font-black text-white mb-3">回測練習</h2>
-          <p class="text-slate-400 leading-relaxed mb-5">隨機股票與隨機歷史時間，逐根 K 線買進、賣出，訓練進出場。</p>
+          <p class="text-slate-400 leading-relaxed mb-5">隨機股票與隨機歷史時間，逐根 K 線做多、做空、平倉，訓練進出場。</p>
           <div class="text-blue-300 font-black">開始回測 →</div>
         </button>
 
@@ -258,9 +258,10 @@
           <div id="profit-detail" class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm font-bold"></div>
         </section>
 
-        <section id="backtest-area" class="hidden grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">
-          <button id="bt-buy" class="btn btn-green py-3">買進</button>
-          <button id="bt-sell" class="btn btn-red py-3">賣出</button>
+        <section id="backtest-area" class="hidden grid grid-cols-2 md:grid-cols-6 gap-2 mt-4">
+          <button id="bt-buy" class="btn btn-green py-3">做多 / 買進</button>
+          <button id="bt-short" class="btn btn-red py-3">做空 / 放空</button>
+          <button id="bt-close" class="btn btn-gray py-3">平倉</button>
           <button id="bt-next" class="btn btn-main py-3">下一根</button>
           <button id="bt-auto" class="btn btn-dark py-3">自動播放</button>
           <button id="bt-reset" class="btn btn-dark py-3">重置回測</button>
@@ -291,7 +292,7 @@
           <div class="space-y-2 text-sm font-bold">
             <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">目前價格</span><span id="bt-price-side" class="text-white">-</span></div>
             <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">現金</span><span id="bt-cash-side" class="text-white">-</span></div>
-            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">持股</span><span id="bt-shares-side" class="text-white">-</span></div>
+            <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">部位</span><span id="bt-shares-side" class="text-white">-</span></div>
             <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">交易次數</span><span id="bt-trades-side" class="text-white">-</span></div>
             <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">權益</span><span id="bt-equity-side" class="text-white">-</span></div>
             <div class="flex justify-between rounded-xl bg-slate-900 border border-slate-700 px-3 py-2"><span class="text-slate-500">報酬</span><span id="bt-return-side" class="text-emerald-300">-</span></div>
@@ -299,7 +300,7 @@
           </div>
 
           <p class="text-xs text-slate-500 leading-relaxed mt-4">
-            到最後一根 K 線時，系統會強制賣出所有持股並計算最終成績。
+            到最後一根 K 線時，系統會自動平倉所有多單或空單並計算最終成績。
           </p>
         </section>
 
@@ -517,7 +518,8 @@ function bindUI(){
   $("undo-draw-btn").onclick = undoDrawing;
   $("clear-draw-btn").onclick = () => { pushDrawHistory(); App.drawings=[]; App.selectedDrawingId=null; saveDrawings(); redrawCanvas(); updateSelectedDrawingLabel(); };
   $("bt-buy").onclick = backtestBuy;
-  $("bt-sell").onclick = backtestSell;
+  $("bt-short").onclick = backtestShort;
+  $("bt-close").onclick = () => backtestClose(false);
   $("bt-next").onclick = backtestNext;
   $("bt-auto").onclick = toggleAutoplay;
   $("bt-reset").onclick = () => setupBacktest(true);
@@ -654,6 +656,7 @@ function captureBacktestSwitchState(){
   return {
     remainingBars: remaining,
     cash: Number(bt.cash ?? 1000000),
+    position: bt.position || null,
     shares: Number(bt.shares ?? 0),
     avgCost: Number(bt.avgCost ?? 0),
     trades: Array.isArray(bt.trades) ? JSON.parse(JSON.stringify(bt.trades)) : [],
@@ -1453,10 +1456,11 @@ function setupBacktest(){
     start: q._visibleEnd,
     end: actualEnd,
     targetRemainingBars: remainingWanted,
-    cash: preserved ? preserved.cash : 1000000,
-    shares: preserved ? preserved.shares : 0,
-    avgCost: preserved ? preserved.avgCost : 0,
-    trades: preserved ? preserved.trades : [],
+    cash: preserved ? Number(preserved.cash || 1000000) : 1000000,
+    position: preserved ? (preserved.position || null) : null,
+    shares: preserved ? Number(preserved.shares || 0) : 0,
+    avgCost: preserved ? Number(preserved.avgCost || 0) : 0,
+    trades: preserved ? (preserved.trades || []) : [],
     finished: false,
     finalScore: null
   };
@@ -1466,7 +1470,7 @@ function setupBacktest(){
 
   App.revealed = false;
   renderBacktestCandles();
-  showBacktestStatus("回測開始。切換日/週/月會固定目前時間錨點與剩餘 K 棒數；最後一根會自動賣出所有持股。");
+  showBacktestStatus("回測開始。可做多或做空；切換日/週/月會固定目前時間錨點與剩餘 K 棒數；最後一根會自動平倉。 ");
 }
 
 function backtestPrice(){
@@ -1475,11 +1479,34 @@ function backtestPrice(){
   return row ? Number(row.close) : 0;
 }
 
+function backtestPositionText(){
+  const bt = App.backtest;
+  if(!bt || !bt.position || bt.shares <= 0) return "空手";
+  const side = bt.position === "long" ? "多單" : "空單";
+  return `${side} ${money(bt.shares)} 股 @ ${Number(bt.avgCost || 0).toFixed(2)}`;
+}
+
+function backtestUnrealizedPct(){
+  const bt = App.backtest;
+  const price = backtestPrice();
+  if(!bt || !bt.position || !price || !bt.avgCost || bt.shares <= 0) return 0;
+  if(bt.position === "long") return ((price - bt.avgCost) / bt.avgCost) * 100;
+  return ((bt.avgCost - price) / bt.avgCost) * 100;
+}
+
 function backtestEquity(){
   const bt = App.backtest;
   if(!bt) return 0;
+
   const price = backtestPrice();
-  return bt.cash + bt.shares * price;
+  if(!bt.position || bt.shares <= 0) return bt.cash;
+
+  if(bt.position === "long") {
+    return bt.cash + bt.shares * price;
+  }
+
+  // 空單採簡化保證金模型：現金不扣除，權益 = 現金 + 空單浮動損益。
+  return bt.cash + (bt.avgCost - price) * bt.shares;
 }
 
 function backtestReturnPct(){
@@ -1531,41 +1558,93 @@ function backtestBuy(){
   const bt = App.backtest;
   if(!bt || bt.finished) return;
 
-  const price = backtestPrice();
-  const qty = Math.floor(bt.cash / price);
+  if(bt.position){
+    showBacktestStatus("目前已有倉位，請先平倉後再重新做多或做空。 ");
+    return;
+  }
 
+  const price = backtestPrice();
+  if(!price || price <= 0){
+    showBacktestStatus("目前價格異常，無法做多。 ");
+    return;
+  }
+
+  const qty = Math.floor(bt.cash / price);
   if(qty <= 0){
-    showBacktestStatus("現金不足，無法買進。");
+    showBacktestStatus("現金不足，無法買進。 ");
     return;
   }
 
   bt.cash -= qty * price;
-  bt.avgCost = bt.shares > 0
-    ? ((bt.avgCost * bt.shares) + (price * qty)) / (bt.shares + qty)
-    : price;
-  bt.shares += qty;
-  bt.trades.push({ type:"buy", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+  bt.position = "long";
+  bt.shares = qty;
+  bt.avgCost = price;
+  bt.trades.push({ type:"open_long", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
 
-  showBacktestStatus(`買進 ${qty} 股，價格 ${price.toFixed(2)}。`);
+  showBacktestStatus(`做多 ${qty} 股，進場價 ${price.toFixed(2)}。`);
 }
 
-function backtestSell(force=false){
+function backtestShort(){
   const bt = App.backtest;
   if(!bt || bt.finished) return;
 
-  if(bt.shares <= 0){
-    if(!force) showBacktestStatus("目前沒有持股可賣出。");
+  if(bt.position){
+    showBacktestStatus("目前已有倉位，請先平倉後再重新做多或做空。 ");
+    return;
+  }
+
+  const price = backtestPrice();
+  if(!price || price <= 0){
+    showBacktestStatus("目前價格異常，無法做空。 ");
+    return;
+  }
+
+  const qty = Math.floor(bt.cash / price);
+  if(qty <= 0){
+    showBacktestStatus("現金不足，無法做空。 ");
+    return;
+  }
+
+  bt.position = "short";
+  bt.shares = qty;
+  bt.avgCost = price;
+  bt.trades.push({ type:"open_short", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+
+  showBacktestStatus(`做空 ${qty} 股，進場價 ${price.toFixed(2)}。`);
+}
+
+function backtestClose(force=false){
+  const bt = App.backtest;
+  if(!bt || bt.finished) return;
+
+  if(!bt.position || bt.shares <= 0){
+    if(!force) showBacktestStatus("目前沒有倉位可平倉。 ");
     return;
   }
 
   const price = backtestPrice();
   const qty = bt.shares;
-  bt.cash += qty * price;
-  bt.trades.push({ type:force ? "force_sell" : "sell", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+  const side = bt.position;
+  let pnl = 0;
+  let msg = "";
+
+  if(side === "long"){
+    bt.cash += qty * price;
+    pnl = (price - bt.avgCost) * qty;
+    bt.trades.push({ type:force ? "force_close_long" : "close_long", price, qty, pnl, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+    msg = `${force ? "最後一根強制平多" : "平多"} ${qty} 股，價格 ${price.toFixed(2)}，損益 ${money(pnl)}。`;
+  } else {
+    pnl = (bt.avgCost - price) * qty;
+    bt.cash += pnl;
+    bt.trades.push({ type:force ? "force_close_short" : "close_short", price, qty, pnl, idx:bt.idx, time:App.currentData[bt.idx]?.time });
+    msg = `${force ? "最後一根強制回補空單" : "平空 / 回補"} ${qty} 股，價格 ${price.toFixed(2)}，損益 ${money(pnl)}。`;
+  }
+
+  bt.position = null;
   bt.shares = 0;
   bt.avgCost = 0;
 
-  showBacktestStatus(`${force ? "最後一根強制賣出" : "賣出"} ${qty} 股，價格 ${price.toFixed(2)}。`);
+  showBacktestStatus(msg);
 }
 
 function backtestNext(){
@@ -1583,7 +1662,9 @@ function backtestNext(){
   if(bt.idx >= bt.end){
     finishBacktest();
   } else {
-    showBacktestStatus(`已前進一根 K，剩餘 ${backtestRemainingBars()} 根。`);
+    const u = backtestUnrealizedPct();
+    const pos = bt.position ? `目前${backtestPositionText()}，浮動 ${pct(u)}。` : "目前空手。";
+    showBacktestStatus(`已前進一根 K，剩餘 ${backtestRemainingBars()} 根。${pos}`);
   }
 }
 
@@ -1630,12 +1711,13 @@ function updateBacktestSidePanel(message=""){
   const equity = backtestEquity();
   const ret = backtestReturnPct();
   const score = bt.finalScore ?? backtestScore();
+  const u = backtestUnrealizedPct();
 
   $("bt-remain-side").innerText = backtestRemainingBars();
   $("bt-played-side").innerText = backtestPlayedBars();
   $("bt-price-side").innerText = price ? price.toFixed(2) : "-";
   $("bt-cash-side").innerText = money(bt.cash);
-  $("bt-shares-side").innerText = money(bt.shares);
+  $("bt-shares-side").innerText = `${backtestPositionText()}${bt.position ? ` / 浮動 ${pct(u)}` : ""}`;
   $("bt-trades-side").innerText = bt.trades.length;
   $("bt-equity-side").innerText = money(equity);
   $("bt-return-side").innerText = pct(ret);
@@ -1653,6 +1735,7 @@ function showBacktestStatus(message){
   const ret = backtestReturnPct();
   const score = bt.finalScore ?? backtestScore();
   const remaining = backtestRemainingBars();
+  const u = backtestUnrealizedPct();
 
   updateBacktestSidePanel(message);
 
@@ -1665,7 +1748,7 @@ function showBacktestStatus(message){
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">剩餘 K 線</div><div class="text-amber-300">${remaining}</div></div>
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">目前價格</div><div>${price.toFixed(2)}</div></div>
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">現金</div><div>${money(bt.cash)}</div></div>
-      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">持股</div><div>${money(bt.shares)}</div></div>
+      <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">部位</div><div>${backtestPositionText()}</div><div class="text-xs ${u>=0?"text-emerald-300":"text-rose-300"}">${bt.position ? `浮動 ${pct(u)}` : ""}</div></div>
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">權益變化</div><div class="${ret>=0?"text-emerald-300":"text-rose-300"}">${pct(ret)}</div></div>
       <div class="rounded-xl bg-slate-900 border border-slate-700 p-3"><div class="text-slate-500 text-xs">成績</div><div class="${score>=0?"text-blue-300":"text-rose-300"}">${score} 分</div></div>
     </div>`;
@@ -1682,14 +1765,11 @@ function finishBacktest(){
   }
 
   let forcedText = "";
-  if(bt.shares > 0){
-    const price = backtestPrice();
+  if(bt.position && bt.shares > 0){
+    const side = bt.position;
     const qty = bt.shares;
-    bt.cash += qty * price;
-    bt.trades.push({ type:"force_sell", price, qty, idx:bt.idx, time:App.currentData[bt.idx]?.time });
-    bt.shares = 0;
-    bt.avgCost = 0;
-    forcedText = `最後一根已強制賣出 ${qty} 股。`;
+    backtestClose(true);
+    forcedText = side === "long" ? `最後一根已強制平多 ${qty} 股。` : `最後一根已強制回補空單 ${qty} 股。`;
   }
 
   bt.finished = true;
