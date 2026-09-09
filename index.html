@@ -170,6 +170,9 @@
               <option value="1200">1200</option>
               <option value="1500">1500</option>
               <option value="2000">2000</option>
+              <option value="2500">2500</option>
+              <option value="3000">3000</option>
+              <option value="4000">4000</option>
             </select>
           </div>
           <div>
@@ -407,7 +410,7 @@ const App = {
   currentData:[], currentDataPath:"", currentQuestion:null, contextAnchorTime:"", loadingQuestion:false, manifest:null, klineCache:{},
   chart:null, candleSeries:null, volumeSeries:null, indicatorSeries:{},
   indicators:{ volume:true, ma:true, ema:false, bb:false, rsi:false, macd:false, atr:false },
-  revealed:false, score:0, hits:0, answers:[], backtest:null, autoplayTimer:null, profit:null,
+  revealed:false, score:0, hits:0, answers:[], backtest:null, pendingBacktestSwitch:null, autoplayTimer:null, profit:null,
   drawings:[], drawHistory:[], drawTool:"cursor", drawStart:null, drawPreview:null, selectedDrawingId:null,
   drawStyle:{ color:"#f59e0b", width:2, style:"solid" }
 };
@@ -619,15 +622,20 @@ function clampVisibleBarsForData(dataLen, desired, revealBars){
 }
 
 function pickStartIdx(data, visibleBars, revealBars, randomStart, anchorTime){
-  const maxStart = Math.max(0, data.length - visibleBars - revealBars - 1);
+  // 非錨點隨機題：保留足夠的未來 K 棒，讓題目/回測可以揭曉。
+  const maxStartWithFuture = Math.max(0, data.length - visibleBars - revealBars - 1);
+
+  // 錨點切換日/週/月：優先固定同一個時間位置，不因為 revealBars 不同把圖往前推。
   if(anchorTime){
-    const maxVisibleEnd = Math.max(visibleBars - 1, data.length - revealBars - 1);
     let visibleEnd = findIndexAtOrBefore(data, anchorTime);
-    if(visibleEnd < 0) visibleEnd = maxVisibleEnd;
-    visibleEnd = Math.max(visibleBars - 1, Math.min(visibleEnd, maxVisibleEnd));
-    return Math.max(0, Math.min(visibleEnd - visibleBars + 1, maxStart));
+    if(visibleEnd < 0) visibleEnd = 0;
+    visibleEnd = Math.max(0, Math.min(visibleEnd, data.length - 1));
+
+    const start = Math.max(0, visibleEnd - visibleBars + 1);
+    return Math.max(0, Math.min(start, Math.max(0, data.length - visibleBars)));
   }
-  return randomStart ? Math.floor(Math.random() * Math.max(1, maxStart)) : maxStart;
+
+  return randomStart ? Math.floor(Math.random() * Math.max(1, maxStartWithFuture)) : maxStartWithFuture;
 }
 
 function visibleCandles(){
@@ -637,31 +645,80 @@ function visibleCandles(){
   return App.currentData.slice(q.start_idx, end + 1);
 }
 
+function captureBacktestSwitchState(){
+  if(App.mode !== "backtest" || !App.backtest) return null;
+
+  const bt = App.backtest;
+  const remaining = Math.max(0, Number(bt.end || 0) - Number(bt.idx || 0));
+
+  return {
+    remainingBars: remaining,
+    cash: Number(bt.cash ?? 1000000),
+    shares: Number(bt.shares ?? 0),
+    avgCost: Number(bt.avgCost ?? 0),
+    trades: Array.isArray(bt.trades) ? JSON.parse(JSON.stringify(bt.trades)) : [],
+    finished: !!bt.finished,
+    finalScore: bt.finalScore ?? null
+  };
+}
+
+function effectiveRevealBarsForContext(interval, options = {}){
+  if(Number.isFinite(Number(options.revealBars))){
+    return Math.max(0, Number(options.revealBars));
+  }
+
+  if(App.mode === "backtest"){
+    const preserved = captureBacktestSwitchState();
+    if(preserved && options.keepAnchor){
+      return preserved.remainingBars;
+    }
+    return backtestRevealBarsByInterval(interval);
+  }
+
+  return revealBarsByInterval(interval);
+}
+
 async function reloadCurrentContext(){
   const q = App.currentQuestion;
   const ticker = q?.ticker || $("symbol-select").value;
   const anchorTime = currentAnchorTime() || displayedAnchorTime();
+  const preservedBacktest = captureBacktestSwitchState();
+
   setContextAnchorTime(anchorTime);
-  await loadManualQuestion(false, true, { ticker, anchorTime, keepAnchor:true });
+  if(preservedBacktest) App.pendingBacktestSwitch = preservedBacktest;
+
+  await loadManualQuestion(false, true, {
+    ticker,
+    interval: App.interval,
+    anchorTime: App.contextAnchorTime,
+    keepAnchor: true,
+    revealBars: preservedBacktest ? preservedBacktest.remainingBars : undefined
+  });
 }
 
 async function switchIntervalKeepContext(newInterval){
   if(!newInterval) return;
+  if(App.interval === newInterval) return;
+
   const q = App.currentQuestion;
   const ticker = q?.ticker || $("symbol-select").value;
   const anchorTime = currentAnchorTime() || displayedAnchorTime();
+  const preservedBacktest = captureBacktestSwitchState();
 
   // 切換日/週/月只改週期，不重新抽股票、不重新抽時間。
-  // 所有週期都用同一個 contextAnchorTime 找最接近該時間的 bar。
+  // 重點：回測時也保留「目前播放到的時間」與「剩餘 K 棒數」，不再用週/月預設 revealBars 重算。
   setContextAnchorTime(anchorTime);
   App.interval = newInterval;
   syncIntervalButtons();
 
+  if(preservedBacktest) App.pendingBacktestSwitch = preservedBacktest;
+
   await loadManualQuestion(false, true, {
     ticker,
-    interval:newInterval,
-    anchorTime:App.contextAnchorTime,
-    keepAnchor:true
+    interval: newInterval,
+    anchorTime: App.contextAnchorTime,
+    keepAnchor: true,
+    revealBars: preservedBacktest ? preservedBacktest.remainingBars : undefined
   });
 }
 
@@ -844,7 +901,7 @@ async function loadManualQuestion(randomStart=true, renderNow=true, options={}){
 
   const interval = options.interval || App.interval;
   const requestedVisibleBars = desiredVisibleBars();
-  const revealBars = options.revealBars || (App.mode === "backtest" ? backtestRevealBarsByInterval(interval) : revealBarsByInterval(interval));
+  const revealBars = effectiveRevealBarsForContext(interval, options);
   const fixedTicker = options.ticker || null;
   const anchorTime = options.anchorTime || null;
   const pool = fixedTicker
@@ -1076,38 +1133,65 @@ function normalizeQuestionBounds(q){
     throw new Error("題目或 K 線資料尚未載入完成。");
   }
 
-  const revealBars = Math.max(1, Number(q.reveal_bars || revealBarsByInterval(q.interval || App.interval)));
+  const revealBars = Math.max(0, Number(q.reveal_bars ?? revealBarsByInterval(q.interval || App.interval)));
 
-  if(App.currentData.length < revealBars + 22){
-    throw new Error(`K 線資料不足：目前 ${App.currentData.length} 根，揭曉根數 ${revealBars}，請重新跑 GitHub Actions。`);
+  if(App.currentData.length < 22){
+    throw new Error(`K 線資料不足：目前 ${App.currentData.length} 根，請重新跑 GitHub Actions。`);
   }
 
-  let visibleBars = clampVisibleBarsForData(App.currentData.length, q.visible_bars || desiredVisibleBars(), revealBars);
-  const maxStart = Math.max(0, App.currentData.length - visibleBars - revealBars - 1);
-
+  let visibleBars = clampVisibleBarsForData(App.currentData.length, q.visible_bars || desiredVisibleBars(), Math.max(1, revealBars));
   const stableAnchorTime = q.context_anchor_time || q.anchor_time || App.contextAnchorTime || null;
 
-  if(stableAnchorTime && (q.start_idx === null || q.start_idx === undefined || q.keep_anchor)){
-    q.start_idx = pickStartIdx(App.currentData, visibleBars, revealBars, false, stableAnchorTime);
+  let visibleEnd = null;
+
+  if(stableAnchorTime && q.keep_anchor){
+    // 這裡是本次修正核心：
+    // 以 anchorTime 對應到新週期最接近且不晚於該時間的 K 棒。
+    // 不再用 data.length - revealBars - 1 去硬性往前推，否則日/週/月切換會漂移。
+    visibleEnd = findIndexAtOrBefore(App.currentData, stableAnchorTime);
+    if(visibleEnd < 0) visibleEnd = 0;
+    visibleEnd = Math.max(0, Math.min(visibleEnd, App.currentData.length - 1));
+
+    q.start_idx = Math.max(0, visibleEnd - visibleBars + 1);
   }
 
   if(q.start_idx === null || q.start_idx === undefined || !Number.isFinite(Number(q.start_idx))){
-    q.start_idx = maxStart;
+    const maxStartWithFuture = Math.max(0, App.currentData.length - visibleBars - Math.max(1, revealBars) - 1);
+    q.start_idx = maxStartWithFuture;
   }
 
-  q.start_idx = Math.max(0, Math.min(Number(q.start_idx), maxStart));
+  q.start_idx = Math.max(0, Math.min(Number(q.start_idx), Math.max(0, App.currentData.length - visibleBars)));
+
+  if(visibleEnd === null){
+    visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - 1);
+
+    // 非錨點題目才需要保留未來 K 棒，避免猜方向沒有答案。
+    if(!q.keep_anchor && revealBars > 0){
+      visibleEnd = Math.min(visibleEnd, App.currentData.length - revealBars - 1);
+    }
+  }
+
+  visibleEnd = Math.max(0, Math.min(visibleEnd, App.currentData.length - 1));
+  q.start_idx = Math.max(0, Math.min(q.start_idx, visibleEnd));
+
   q.visible_bars = visibleBars;
   q.reveal_bars = revealBars;
-  q._visibleEnd = Math.min(q.start_idx + visibleBars - 1, App.currentData.length - revealBars - 1);
+  q._visibleEnd = visibleEnd;
   q._revealEnd = Math.min(q._visibleEnd + revealBars, App.currentData.length - 1);
 
   q.context_anchor_time = stableAnchorTime || App.currentData[q._visibleEnd]?.time || null;
   q.anchor_time = q.context_anchor_time;
   q.resolved_anchor_time = App.currentData[q._visibleEnd]?.time || null;
-  setContextAnchorTime(q.context_anchor_time);
 
-  if(q._visibleEnd < 0 || q._revealEnd <= q._visibleEnd){
+  // keep_anchor 時永遠保留原始 anchor，不把 weekly/monthly 的 bar 日期覆蓋回 contextAnchorTime。
+  setContextAnchorTime(q.keep_anchor && stableAnchorTime ? stableAnchorTime : q.context_anchor_time);
+
+  if(q._visibleEnd < 0){
     throw new Error("題目索引異常，請按『隨機題段』重新整理題目。");
+  }
+
+  if(App.mode !== "backtest" && !(App.mode === "battle" && Battle.battleMode === "profit") && q._revealEnd <= q._visibleEnd){
+    throw new Error("這個時間點後面沒有足夠未來 K 棒可揭曉，請按『隨機題段』重新抽題。");
   }
 }
 
@@ -1347,28 +1431,42 @@ function showLoadError(err){ const box=$("result-box"); box.classList.remove("hi
 /* 回測 */
 function setupBacktest(){
   const q = App.currentQuestion;
-  if(!q) {
+  if(!q){
     updateBacktestSidePanel("請先建立回測題段。");
     return;
   }
 
   normalizeQuestionBounds(q);
 
+  const preserved = App.pendingBacktestSwitch;
+  App.pendingBacktestSwitch = null;
+
+  const remainingWanted = preserved
+    ? Math.max(0, Number(preserved.remainingBars || 0))
+    : Math.max(0, Number(q._revealEnd - q._visibleEnd));
+
+  const actualEnd = Math.min(q._visibleEnd + remainingWanted, App.currentData.length - 1);
+
+  // 切換日/週/月時：idx 固定在 anchor 對應的目前 K 棒，剩餘 K 棒不再因週期而變多。
   App.backtest = {
-    idx:q._visibleEnd,
-    start:q._visibleEnd,
-    end:q._revealEnd,
-    cash:1000000,
-    shares:0,
-    avgCost:0,
-    trades:[],
-    finished:false,
-    finalScore:null
+    idx: q._visibleEnd,
+    start: q._visibleEnd,
+    end: actualEnd,
+    targetRemainingBars: remainingWanted,
+    cash: preserved ? preserved.cash : 1000000,
+    shares: preserved ? preserved.shares : 0,
+    avgCost: preserved ? preserved.avgCost : 0,
+    trades: preserved ? preserved.trades : [],
+    finished: false,
+    finalScore: null
   };
+
+  q._revealEnd = actualEnd;
+  q.reveal_bars = Math.max(0, actualEnd - q._visibleEnd);
 
   App.revealed = false;
   renderBacktestCandles();
-  showBacktestStatus("回測開始。請在剩餘 K 線內完成買賣；最後一根會自動賣出所有持股。");
+  showBacktestStatus("回測開始。切換日/週/月會固定目前時間錨點與剩餘 K 棒數；最後一根會自動賣出所有持股。");
 }
 
 function backtestPrice(){
