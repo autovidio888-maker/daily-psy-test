@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-10T03:13:17.777724+08:00",
+  "updated_at": "2026-09-11T03:05:07.131453+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -71,7 +71,7 @@
       "ticker": "0050.TW",
       "interval": "1wk",
       "path": "public/data/klines/0050_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "0050.TW",
@@ -89,7 +89,7 @@
       "ticker": "2330.TW",
       "interval": "1wk",
       "path": "public/data/klines/2330_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2330.TW",
@@ -107,7 +107,7 @@
       "ticker": "2454.TW",
       "interval": "1wk",
       "path": "public/data/klines/2454_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2454.TW",
@@ -125,7 +125,7 @@
       "ticker": "2308.TW",
       "interval": "1wk",
       "path": "public/data/klines/2308_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2308.TW",
@@ -143,7 +143,7 @@
       "ticker": "2317.TW",
       "interval": "1wk",
       "path": "public/data/klines/2317_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2317.TW",
@@ -161,7 +161,7 @@
       "ticker": "3711.TW",
       "interval": "1wk",
       "path": "public/data/klines/3711_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3711.TW",
@@ -179,7 +179,7 @@
       "ticker": "2383.TW",
       "interval": "1wk",
       "path": "public/data/klines/2383_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2383.TW",
@@ -197,7 +197,7 @@
       "ticker": "2303.TW",
       "interval": "1wk",
       "path": "public/data/klines/2303_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2303.TW",
@@ -215,7 +215,7 @@
       "ticker": "3037.TW",
       "interval": "1wk",
       "path": "public/data/klines/3037_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3037.TW",
@@ -233,7 +233,7 @@
       "ticker": "2891.TW",
       "interval": "1wk",
       "path": "public/data/klines/2891_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2891.TW",
@@ -251,7 +251,7 @@
       "ticker": "2345.TW",
       "interval": "1wk",
       "path": "public/data/klines/2345_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2345.TW",
@@ -269,7 +269,7 @@
       "ticker": "2881.TW",
       "interval": "1wk",
       "path": "public/data/klines/2881_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2881.TW",
@@ -287,7 +287,7 @@
       "ticker": "2882.TW",
       "interval": "1wk",
       "path": "public/data/klines/2882_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2882.TW",
@@ -305,7 +305,7 @@
       "ticker": "1303.TW",
       "interval": "1wk",
       "path": "public/data/klines/1303_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "1303.TW",
@@ -323,7 +323,7 @@
       "ticker": "2327.TW",
       "interval": "1wk",
       "path": "public/data/klines/2327_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2327.TW",
@@ -341,7 +341,7 @@
       "ticker": "3017.TW",
       "interval": "1wk",
       "path": "public/data/klines/3017_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3017.TW",
@@ -359,7 +359,7 @@
       "ticker": "2887.TW",
       "interval": "1wk",
       "path": "public/data/klines/2887_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2887.TW",
@@ -377,7 +377,7 @@
       "ticker": "2382.TW",
       "interval": "1wk",
       "path": "public/data/klines/2382_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2382.TW",
@@ -395,7 +395,7 @@
       "ticker": "2360.TW",
       "interval": "1wk",
       "path": "public/data/klines/2360_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2360.TW",
@@ -413,7 +413,7 @@
       "ticker": "2885.TW",
       "interval": "1wk",
       "path": "public/data/klines/2885_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2885.TW",
@@ -431,7 +431,7 @@
       "ticker": "2059.TW",
       "interval": "1wk",
       "path": "public/data/klines/2059_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2059.TW",
@@ -467,7 +467,7 @@
       "ticker": "2886.TW",
       "interval": "1wk",
       "path": "public/data/klines/2886_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2886.TW",
@@ -485,7 +485,7 @@
       "ticker": "2884.TW",
       "interval": "1wk",
       "path": "public/data/klines/2884_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2884.TW",
@@ -503,7 +503,7 @@
       "ticker": "3231.TW",
       "interval": "1wk",
       "path": "public/data/klines/3231_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3231.TW",
@@ -521,7 +521,7 @@
       "ticker": "2408.TW",
       "interval": "1wk",
       "path": "public/data/klines/2408_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2408.TW",
@@ -539,7 +539,7 @@
       "ticker": "2344.TW",
       "interval": "1wk",
       "path": "public/data/klines/2344_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2344.TW",
@@ -557,7 +557,7 @@
       "ticker": "2357.TW",
       "interval": "1wk",
       "path": "public/data/klines/2357_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2357.TW",
@@ -575,7 +575,7 @@
       "ticker": "2301.TW",
       "interval": "1wk",
       "path": "public/data/klines/2301_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2301.TW",
@@ -593,7 +593,7 @@
       "ticker": "2412.TW",
       "interval": "1wk",
       "path": "public/data/klines/2412_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2412.TW",
@@ -611,7 +611,7 @@
       "ticker": "2890.TW",
       "interval": "1wk",
       "path": "public/data/klines/2890_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2890.TW",
@@ -629,7 +629,7 @@
       "ticker": "2883.TW",
       "interval": "1wk",
       "path": "public/data/klines/2883_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2883.TW",
@@ -647,7 +647,7 @@
       "ticker": "3008.TW",
       "interval": "1wk",
       "path": "public/data/klines/3008_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3008.TW",
@@ -665,7 +665,7 @@
       "ticker": "2880.TW",
       "interval": "1wk",
       "path": "public/data/klines/2880_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2880.TW",
@@ -683,7 +683,7 @@
       "ticker": "2892.TW",
       "interval": "1wk",
       "path": "public/data/klines/2892_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2892.TW",
@@ -701,7 +701,7 @@
       "ticker": "3665.TW",
       "interval": "1wk",
       "path": "public/data/klines/3665_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3665.TW",
@@ -719,7 +719,7 @@
       "ticker": "1216.TW",
       "interval": "1wk",
       "path": "public/data/klines/1216_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "1216.TW",
@@ -737,7 +737,7 @@
       "ticker": "3443.TW",
       "interval": "1wk",
       "path": "public/data/klines/3443_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3443.TW",
@@ -755,7 +755,7 @@
       "ticker": "3653.TW",
       "interval": "1wk",
       "path": "public/data/klines/3653_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3653.TW",
@@ -773,7 +773,7 @@
       "ticker": "4958.TW",
       "interval": "1wk",
       "path": "public/data/klines/4958_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "4958.TW",
@@ -785,7 +785,7 @@
       "ticker": "7769.TW",
       "interval": "1d",
       "path": "public/data/klines/7769_TW_1d.json",
-      "count": 452
+      "count": 453
     },
     {
       "ticker": "7769.TW",
@@ -803,7 +803,7 @@
       "ticker": "2368.TW",
       "interval": "1wk",
       "path": "public/data/klines/2368_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2368.TW",
@@ -821,7 +821,7 @@
       "ticker": "2395.TW",
       "interval": "1wk",
       "path": "public/data/klines/2395_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2395.TW",
@@ -839,7 +839,7 @@
       "ticker": "3661.TW",
       "interval": "1wk",
       "path": "public/data/klines/3661_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3661.TW",
@@ -857,7 +857,7 @@
       "ticker": "2449.TW",
       "interval": "1wk",
       "path": "public/data/klines/2449_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2449.TW",
@@ -875,7 +875,7 @@
       "ticker": "5880.TW",
       "interval": "1wk",
       "path": "public/data/klines/5880_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "5880.TW",
@@ -893,7 +893,7 @@
       "ticker": "8046.TW",
       "interval": "1wk",
       "path": "public/data/klines/8046_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "8046.TW",
@@ -911,7 +911,7 @@
       "ticker": "2603.TW",
       "interval": "1wk",
       "path": "public/data/klines/2603_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "2603.TW",
@@ -929,7 +929,7 @@
       "ticker": "4904.TW",
       "interval": "1wk",
       "path": "public/data/klines/4904_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "4904.TW",
@@ -947,7 +947,7 @@
       "ticker": "3045.TW",
       "interval": "1wk",
       "path": "public/data/klines/3045_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "3045.TW",
@@ -965,7 +965,7 @@
       "ticker": "6505.TW",
       "interval": "1wk",
       "path": "public/data/klines/6505_TW_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "6505.TW",
@@ -983,7 +983,7 @@
       "ticker": "NVDA",
       "interval": "1wk",
       "path": "public/data/klines/NVDA_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "NVDA",
@@ -1001,7 +1001,7 @@
       "ticker": "AAPL",
       "interval": "1wk",
       "path": "public/data/klines/AAPL_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "AAPL",
@@ -1019,7 +1019,7 @@
       "ticker": "MSFT",
       "interval": "1wk",
       "path": "public/data/klines/MSFT_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "MSFT",
@@ -1037,7 +1037,7 @@
       "ticker": "SPY",
       "interval": "1wk",
       "path": "public/data/klines/SPY_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "SPY",
@@ -1055,7 +1055,7 @@
       "ticker": "QQQ",
       "interval": "1wk",
       "path": "public/data/klines/QQQ_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "QQQ",
