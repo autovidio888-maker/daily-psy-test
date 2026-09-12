@@ -1,58 +1,58 @@
 {
-  "date": "2026-09-12",
+  "date": "2026-09-13",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "3008.TW",
+      "ticker": "2880.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/3008_TW_1mo.json",
-      "start_idx": 96,
+      "data_path": "public/data/klines/2880_TW_1mo.json",
+      "start_idx": 103,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
       "question_no": 2,
-      "ticker": "2892.TW",
+      "ticker": "2882.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/2892_TW_1wk.json",
-      "start_idx": 252,
+      "data_path": "public/data/klines/2882_TW_1wk.json",
+      "start_idx": 152,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 3,
-      "ticker": "AAPL",
+      "ticker": "2412.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/AAPL_1wk.json",
-      "start_idx": 93,
+      "data_path": "public/data/klines/2412_TW_1wk.json",
+      "start_idx": 132,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 4,
-      "ticker": "2885.TW",
+      "ticker": "BTC-USD",
       "interval": "1d",
-      "data_path": "public/data/klines/2885_TW_1d.json",
-      "start_idx": 896,
+      "data_path": "public/data/klines/BTC_USD_1d.json",
+      "start_idx": 1504,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 5,
-      "ticker": "2892.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2892_TW_1d.json",
-      "start_idx": 559,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "ticker": "2891.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2891_TW_1mo.json",
+      "start_idx": 91,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     }
   ],
-  "updated_at": "2026-09-12T03:07:04.838354+08:00"
+  "updated_at": "2026-09-13T02:17:34.207069+08:00"
 }
