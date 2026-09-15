@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T04:16:34.945371+08:00",
+  "updated_at": "2026-09-16T03:39:17.707360+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -71,7 +71,7 @@
       "ticker": "0050.TW",
       "interval": "1wk",
       "path": "public/data/klines/0050_TW_1wk.json",
-      "count": 522
+      "count": 523
     },
     {
       "ticker": "0050.TW",
@@ -785,7 +785,7 @@
       "ticker": "7769.TW",
       "interval": "1d",
       "path": "public/data/klines/7769_TW_1d.json",
-      "count": 455
+      "count": 456
     },
     {
       "ticker": "7769.TW",
@@ -977,7 +977,7 @@
       "ticker": "NVDA",
       "interval": "1d",
       "path": "public/data/klines/NVDA_1d.json",
-      "count": 1254
+      "count": 1255
     },
     {
       "ticker": "NVDA",
@@ -995,7 +995,7 @@
       "ticker": "AAPL",
       "interval": "1d",
       "path": "public/data/klines/AAPL_1d.json",
-      "count": 1254
+      "count": 1255
     },
     {
       "ticker": "AAPL",
@@ -1013,7 +1013,7 @@
       "ticker": "MSFT",
       "interval": "1d",
       "path": "public/data/klines/MSFT_1d.json",
-      "count": 1254
+      "count": 1255
     },
     {
       "ticker": "MSFT",
@@ -1031,7 +1031,7 @@
       "ticker": "SPY",
       "interval": "1d",
       "path": "public/data/klines/SPY_1d.json",
-      "count": 1254
+      "count": 1255
     },
     {
       "ticker": "SPY",
@@ -1049,7 +1049,7 @@
       "ticker": "QQQ",
       "interval": "1d",
       "path": "public/data/klines/QQQ_1d.json",
-      "count": 1254
+      "count": 1255
     },
     {
       "ticker": "QQQ",
