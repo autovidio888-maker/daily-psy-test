@@ -1,58 +1,58 @@
 {
-  "date": "2026-09-16",
+  "date": "2026-09-17",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "8046.TW",
+      "ticker": "3017.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/3017_TW_1d.json",
+      "start_idx": 142,
+      "visible_bars": 240,
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
+    },
+    {
+      "question_no": 2,
+      "ticker": "2345.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/8046_TW_1mo.json",
+      "data_path": "public/data/klines/2345_TW_1mo.json",
+      "start_idx": 89,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
+    },
+    {
+      "question_no": 3,
+      "ticker": "2449.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2449_TW_1mo.json",
       "start_idx": 80,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
-      "question_no": 2,
-      "ticker": "3037.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/3037_TW_1d.json",
-      "start_idx": 813,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
-    },
-    {
-      "question_no": 3,
-      "ticker": "BTC-USD",
-      "interval": "1d",
-      "data_path": "public/data/klines/BTC_USD_1d.json",
-      "start_idx": 504,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
-    },
-    {
       "question_no": 4,
-      "ticker": "SPY",
+      "ticker": "3037.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/SPY_1mo.json",
-      "start_idx": 189,
+      "data_path": "public/data/klines/3037_TW_1mo.json",
+      "start_idx": 83,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
       "question_no": 5,
-      "ticker": "2882.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2882_TW_1d.json",
-      "start_idx": 300,
+      "ticker": "BTC-USD",
+      "interval": "1wk",
+      "data_path": "public/data/klines/BTC_USD_1wk.json",
+      "start_idx": 97,
       "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
     }
   ],
-  "updated_at": "2026-09-16T03:39:17.708444+08:00"
+  "updated_at": "2026-09-17T03:30:51.058951+08:00"
 }
