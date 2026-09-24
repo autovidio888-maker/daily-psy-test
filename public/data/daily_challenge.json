@@ -1,58 +1,58 @@
 {
-  "date": "2026-09-24",
+  "date": "2026-09-25",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "2449.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2449_TW_1d.json",
+      "ticker": "2345.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/2345_TW_1wk.json",
       "start_idx": 149,
+      "visible_bars": 240,
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
+    },
+    {
+      "question_no": 2,
+      "ticker": "3711.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/3711_TW_1wk.json",
+      "start_idx": 149,
+      "visible_bars": 240,
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
+    },
+    {
+      "question_no": 3,
+      "ticker": "2882.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/2882_TW_1d.json",
+      "start_idx": 291,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
-      "question_no": 2,
-      "ticker": "2308.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/2308_TW_1mo.json",
-      "start_idx": 115,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
-    },
-    {
-      "question_no": 3,
-      "ticker": "2327.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/2327_TW_1mo.json",
-      "start_idx": 128,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
-    },
-    {
       "question_no": 4,
-      "ticker": "8046.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/8046_TW_1mo.json",
-      "start_idx": 80,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
+      "ticker": "3661.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/3661_TW_1d.json",
+      "start_idx": 271,
+      "visible_bars": 240,
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
     },
     {
       "question_no": 5,
-      "ticker": "4904.TW",
+      "ticker": "3665.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/4904_TW_1wk.json",
-      "start_idx": 98,
+      "data_path": "public/data/klines/3665_TW_1wk.json",
+      "start_idx": 265,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     }
   ],
-  "updated_at": "2026-09-24T03:37:45.175669+08:00"
+  "updated_at": "2026-09-25T03:56:30.042080+08:00"
 }
