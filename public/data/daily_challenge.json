@@ -1,58 +1,58 @@
 {
-  "date": "2026-09-29",
+  "date": "2026-09-30",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "5880.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/5880_TW_1wk.json",
-      "start_idx": 138,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "ticker": "3045.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/3045_TW_1mo.json",
+      "start_idx": 88,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 2,
-      "ticker": "0050.TW",
+      "ticker": "3037.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/3037_TW_1mo.json",
+      "start_idx": 115,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
+    },
+    {
+      "question_no": 3,
+      "ticker": "3711.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/0050_TW_1wk.json",
-      "start_idx": 95,
+      "data_path": "public/data/klines/3711_TW_1wk.json",
+      "start_idx": 228,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
-      "question_no": 3,
-      "ticker": "NVDA",
-      "interval": "1d",
-      "data_path": "public/data/klines/NVDA_1d.json",
-      "start_idx": 803,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
-    },
-    {
       "question_no": 4,
-      "ticker": "5880.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/5880_TW_1d.json",
-      "start_idx": 144,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "ticker": "2890.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2890_TW_1mo.json",
+      "start_idx": 88,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 5,
-      "ticker": "2408.TW",
+      "ticker": "8046.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/2408_TW_1mo.json",
-      "start_idx": 119,
+      "data_path": "public/data/klines/8046_TW_1mo.json",
+      "start_idx": 80,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     }
   ],
-  "updated_at": "2026-09-29T05:48:18.948870+08:00"
+  "updated_at": "2026-09-30T04:39:46.647818+08:00"
 }
