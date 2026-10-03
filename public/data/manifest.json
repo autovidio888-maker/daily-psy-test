@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-03T04:36:47.215938+08:00",
+  "updated_at": "2026-10-04T03:09:33.589394+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -65,7 +65,7 @@
       "ticker": "0050.TW",
       "interval": "1d",
       "path": "public/data/klines/0050_TW_1d.json",
-      "count": 1213
+      "count": 1214
     },
     {
       "ticker": "0050.TW",
@@ -1073,7 +1073,7 @@
       "ticker": "BTC-USD",
       "interval": "1wk",
       "path": "public/data/klines/BTC_USD_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "BTC-USD",
