@@ -1,58 +1,58 @@
 {
-  "date": "2026-10-09",
+  "date": "2026-10-10",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "3653.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/3653_TW_1wk.json",
-      "start_idx": 211,
+      "ticker": "2383.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/2383_TW_1d.json",
+      "start_idx": 855,
       "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
     },
     {
       "question_no": 2,
-      "ticker": "2882.TW",
+      "ticker": "2881.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/2882_TW_1mo.json",
-      "start_idx": 130,
+      "data_path": "public/data/klines/2881_TW_1mo.json",
+      "start_idx": 93,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
       "question_no": 3,
-      "ticker": "2059.TW",
+      "ticker": "2887.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2059_TW_1d.json",
-      "start_idx": 150,
+      "data_path": "public/data/klines/2887_TW_1d.json",
+      "start_idx": 347,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 4,
-      "ticker": "2395.TW",
+      "ticker": "4958.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2395_TW_1d.json",
-      "start_idx": 502,
+      "data_path": "public/data/klines/4958_TW_1d.json",
+      "start_idx": 544,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 5,
-      "ticker": "2360.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2360_TW_1d.json",
-      "start_idx": 543,
-      "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "ticker": "MSFT",
+      "interval": "1mo",
+      "data_path": "public/data/klines/MSFT_1mo.json",
+      "start_idx": 127,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     }
   ],
-  "updated_at": "2026-10-09T05:14:58.670024+08:00"
+  "updated_at": "2026-10-10T04:45:25.467642+08:00"
 }
