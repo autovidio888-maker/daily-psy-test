@@ -1,58 +1,58 @@
 {
-  "date": "2026-10-21",
+  "date": "2026-10-22",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "2887.TW",
+      "ticker": "6505.TW",
       "interval": "1mo",
-      "data_path": "public/data/klines/2887_TW_1mo.json",
-      "start_idx": 103,
+      "data_path": "public/data/klines/6505_TW_1mo.json",
+      "start_idx": 84,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
       "question_no": 2,
-      "ticker": "1216.TW",
+      "ticker": "2883.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/1216_TW_1wk.json",
-      "start_idx": 208,
+      "data_path": "public/data/klines/2883_TW_1wk.json",
+      "start_idx": 106,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 3,
-      "ticker": "2884.TW",
+      "ticker": "8046.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/8046_TW_1wk.json",
+      "start_idx": 233,
+      "visible_bars": 240,
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
+    },
+    {
+      "question_no": 4,
+      "ticker": "2059.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2884_TW_1d.json",
-      "start_idx": 813,
+      "data_path": "public/data/klines/2059_TW_1d.json",
+      "start_idx": 117,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
-      "question_no": 4,
-      "ticker": "2303.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/2303_TW_1mo.json",
-      "start_idx": 86,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
-    },
-    {
       "question_no": 5,
-      "ticker": "QQQ",
+      "ticker": "2891.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/QQQ_1wk.json",
-      "start_idx": 200,
+      "data_path": "public/data/klines/2891_TW_1wk.json",
+      "start_idx": 136,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     }
   ],
-  "updated_at": "2026-10-21T03:57:59.772880+08:00"
+  "updated_at": "2026-10-22T04:02:44.240689+08:00"
 }
