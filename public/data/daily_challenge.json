@@ -1,58 +1,58 @@
 {
-  "date": "2026-10-27",
+  "date": "2026-10-28",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
       "ticker": "2345.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2345_TW_1d.json",
-      "start_idx": 409,
+      "interval": "1wk",
+      "data_path": "public/data/klines/2345_TW_1wk.json",
+      "start_idx": 187,
       "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
     },
     {
       "question_no": 2,
-      "ticker": "2454.TW",
+      "ticker": "AAPL",
       "interval": "1mo",
-      "data_path": "public/data/klines/2454_TW_1mo.json",
-      "start_idx": 100,
+      "data_path": "public/data/klines/AAPL_1mo.json",
+      "start_idx": 303,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
       "question_no": 3,
-      "ticker": "3045.TW",
+      "ticker": "2308.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/3045_TW_1d.json",
-      "start_idx": 620,
+      "data_path": "public/data/klines/2308_TW_1d.json",
+      "start_idx": 931,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 4,
-      "ticker": "2327.TW",
+      "ticker": "2885.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/2327_TW_1d.json",
-      "start_idx": 595,
+      "data_path": "public/data/klines/2885_TW_1d.json",
+      "start_idx": 170,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 5,
-      "ticker": "3045.TW",
-      "interval": "1mo",
-      "data_path": "public/data/klines/3045_TW_1mo.json",
-      "start_idx": 99,
-      "visible_bars": 180,
-      "reveal_bars": 8,
-      "threshold_pct": 6.0
+      "ticker": "1216.TW",
+      "interval": "1d",
+      "data_path": "public/data/klines/1216_TW_1d.json",
+      "start_idx": 168,
+      "visible_bars": 240,
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
     }
   ],
-  "updated_at": "2026-10-27T04:59:41.239060+08:00"
+  "updated_at": "2026-10-28T04:34:58.196362+08:00"
 }
