@@ -1,58 +1,58 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-30",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "2887.TW",
+      "ticker": "3665.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/2887_TW_1wk.json",
-      "start_idx": 246,
+      "data_path": "public/data/klines/3665_TW_1wk.json",
+      "start_idx": 159,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 2,
-      "ticker": "2892.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/2892_TW_1wk.json",
-      "start_idx": 250,
+      "ticker": "SPY",
+      "interval": "1d",
+      "data_path": "public/data/klines/SPY_1d.json",
+      "start_idx": 103,
       "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "reveal_bars": 20,
+      "threshold_pct": 1.2
     },
     {
       "question_no": 3,
-      "ticker": "2395.TW",
+      "ticker": "2383.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/2395_TW_1wk.json",
-      "start_idx": 82,
+      "data_path": "public/data/klines/2383_TW_1wk.json",
+      "start_idx": 124,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 4,
-      "ticker": "3017.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/3017_TW_1wk.json",
-      "start_idx": 200,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "ticker": "2882.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2882_TW_1mo.json",
+      "start_idx": 123,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 5,
-      "ticker": "3231.TW",
+      "ticker": "AAPL",
       "interval": "1mo",
-      "data_path": "public/data/klines/3231_TW_1mo.json",
-      "start_idx": 85,
+      "data_path": "public/data/klines/AAPL_1mo.json",
+      "start_idx": 305,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     }
   ],
-  "updated_at": "2026-10-29T04:56:58.854559+08:00"
+  "updated_at": "2026-10-30T05:00:11.077038+08:00"
 }
