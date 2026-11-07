@@ -1,58 +1,58 @@
 {
-  "date": "2026-11-07",
+  "date": "2026-11-08",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
+      "ticker": "3661.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/3661_TW_1wk.json",
+      "start_idx": 186,
+      "visible_bars": 240,
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
+    },
+    {
+      "question_no": 2,
       "ticker": "2449.TW",
       "interval": "1mo",
       "data_path": "public/data/klines/2449_TW_1mo.json",
-      "start_idx": 82,
+      "start_idx": 106,
       "visible_bars": 180,
       "reveal_bars": 8,
       "threshold_pct": 6.0
     },
     {
-      "question_no": 2,
-      "ticker": "0050.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/0050_TW_1wk.json",
-      "start_idx": 159,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
-    },
-    {
       "question_no": 3,
-      "ticker": "1303.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/1303_TW_1wk.json",
-      "start_idx": 151,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "ticker": "2395.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2395_TW_1mo.json",
+      "start_idx": 98,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 4,
-      "ticker": "2883.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2883_TW_1d.json",
-      "start_idx": 83,
+      "ticker": "2344.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/2344_TW_1wk.json",
+      "start_idx": 163,
       "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
     },
     {
       "question_no": 5,
-      "ticker": "3661.TW",
+      "ticker": "2059.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/3661_TW_1d.json",
-      "start_idx": 770,
+      "data_path": "public/data/klines/2059_TW_1d.json",
+      "start_idx": 696,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     }
   ],
-  "updated_at": "2026-11-07T05:26:26.207393+08:00"
+  "updated_at": "2026-11-08T04:07:30.967245+08:00"
 }
