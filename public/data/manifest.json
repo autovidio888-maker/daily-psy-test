@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-17T08:08:34.465462+08:00",
+  "updated_at": "2026-11-18T07:27:19.296279+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -65,7 +65,7 @@
       "ticker": "0050.TW",
       "interval": "1d",
       "path": "public/data/klines/0050_TW_1d.json",
-      "count": 1213
+      "count": 1212
     },
     {
       "ticker": "0050.TW",
@@ -785,7 +785,7 @@
       "ticker": "7769.TW",
       "interval": "1d",
       "path": "public/data/klines/7769_TW_1d.json",
-      "count": 495
+      "count": 496
     },
     {
       "ticker": "7769.TW",
@@ -1067,7 +1067,7 @@
       "ticker": "BTC-USD",
       "interval": "1d",
       "path": "public/data/klines/BTC_USD_1d.json",
-      "count": 1826
+      "count": 1827
     },
     {
       "ticker": "BTC-USD",
