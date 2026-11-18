@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-18T07:27:19.296279+08:00",
+  "updated_at": "2026-11-19T06:55:08.904379+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -785,7 +785,7 @@
       "ticker": "7769.TW",
       "interval": "1d",
       "path": "public/data/klines/7769_TW_1d.json",
-      "count": 496
+      "count": 497
     },
     {
       "ticker": "7769.TW",
