@@ -1,58 +1,58 @@
 {
-  "date": "2026-11-23",
+  "date": "2026-11-24",
   "title": "今日裸 K 五連戰",
   "description": "每日自動產生 5 題 K 線方向練習。股票名稱先隱藏，作答後揭曉。",
   "questions": [
     {
       "question_no": 1,
-      "ticker": "3037.TW",
+      "ticker": "2449.TW",
       "interval": "1d",
-      "data_path": "public/data/klines/3037_TW_1d.json",
-      "start_idx": 158,
+      "data_path": "public/data/klines/2449_TW_1d.json",
+      "start_idx": 179,
       "visible_bars": 240,
       "reveal_bars": 20,
       "threshold_pct": 1.2
     },
     {
       "question_no": 2,
-      "ticker": "2449.TW",
-      "interval": "1wk",
-      "data_path": "public/data/klines/2449_TW_1wk.json",
-      "start_idx": 218,
-      "visible_bars": 240,
-      "reveal_bars": 12,
-      "threshold_pct": 3.0
+      "ticker": "2412.TW",
+      "interval": "1mo",
+      "data_path": "public/data/klines/2412_TW_1mo.json",
+      "start_idx": 85,
+      "visible_bars": 180,
+      "reveal_bars": 8,
+      "threshold_pct": 6.0
     },
     {
       "question_no": 3,
-      "ticker": "4904.TW",
+      "ticker": "2303.TW",
       "interval": "1wk",
-      "data_path": "public/data/klines/4904_TW_1wk.json",
-      "start_idx": 117,
+      "data_path": "public/data/klines/2303_TW_1wk.json",
+      "start_idx": 268,
       "visible_bars": 240,
       "reveal_bars": 12,
       "threshold_pct": 3.0
     },
     {
       "question_no": 4,
-      "ticker": "2887.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/2887_TW_1d.json",
-      "start_idx": 788,
+      "ticker": "3008.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/3008_TW_1wk.json",
+      "start_idx": 202,
       "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
     },
     {
       "question_no": 5,
-      "ticker": "3037.TW",
-      "interval": "1d",
-      "data_path": "public/data/klines/3037_TW_1d.json",
-      "start_idx": 821,
+      "ticker": "4958.TW",
+      "interval": "1wk",
+      "data_path": "public/data/klines/4958_TW_1wk.json",
+      "start_idx": 198,
       "visible_bars": 240,
-      "reveal_bars": 20,
-      "threshold_pct": 1.2
+      "reveal_bars": 12,
+      "threshold_pct": 3.0
     }
   ],
-  "updated_at": "2026-11-23T05:40:07.791851+08:00"
+  "updated_at": "2026-11-24T10:51:35.221709+08:00"
 }
