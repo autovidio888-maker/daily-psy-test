@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-27T08:29:40.053070+08:00",
+  "updated_at": "2026-11-28T07:59:27.175208+08:00",
   "ticker_count": 57,
   "tickers": [
     "0050.TW",
@@ -785,7 +785,7 @@
       "ticker": "7769.TW",
       "interval": "1d",
       "path": "public/data/klines/7769_TW_1d.json",
-      "count": 503
+      "count": 504
     },
     {
       "ticker": "7769.TW",
@@ -983,7 +983,7 @@
       "ticker": "NVDA",
       "interval": "1wk",
       "path": "public/data/klines/NVDA_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "NVDA",
@@ -1001,7 +1001,7 @@
       "ticker": "AAPL",
       "interval": "1wk",
       "path": "public/data/klines/AAPL_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "AAPL",
@@ -1019,7 +1019,7 @@
       "ticker": "MSFT",
       "interval": "1wk",
       "path": "public/data/klines/MSFT_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "MSFT",
@@ -1037,7 +1037,7 @@
       "ticker": "SPY",
       "interval": "1wk",
       "path": "public/data/klines/SPY_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "SPY",
@@ -1055,7 +1055,7 @@
       "ticker": "QQQ",
       "interval": "1wk",
       "path": "public/data/klines/QQQ_1wk.json",
-      "count": 523
+      "count": 522
     },
     {
       "ticker": "QQQ",
@@ -1067,7 +1067,7 @@
       "ticker": "BTC-USD",
       "interval": "1d",
       "path": "public/data/klines/BTC_USD_1d.json",
-      "count": 1826
+      "count": 1827
     },
     {
       "ticker": "BTC-USD",
